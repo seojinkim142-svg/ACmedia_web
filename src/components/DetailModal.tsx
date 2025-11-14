@@ -22,22 +22,9 @@ const DetailModal = ({ isOpen, onClose, item }: DetailModalProps) => {
   const [editId, setEditId] = useState<number | null>(null);
   const [editContent, setEditContent] = useState("");
 
-  // -----------------------------
-  //  댓글 불러오기
-  // -----------------------------
-  const loadComments = async () => {
-    const { data } = await supabase
-      .from("comments")
-      .select("*")
-      .eq("post_id", item.id)
-      .order("created_at", { ascending: true }); // 오래된 댓글 위 / 최신 아래
-
-    if (data) setComments(data);
-  };
-
-  // -----------------------------
-  //  article 데이터 불러오기 (출처/상태)
-  // -----------------------------
+  // ----------------------------------
+  // article 데이터 불러오기
+  // ----------------------------------
   const loadArticleInfo = async () => {
     const { data } = await supabase
       .from("articles")
@@ -51,10 +38,10 @@ const DetailModal = ({ isOpen, onClose, item }: DetailModalProps) => {
     }
   };
 
-  // -----------------------------
-  //  출처/상태 저장
-  // -----------------------------
-  const saveSourceStatus = async (src: string, st: string) => {
+  // ----------------------------------
+  // article 저장 (출처/상태)
+  // ----------------------------------
+  const handleSaveArticleInfo = async () => {
     await supabase.from("articles").upsert(
       {
         id: item.id,
@@ -62,22 +49,28 @@ const DetailModal = ({ isOpen, onClose, item }: DetailModalProps) => {
         summary: item.summary,
         body: item.body,
         image: item.image,
-        source: src,
-        status: st,
+        source: source,
+        status: status,
         updated_at: new Date().toISOString(),
       },
       { onConflict: "id" }
     );
+    alert("저장되었습니다.");
   };
 
-  //  출처/상태 변경될 때마다 자동 저장
-  useEffect(() => {
-    saveSourceStatus(source, status);
-  }, [source, status]);
+  // ----------------------------------
+  // 댓글 불러오기 (오래된 순)
+  // ----------------------------------
+  const loadComments = async () => {
+    const { data } = await supabase
+      .from("comments")
+      .select("*")
+      .eq("post_id", item.id)
+      .order("created_at", { ascending: true });
 
-  // -----------------------------
-  // 모달 열릴 때 DB 데이터 불러오기
-  // -----------------------------
+    if (data) setComments(data);
+  };
+
   useEffect(() => {
     if (item?.id) {
       loadArticleInfo();
@@ -85,9 +78,9 @@ const DetailModal = ({ isOpen, onClose, item }: DetailModalProps) => {
     }
   }, [item]);
 
-  // -----------------------------
+  // ----------------------------------
   // 댓글 생성
-  // -----------------------------
+  // ----------------------------------
   const handleSaveComment = async () => {
     if (!comment.trim()) return;
 
@@ -100,17 +93,17 @@ const DetailModal = ({ isOpen, onClose, item }: DetailModalProps) => {
     loadComments();
   };
 
-  // -----------------------------
+  // ----------------------------------
   // 댓글 삭제
-  // -----------------------------
+  // ----------------------------------
   const handleDeleteComment = async (id: number) => {
     await supabase.from("comments").delete().eq("id", id);
     loadComments();
   };
 
-  // -----------------------------
+  // ----------------------------------
   // 댓글 수정
-  // -----------------------------
+  // ----------------------------------
   const handleStartEdit = (id: number, content: string) => {
     setEditId(id);
     setEditContent(content);
@@ -150,36 +143,45 @@ const DetailModal = ({ isOpen, onClose, item }: DetailModalProps) => {
             <p className="text-gray-700 whitespace-pre-line">{item.body}</p>
 
             <div className="flex justify-center mt-4">
-              <img src={item.image} className="w-60 h-60 rounded-md object-cover" />
+              <img src={item.image} className="w-64 h-64 rounded-md object-cover" />
             </div>
           </div>
 
-          {/* 출처 */}
-          <div>
-            <h4 className="font-bold mb-1">콘텐츠 출처</h4>
-            <select
-              className="border rounded-md px-3 py-1"
-              value={source}
-              onChange={(e) => setSource(e.target.value)}
-            >
-              {sourceList.map((s) => (
-                <option key={s} value={s}>{s}</option>
-              ))}
-            </select>
-          </div>
+          {/* 출처 / 상태 */}
+          <div className="space-y-3">
+            <div>
+              <h4 className="font-bold mb-1">콘텐츠 출처</h4>
+              <select
+                className="border rounded-md px-3 py-1"
+                value={source}
+                onChange={(e) => setSource(e.target.value)}
+              >
+                {sourceList.map((s) => (
+                  <option key={s} value={s}>{s}</option>
+                ))}
+              </select>
+            </div>
 
-          {/* 상태 */}
-          <div>
-            <h4 className="font-bold mb-1">상태</h4>
-            <select
-              className="border rounded-md px-3 py-1"
-              value={status}
-              onChange={(e) => setStatus(e.target.value)}
+            <div>
+              <h4 className="font-bold mb-1">상태</h4>
+              <select
+                className="border rounded-md px-3 py-1"
+                value={status}
+                onChange={(e) => setStatus(e.target.value)}
+              >
+                {statusList.map((st) => (
+                  <option key={st} value={st}>{st}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* 저장 버튼 */}
+            <button
+              onClick={handleSaveArticleInfo}
+              className="px-4 py-2 bg-green-600 text-white font-semibold rounded-lg"
             >
-              {statusList.map((st) => (
-                <option key={st} value={st}>{st}</option>
-              ))}
-            </select>
+              출처/상태 저장
+            </button>
           </div>
 
           {/* 댓글 목록 */}
@@ -243,7 +245,7 @@ const DetailModal = ({ isOpen, onClose, item }: DetailModalProps) => {
             </div>
           </div>
 
-          {/* 새 댓글 */}
+          {/* 댓글 입력 */}
           <div>
             <textarea
               className="w-full border rounded-md p-3 h-24"
@@ -259,6 +261,7 @@ const DetailModal = ({ isOpen, onClose, item }: DetailModalProps) => {
               댓글 작성
             </button>
           </div>
+
         </div>
       </div>
     </div>
