@@ -1,5 +1,5 @@
 import { useState } from "react";
-import DetailModal from "C:/Users/tjwls/my-project/src/components/DetailModal";
+import DetailModal from "../components/DetailModal";
 
 interface Item {
   id: number;
