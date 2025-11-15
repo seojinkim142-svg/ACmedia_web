@@ -2,17 +2,16 @@ import { useState } from "react";
 import { uploadImage } from "../lib/uploadImages";
 import { supabase } from "../supabaseClient";
 
-
 interface Props {
   images: string[];
   articleId: number;
   onUpdate: () => void;
+  onPreview: (url: string) => void; // 이미지 프리뷰 통합
 }
 
-export default function ImageSection({ images, articleId, onUpdate }: Props) {
+export default function ImageSection({ images, articleId, onUpdate, onPreview }: Props) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [uploading, setUploading] = useState(false);
-  const [preview, setPreview] = useState<string | null>(null);
 
   const next = () => setCurrentIndex((i) => (i + 1) % images.length);
   const prev = () => setCurrentIndex((i) => (i - 1 + images.length) % images.length);
@@ -38,27 +37,30 @@ export default function ImageSection({ images, articleId, onUpdate }: Props) {
   };
 
   return (
-    <>
-      {preview && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-999"
-             onClick={() => setPreview(null)}>
-          <img src={preview} className="max-w-[90vw] max-h-[90vh] rounded-lg" />
-        </div>
-      )}
-
+    <div className="space-y-3">
       {images.length > 0 && (
-        <div className="space-y-3">
-          {/* 슬라이더 */}
+        <>
+          {/* 이미지 슬라이더 */}
           <div className="relative flex justify-center items-center">
-            <button onClick={prev} className="absolute left-0 bg-black/60 text-white px-3 py-2 rounded-full">‹</button>
+            <button
+              onClick={prev}
+              className="absolute left-0 bg-black/60 text-white px-3 py-2 rounded-full"
+            >
+              ‹
+            </button>
 
             <img
               src={images[currentIndex]}
               className="w-64 h-64 object-cover rounded-lg cursor-pointer"
-              onClick={() => setPreview(images[currentIndex])}
+              onClick={() => onPreview(images[currentIndex])}
             />
 
-            <button onClick={next} className="absolute right-0 bg-black/60 text-white px-3 py-2 rounded-full">›</button>
+            <button
+              onClick={next}
+              className="absolute right-0 bg-black/60 text-white px-3 py-2 rounded-full"
+            >
+              ›
+            </button>
           </div>
 
           <button
@@ -68,6 +70,7 @@ export default function ImageSection({ images, articleId, onUpdate }: Props) {
             다운로드
           </button>
 
+          {/* 작은 썸네일 */}
           <div className="flex justify-center gap-2">
             {images.map((img, i) => (
               <img
@@ -80,14 +83,14 @@ export default function ImageSection({ images, articleId, onUpdate }: Props) {
               />
             ))}
           </div>
-        </div>
+        </>
       )}
 
-      {/* 업로드 */}
+      {/* 이미지 업로드 */}
       <div>
         <input type="file" accept="image/*" onChange={uploadNewImage} />
         {uploading && <div className="text-sm text-blue-600">업로드 중...</div>}
       </div>
-    </>
+    </div>
   );
 }

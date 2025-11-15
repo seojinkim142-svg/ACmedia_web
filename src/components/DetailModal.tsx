@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
-import ImageSection from "./ImageSection.tsx";
-import InfoSection from "./InfoSection.tsx";
-import CommentsSection from "./CommentsSection.tsx";
+import ImageSection from "./ImageSection";
+import InfoSection from "./InfoSection";
+import CommentsSection from "./CommentsSection";
+import ImagePreviewModal from "./ImagePreviewModal";
 
 import { supabase } from "../supabaseClient";
-
 
 interface DetailModalProps {
   isOpen: boolean;
@@ -17,13 +17,10 @@ const DetailModal = ({ isOpen, onClose, item }: DetailModalProps) => {
 
   const [article, setArticle] = useState<any>(item);
   const [comments, setComments] = useState<any[]>([]);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
 
   const loadArticleInfo = async () => {
-    const { data } = await supabase
-      .from("articles")
-      .select("*")
-      .eq("id", item.id)
-      .single();
+    const { data } = await supabase.from("articles").select("*").eq("id", item.id).single();
     if (data) setArticle(data);
   };
 
@@ -33,6 +30,7 @@ const DetailModal = ({ isOpen, onClose, item }: DetailModalProps) => {
       .select("*")
       .eq("post_id", item.id)
       .order("created_at", { ascending: true });
+
     if (data) setComments(data);
   };
 
@@ -44,37 +42,54 @@ const DetailModal = ({ isOpen, onClose, item }: DetailModalProps) => {
   }, [item]);
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-5000">
       <div className="bg-white w-full max-w-2xl rounded-xl shadow-xl max-h-[90vh] overflow-hidden flex flex-col">
 
         {/* HEADER */}
         <div className="flex justify-between items-center p-4 border-b">
           <h2 className="text-xl font-semibold">{article.title}</h2>
-          <button onClick={onClose} className="text-gray-500 text-2xl">×</button>
+          <button onClick={onClose} className="text-gray-500 text-2xl">
+            ×
+          </button>
         </div>
 
-        {/* BODY SCROLL */}
-        <div className="p-4 overflow-y-auto space-y-6">
+        {/* BODY (Scroll) */}
+        <div className="p-4 overflow-y-auto space-y-8">
 
+          {/* 요약 */}
+          <div>
+            <h3 className="font-bold mb-1">한눈에 보기</h3>
+            <p>{article.summary}</p>
+          </div>
+
+          {/* 본문 */}
+          <div>
+            <h3 className="font-bold mb-1">본문</h3>
+            <p className="whitespace-pre-line">{article.body}</p>
+          </div>
+
+          {/* 이미지 슬라이더 */}
           <ImageSection
             images={article.images || []}
             articleId={article.id}
             onUpdate={loadArticleInfo}
+            onPreview={(url) => setPreviewImage(url)}
           />
 
-          <InfoSection
-            article={article}
-            onUpdate={loadArticleInfo}
-          />
+          {/* 출처 / 상태 / 저장 */}
+          <InfoSection article={article} onUpdate={loadArticleInfo} />
 
+          {/* 댓글 */}
           <CommentsSection
             comments={comments}
             postId={article.id}
             onUpdate={loadComments}
           />
-
         </div>
       </div>
+
+      {/* 이미지 프리뷰 */}
+      <ImagePreviewModal image={previewImage} onClose={() => setPreviewImage(null)} />
     </div>
   );
 };
