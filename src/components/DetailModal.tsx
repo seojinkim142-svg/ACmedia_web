@@ -40,20 +40,17 @@ export default function DetailModal({ isOpen, onClose, item }: DetailModalProps)
 
   useEffect(() => {
     if (item?.id) {
-      setArticle(item); // ★ item 변경 즉시 article 반영
+      setArticle(item);
       loadArticleInfo();
       loadComments();
     }
   }, [item]);
 
-  // ★ 팝업 열림 여부만 체크 (핵심 수정)
   if (!isOpen) return null;
-
-  // ★ article 상태 체크 (item 대신)
   if (!article) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/40 z-50 flex justify-center items-start overflow-auto">
+    <div className="fixed inset-0 bg-black/40 z-9000 flex justify-center items-start overflow-auto">
       <div className="bg-white w-full max-w-2xl rounded-lg shadow-xl mt-10 max-h-[90vh] overflow-auto">
 
         {/* HEADER */}
@@ -103,7 +100,7 @@ export default function DetailModal({ isOpen, onClose, item }: DetailModalProps)
             />
           </div>
 
-          {/* 이미지 슬라이더 */}
+          {/* 이미지 슬라이더 (사진 클릭 → Preview 팝업) */}
           <ImageSection
             images={article.images || []}
             articleId={article.id}
@@ -111,7 +108,7 @@ export default function DetailModal({ isOpen, onClose, item }: DetailModalProps)
           />
 
           {/* 에디터 / 출처 / 콘텐츠 출처 / 상태 */}
-          <InfoSection article={article} onUpdate={loadArticleInfo} />
+          <InfoSection article ={article} onUpdate={loadArticleInfo} />
 
           {/* 댓글 */}
           <CommentsSection

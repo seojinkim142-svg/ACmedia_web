@@ -1,13 +1,17 @@
 import { supabase } from "../supabaseClient";
 
-interface Props {
+interface InfoSectionProps {
   article: any;
   onUpdate: () => void;
 }
 
-export default function InfoSection({ article, onUpdate }: Props) {
+export default function InfoSection({ article, onUpdate }: InfoSectionProps) {
   const updateField = async (field: string, value: any) => {
-    await supabase.from("articles").update({ [field]: value }).eq("id", article.id);
+    await supabase
+      .from("articles")
+      .update({ [field]: value })
+      .eq("id", article.id);
+
     onUpdate();
   };
 
@@ -67,7 +71,7 @@ export default function InfoSection({ article, onUpdate }: Props) {
         </select>
       </div>
 
-      {/* 저장 버튼 */}
+      {/* 저장 */}
       <button
         className="w-full py-3 bg-green-600 text-white rounded"
         onClick={() => alert("저장되었습니다.")}
