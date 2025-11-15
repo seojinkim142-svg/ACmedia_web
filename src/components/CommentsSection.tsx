@@ -30,7 +30,10 @@ export default function CommentsSection({ comments, postId, onUpdate }: Props) {
   };
 
   const saveEdit = async () => {
-    await supabase.from("comments").update({ content: editContent }).eq("id", editId);
+    await supabase.from("comments")
+      .update({ content: editContent })
+      .eq("id", editId);
+
     setEditId(null);
     setEditContent("");
     onUpdate();
@@ -43,31 +46,41 @@ export default function CommentsSection({ comments, postId, onUpdate }: Props) {
       {comments.map((c) => (
         <div key={c.id} className="border p-2 rounded-md bg-gray-50 mb-2">
           {editId === c.id ? (
-            <>
+            <div>
               <textarea
                 className="w-full border rounded p-2"
                 value={editContent}
                 onChange={(e) => setEditContent(e.target.value)}
               />
               <div className="flex gap-2 mt-2">
-                <button onClick={saveEdit} className="px-3 py-1 bg-blue-600 text-white rounded">저장</button>
-                <button onClick={() => setEditId(null)} className="px-3 py-1 bg-gray-300 rounded">취소</button>
+                <button onClick={saveEdit} className="px-3 py-1 bg-blue-600 text-white rounded">
+                  저장
+                </button>
+                <button onClick={() => setEditId(null)} className="px-3 py-1 bg-gray-300 rounded">
+                  취소
+                </button>
               </div>
-            </>
+            </div>
           ) : (
-            <>
+            <div>
               <div>{c.content}</div>
               <div className="text-xs text-gray-500">{new Date(c.created_at).toLocaleString()}</div>
 
               <div className="flex gap-4 text-sm mt-2">
-                <button onClick={() => { setEditId(c.id); setEditContent(c.content); }} className="text-blue-600">
+                <button
+                  onClick={() => {
+                    setEditId(c.id);
+                    setEditContent(c.content);
+                  }}
+                  className="text-blue-600"
+                >
                   수정
                 </button>
                 <button onClick={() => deleteComment(c.id)} className="text-red-600">
                   삭제
                 </button>
               </div>
-            </>
+            </div>
           )}
         </div>
       ))}

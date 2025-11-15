@@ -39,7 +39,6 @@ export default function InfoSection({ article, onUpdate }: InfoProps) {
   return (
     <div className="space-y-6">
 
-      {/* 제목 */}
       <div>
         <h3 className="font-bold mb-1">제목</h3>
         <input
@@ -49,7 +48,6 @@ export default function InfoSection({ article, onUpdate }: InfoProps) {
         />
       </div>
 
-      {/* 요약 */}
       <div>
         <h3 className="font-bold mb-1">요약</h3>
         <textarea
@@ -60,7 +58,6 @@ export default function InfoSection({ article, onUpdate }: InfoProps) {
         />
       </div>
 
-      {/* 본문 */}
       <div>
         <h3 className="font-bold mb-1">본문</h3>
         <textarea
@@ -71,7 +68,6 @@ export default function InfoSection({ article, onUpdate }: InfoProps) {
         />
       </div>
 
-      {/* 에디터 */}
       <div>
         <h3 className="font-bold mb-1">에디터</h3>
         <input
@@ -81,7 +77,6 @@ export default function InfoSection({ article, onUpdate }: InfoProps) {
         />
       </div>
 
-      {/* 출처 */}
       <div>
         <h3 className="font-bold mb-1">출처</h3>
         <select
@@ -95,7 +90,6 @@ export default function InfoSection({ article, onUpdate }: InfoProps) {
         </select>
       </div>
 
-      {/* 콘텐츠 출처 */}
       <div>
         <h3 className="font-bold mb-1">콘텐츠 출처</h3>
         <input
@@ -105,7 +99,6 @@ export default function InfoSection({ article, onUpdate }: InfoProps) {
         />
       </div>
 
-      {/* 상태 */}
       <div>
         <h3 className="font-bold mb-1">상태</h3>
         <select
@@ -119,7 +112,6 @@ export default function InfoSection({ article, onUpdate }: InfoProps) {
         </select>
       </div>
 
-      {/* 저장 */}
       <button
         onClick={save}
         className="px-4 py-2 w-full bg-green-600 text-white rounded"

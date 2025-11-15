@@ -16,7 +16,6 @@ export default function DetailModal({ isOpen, onClose, item }: DetailModalProps)
 
   const loadArticleInfo = async () => {
     if (!item?.id) return;
-
     const { data } = await supabase
       .from("articles")
       .select("*")
@@ -28,7 +27,6 @@ export default function DetailModal({ isOpen, onClose, item }: DetailModalProps)
 
   const loadComments = async () => {
     if (!item?.id) return;
-
     const { data } = await supabase
       .from("comments")
       .select("*")
@@ -40,37 +38,36 @@ export default function DetailModal({ isOpen, onClose, item }: DetailModalProps)
 
   useEffect(() => {
     if (item?.id) {
+      setArticle(item);
       loadArticleInfo();
       loadComments();
     }
   }, [item]);
 
-  if (!isOpen || !item) return null;
+  // ★ 팝업 여부는 isOpen만 체크해야 정상 작동
+  if (!isOpen) return null;
+
+  if (!article) return null;
 
   return (
     <div className="fixed inset-0 bg-black/40 flex justify-center items-start z-50 overflow-auto">
       <div className="bg-white w-full max-w-2xl rounded-xl shadow-xl max-h-[90vh] overflow-hidden mt-10">
 
-        {/* Header */}
         <div className="flex justify-between items-center p-4 border-b">
-          <h2 className="text-xl font-bold">{article?.title}</h2>
+          <h2 className="text-xl font-bold">{article.title}</h2>
           <button onClick={onClose} className="text-2xl text-gray-600">×</button>
         </div>
 
-        {/* Body */}
         <div className="p-4 space-y-8 overflow-y-auto">
 
-          {/* 이미지 */}
           <ImageSection
-            images={article?.images || []}
-            articleId={article?.id}
+            images={article.images || []}
+            articleId={article.id}
             onUpdate={loadArticleInfo}
           />
 
-          {/* 정보 섹션(제목/요약/본문/출처/상태 등) */}
           <InfoSection article={article} onUpdate={loadArticleInfo} />
 
-          {/* 댓글 */}
           <CommentsSection
             comments={comments}
             postId={article.id}
