@@ -51,32 +51,37 @@ export default function WritePage() {
       {/* 전체 좌측 정렬 */}
       <div className="flex flex-col items-start w-full px-6 mt-6 gap-4">
 
+        {/* 제목 */}
         <label className="font-semibold">제목</label>
         <input
-          className="border rounded p-2 w-full max-w-xl"
+          className="border rounded p-2 w-full"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
         />
 
+        {/* 요약 */}
         <label className="font-semibold">요약</label>
         <textarea
-          className="border rounded p-2 w-full max-w-xl"
+          className="border rounded p-2 w-full"
           rows={3}
           value={summary}
           onChange={(e) => setSummary(e.target.value)}
         />
 
+        {/* 본문 */}
         <label className="font-semibold">본문</label>
         <textarea
-          className="border rounded p-2 w-full max-w-xl"
+          className="border rounded p-2 w-full"
           rows={8}
           value={body}
           onChange={(e) => setBody(e.target.value)}
         />
 
+        {/* 이미지 업로드 */}
         <label className="font-semibold">이미지 업로드</label>
         <input type="file" accept="image/*" onChange={uploadNewImage} />
 
+        {/* 업로드된 이미지 썸네일 */}
         <div className="flex gap-2 flex-wrap mt-2">
           {images.map((img, i) => (
             <img
@@ -87,16 +92,18 @@ export default function WritePage() {
           ))}
         </div>
 
+        {/* 에디터 */}
         <label className="font-semibold">에디터</label>
         <input
-          className="border rounded p-2 w-full max-w-xl"
+          className="border rounded p-2 w-full"
           value={editor}
           onChange={(e) => setEditor(e.target.value)}
         />
 
+        {/* 출처 */}
         <label className="font-semibold">출처</label>
         <select
-          className="border rounded p-2 w-full max-w-xl"
+          className="border rounded p-2 w-full"
           value={source}
           onChange={(e) => setSource(e.target.value)}
         >
@@ -105,16 +112,18 @@ export default function WritePage() {
           ))}
         </select>
 
+        {/* 콘텐츠 출처 */}
         <label className="font-semibold">콘텐츠 출처</label>
         <input
-          className="border rounded p-2 w-full max-w-xl"
+          className="border rounded p-2 w-full"
           value={contentSource}
           onChange={(e) => setContentSource(e.target.value)}
         />
 
+        {/* 상태 */}
         <label className="font-semibold">상태</label>
         <select
-          className="border rounded p-2 w-full max-w-xl"
+          className="border rounded p-2 w-full"
           value={status}
           onChange={(e) => setStatus(e.target.value)}
         >
@@ -123,6 +132,7 @@ export default function WritePage() {
           ))}
         </select>
 
+        {/* 저장 버튼 */}
         <button
           className="px-6 py-3 bg-green-600 text-white rounded mt-4"
           onClick={saveArticle}
