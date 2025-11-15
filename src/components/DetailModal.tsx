@@ -71,29 +71,37 @@ const DetailModal = ({ isOpen, onClose, item }: DetailModalProps) => {
         {/* BODY */}
         <div className="p-4 overflow-y-auto space-y-6">
 
-          {/* 1) 요약 */}
+          {/* 요약 */}
           <div>
-            <h3 className="font-bold">요약</h3>
-            <p>{article.summary}</p>
+            <textarea
+              readOnly
+              className="w-full border rounded p-2 text-sm h-20"
+              value={article.summary || ""}
+              placeholder="요약"
+            />
           </div>
 
-          {/* 2) 본문 */}
+          {/* 본문 */}
           <div>
-            <h3 className="font-bold">본문</h3>
-            <p className="whitespace-pre-line">{article.body}</p>
+            <textarea
+              readOnly
+              className="w-full border rounded p-2 text-sm h-48 whitespace-pre-line"
+              value={article.body || ""}
+              placeholder="본문"
+            />
           </div>
 
-          {/* 3) 이미지 */}
+          {/* 이미지 */}
           <ImageSection
             images={article.images?.length ? article.images : [DEFAULT_IMAGE]}
             articleId={article.id}
             onUpdate={loadArticleInfo}
           />
 
-          {/* 4) 출처 · 에디터 · 상태 · 저장 */}
+          {/* 출처 / 에디터 / 상태 / 저장 */}
           <InfoSection article={article} onUpdate={loadArticleInfo} />
 
-          {/* 5) 댓글 */}
+          {/* 댓글 */}
           <CommentsSection
             comments={comments}
             postId={article.id}
