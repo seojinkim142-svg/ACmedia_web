@@ -17,6 +17,9 @@ const DetailModal = ({ isOpen, onClose, item }: DetailModalProps) => {
   const [source, setSource] = useState(item.source);
   const [status, setStatus] = useState(item.status);
 
+  // 추가된 콘텐츠 출처
+  const [contentSource, setContentSource] = useState(item.content_source || "");
+
   // 댓글
   const [comment, setComment] = useState("");
   const [comments, setComments] = useState<any[]>([]);
@@ -42,6 +45,7 @@ const DetailModal = ({ isOpen, onClose, item }: DetailModalProps) => {
       if (data.source) setSource(data.source);
       if (data.status) setStatus(data.status);
       if (data.images) setPendingImages(data.images);
+      if (data.content_source) setContentSource(data.content_source); // ★ 추가됨
     }
   };
 
@@ -62,13 +66,14 @@ const DetailModal = ({ isOpen, onClose, item }: DetailModalProps) => {
     }
   }, [item]);
 
-  // -------------------------  저장 (출처 + 상태 + 이미지)  -------------------------
+  // -------------------------  저장 (출처 + 콘텐츠 출처 + 상태 + 이미지)  -------------------------
   const handleSaveArticle = async () => {
     await supabase
       .from("articles")
       .update({
         source,
         status,
+        content_source: contentSource, // ★ 추가됨
         images: pendingImages,
         updated_at: new Date().toISOString(),
       })
@@ -121,7 +126,7 @@ const DetailModal = ({ isOpen, onClose, item }: DetailModalProps) => {
 
     if (url) {
       const newImages = [...pendingImages, url];
-      setPendingImages(newImages); // DB 저장 없음
+      setPendingImages(newImages);
     }
 
     setUploading(false);
@@ -163,7 +168,7 @@ const DetailModal = ({ isOpen, onClose, item }: DetailModalProps) => {
             <p className="text-gray-700 whitespace-pre-line">{item.body}</p>
           </div>
 
-          {/* 이미지 슬라이더 */}
+          {/* 슬라이더 */}
           {pendingImages.length > 0 && (
             <div className="space-y-3">
               <div className="relative flex justify-center items-center">
@@ -219,10 +224,12 @@ const DetailModal = ({ isOpen, onClose, item }: DetailModalProps) => {
             )}
           </div>
 
-          {/* 출처 / 상태 */}
+          {/* 출처 / 콘텐츠 출처 / 상태 */}
           <div className="space-y-3 mt-4">
+
+            {/* 출처 */}
             <div>
-              <h4 className="font-bold mb-1">콘텐츠 출처</h4>
+              <h4 className="font-bold mb-1">출처</h4>
               <select
                 className="border rounded-md px-3 py-1"
                 value={source}
@@ -234,6 +241,19 @@ const DetailModal = ({ isOpen, onClose, item }: DetailModalProps) => {
               </select>
             </div>
 
+            {/* 콘텐츠 출처 추가 */}
+            <div>
+              <h4 className="font-bold mb-1">콘텐츠 출처</h4>
+              <input
+                type="text"
+                className="border rounded-md px-3 py-1 w-full"
+                value={contentSource}
+                onChange={(e) => setContentSource(e.target.value)}
+                placeholder="예: CNN, Reddit r/news, 인스타그램 계정명 등"
+              />
+            </div>
+
+            {/* 상태 */}
             <div>
               <h4 className="font-bold mb-1">상태</h4>
               <select
