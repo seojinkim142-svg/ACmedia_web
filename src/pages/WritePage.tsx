@@ -50,7 +50,7 @@ export default function WritePage() {
     <div className="w-full">
       <Navbar />
 
-      {/* 전체 좌측 정렬 적용 */}
+      {/* 전체 좌측 정렬 */}
       <div className="flex flex-col items-start w-full px-6 mt-6 gap-4">
 
         {/* 제목 */}
@@ -83,6 +83,7 @@ export default function WritePage() {
         <label className="font-semibold">이미지 업로드</label>
         <input type="file" accept="image/*" onChange={uploadNewImage} />
 
+        {/* 업로드된 이미지 썸네일 */}
         <div className="flex gap-2 flex-wrap mt-2">
           {images.map((img, i) => (
             <img
@@ -133,7 +134,7 @@ export default function WritePage() {
           ))}
         </select>
 
-        {/* 저장 */}
+        {/* 저장 버튼 */}
         <button
           className="px-6 py-3 bg-green-600 text-white rounded mt-4"
           onClick={saveArticle}
