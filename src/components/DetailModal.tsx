@@ -62,21 +62,38 @@ const DetailModal = ({ isOpen, onClose, item }: DetailModalProps) => {
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
       <div className="bg-white w-full max-w-2xl rounded-xl shadow-xl max-h-[90vh] overflow-hidden flex flex-col">
 
+        {/* HEADER */}
         <div className="flex justify-between items-center p-4 border-b">
           <h2 className="text-xl font-semibold">{article.title}</h2>
           <button onClick={onClose} className="text-gray-500 text-2xl">×</button>
         </div>
 
+        {/* BODY */}
         <div className="p-4 overflow-y-auto space-y-6">
 
+          {/* 1) 요약 */}
+          <div>
+            <h3 className="font-bold">요약</h3>
+            <p>{article.summary}</p>
+          </div>
+
+          {/* 2) 본문 */}
+          <div>
+            <h3 className="font-bold">본문</h3>
+            <p className="whitespace-pre-line">{article.body}</p>
+          </div>
+
+          {/* 3) 이미지 */}
           <ImageSection
             images={article.images?.length ? article.images : [DEFAULT_IMAGE]}
             articleId={article.id}
             onUpdate={loadArticleInfo}
           />
 
+          {/* 4) 출처 · 에디터 · 상태 · 저장 */}
           <InfoSection article={article} onUpdate={loadArticleInfo} />
 
+          {/* 5) 댓글 */}
           <CommentsSection
             comments={comments}
             postId={article.id}
