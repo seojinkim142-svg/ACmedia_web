@@ -27,9 +27,8 @@ const DetailModal = ({ isOpen, onClose, item }: DetailModalProps) => {
 
   const [uploading, setUploading] = useState(false);
 
-  // ----------------------------
-  // 불러오기 functions
-  // ----------------------------
+  // 변경 사항: 이미지 DB 저장 대신 "대기 상태 저장"
+  const [pendingImages, setPendingImages] = useState<string[]>(item.images || []);
 
   const loadArticleInfo = async () => {
     const { data } = await supabase
@@ -41,7 +40,10 @@ const DetailModal = ({ isOpen, onClose, item }: DetailModalProps) => {
     if (data) {
       if (data.source) setSource(data.source);
       if (data.status) setStatus(data.status);
-      if (data.images) item.images = data.images; // 슬라이더 반영
+      if (data.images) {
+        setPendingImages(data.images);
+        item.images = data.images;
+      }
     }
   };
 
@@ -62,9 +64,7 @@ const DetailModal = ({ isOpen, onClose, item }: DetailModalProps) => {
     }
   }, [item]);
 
-  // ----------------------------
-  // 출처/상태 저장
-  // ----------------------------
+  // 출처 + 상태 + 이미지까지 한 번에 저장
   const handleSaveArticle = async () => {
     await supabase.from("articles").upsert(
       {
@@ -75,18 +75,36 @@ const DetailModal = ({ isOpen, onClose, item }: DetailModalProps) => {
         image: item.image,
         source: source,
         status: status,
-        images: item.images || [],
+        images: pendingImages,
         updated_at: new Date().toISOString(),
       },
       { onConflict: "id" }
     );
 
+    // 화면 반영
+    item.images = pendingImages;
+
     alert("저장되었습니다.");
   };
 
-  // ----------------------------
-  // 댓글 작성
-  // ----------------------------
+  // 이미지 업로드 (DB 저장은 하지 않음 → pendingImages에만 저장)
+  const handleUploadImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+
+    const file = e.target.files[0];
+    setUploading(true);
+
+    const url = await uploadImage(file);
+
+    if (url) {
+      const newImages = [...pendingImages, url];
+      setPendingImages(newImages);
+      item.images = newImages;
+    }
+
+    setUploading(false);
+  };
+
   const handleSaveComment = async () => {
     if (!comment.trim()) return;
 
@@ -99,17 +117,11 @@ const DetailModal = ({ isOpen, onClose, item }: DetailModalProps) => {
     loadComments();
   };
 
-  // ----------------------------
-  // 댓글 삭제
-  // ----------------------------
   const handleDeleteComment = async (id: number) => {
     await supabase.from("comments").delete().eq("id", id);
     loadComments();
   };
 
-  // ----------------------------
-  // 댓글 수정
-  // ----------------------------
   const handleEditSave = async () => {
     if (!editContent.trim()) return;
 
@@ -123,49 +135,20 @@ const DetailModal = ({ isOpen, onClose, item }: DetailModalProps) => {
     loadComments();
   };
 
-  // ----------------------------
-  // 이미지 업로드
-  // ----------------------------
-  const handleUploadImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files || e.target.files.length === 0) return;
-
-    const file = e.target.files[0];
-    setUploading(true);
-
-    const url = await uploadImage(file);
-
-    if (url) {
-      const newImages = [...(item.images || []), url];
-
-      await supabase
-        .from("articles")
-        .update({ images: newImages })
-        .eq("id", item.id);
-
-      item.images = newImages; // 슬라이더 반영
-    }
-
-    setUploading(false);
-  };
-
-  // ----------------------------
-  // 슬라이더 이동
-  // ----------------------------
   const nextImage = () => {
-    if (!item.images || item.images.length === 0) return;
-    setCurrentIndex((prev) => (prev + 1) % item.images.length);
+    if (!pendingImages || pendingImages.length === 0) return;
+    setCurrentIndex((prev) => (prev + 1) % pendingImages.length);
   };
 
   const prevImage = () => {
-    if (!item.images || item.images.length === 0) return;
-    setCurrentIndex((prev) => (prev - 1 + item.images.length) % item.images.length);
+    if (!pendingImages || pendingImages.length === 0) return;
+    setCurrentIndex((prev) => (prev - 1 + pendingImages.length) % pendingImages.length);
   };
 
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-9999">
       <div className="bg-white w-full max-w-2xl rounded-xl shadow-xl max-h-[90vh] overflow-hidden flex flex-col">
 
-        {/* HEADER */}
         <div className="flex justify-between items-center p-4 border-b">
           <h2 className="text-xl font-semibold">{item.title}</h2>
           <button onClick={onClose} className="text-gray-500 text-2xl">×</button>
@@ -173,20 +156,17 @@ const DetailModal = ({ isOpen, onClose, item }: DetailModalProps) => {
 
         <div className="p-4 overflow-y-auto space-y-6">
 
-          {/* SUMMARY */}
           <div>
             <h3 className="font-bold mb-1">한눈에 보기</h3>
             <p className="text-gray-700">{item.summary}</p>
           </div>
 
-          {/* BODY */}
           <div>
             <h3 className="font-bold mb-1">본문</h3>
             <p className="text-gray-700 whitespace-pre-line">{item.body}</p>
           </div>
 
-          {/* 이미지 슬라이더 */}
-          {item.images && item.images.length > 0 && (
+          {pendingImages && pendingImages.length > 0 && (
             <div className="space-y-3">
               <div className="relative flex justify-center items-center">
                 <button
@@ -197,7 +177,7 @@ const DetailModal = ({ isOpen, onClose, item }: DetailModalProps) => {
                 </button>
 
                 <img
-                  src={item.images[currentIndex]}
+                  src={pendingImages[currentIndex]}
                   className="w-64 h-64 object-cover rounded-lg shadow"
                 />
 
@@ -209,9 +189,8 @@ const DetailModal = ({ isOpen, onClose, item }: DetailModalProps) => {
                 </button>
               </div>
 
-              {/* 썸네일 */}
               <div className="flex justify-center gap-2">
-                {item.images.map((img: string, i: number) => (
+                {pendingImages.map((img: string, i: number) => (
                   <img
                     key={i}
                     src={img}
@@ -225,7 +204,6 @@ const DetailModal = ({ isOpen, onClose, item }: DetailModalProps) => {
             </div>
           )}
 
-          {/* 이미지 업로드 */}
           <div>
             <h4 className="font-bold mb-1">이미지 업로드</h4>
 
@@ -241,7 +219,6 @@ const DetailModal = ({ isOpen, onClose, item }: DetailModalProps) => {
             )}
           </div>
 
-          {/* 출처 / 상태 */}
           <div className="space-y-3 mt-4">
             <div>
               <h4 className="font-bold mb-1">콘텐츠 출처</h4>
@@ -277,7 +254,6 @@ const DetailModal = ({ isOpen, onClose, item }: DetailModalProps) => {
             </button>
           </div>
 
-          {/* 댓글 */}
           <div>
             <h3 className="font-bold mb-1">댓글</h3>
 
