@@ -9,7 +9,8 @@ import WritePage from "./pages/WritePage";
 
 export default function App() {
   return (
-    <div className="p-6">
+    <div className="w-full min-h-screen">
+      {/* 좌측 정렬 Navbar */}
       <Navbar />
 
       <Routes>
