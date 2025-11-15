@@ -16,6 +16,7 @@ export default function DetailModal({ isOpen, onClose, item }: DetailModalProps)
 
   const loadArticleInfo = async () => {
     if (!item?.id) return;
+
     const { data } = await supabase
       .from("articles")
       .select("*")
@@ -27,6 +28,7 @@ export default function DetailModal({ isOpen, onClose, item }: DetailModalProps)
 
   const loadComments = async () => {
     if (!item?.id) return;
+
     const { data } = await supabase
       .from("comments")
       .select("*")
@@ -44,30 +46,34 @@ export default function DetailModal({ isOpen, onClose, item }: DetailModalProps)
     }
   }, [item]);
 
-  // ★ 팝업 여부는 isOpen만 체크해야 정상 작동
+  /** 팝업 자체가 열려있는지만 판단 */
   if (!isOpen) return null;
-
   if (!article) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex justify-center items-start z-50 overflow-auto">
-      <div className="bg-white w-full max-w-2xl rounded-xl shadow-xl max-h-[90vh] overflow-hidden mt-10">
+    <div className="fixed inset-0 bg-black/40 flex justify-center items-start z-50 overflow-hidden">
+      <div className="bg-white w-full max-w-2xl rounded-xl shadow-xl max-h-[90vh] overflow-y-auto mt-10">
 
+        {/* Header */}
         <div className="flex justify-between items-center p-4 border-b">
-          <h2 className="text-xl font-bold">{article.title}</h2>
+          <h2 className="text-xl font-bold">{article?.title}</h2>
           <button onClick={onClose} className="text-2xl text-gray-600">×</button>
         </div>
 
-        <div className="p-4 space-y-8 overflow-y-auto">
+        {/* Body */}
+        <div className="p-4 space-y-10">
 
+          {/* 1) 제목 + 요약 + 본문 + 에디터 + 출처 + 상태 */}
+          <InfoSection article={article} onUpdate={loadArticleInfo} />
+
+          {/* 2) 이미지 (슬라이더 + 다운로드 + 삭제 + 썸네일 + 업로드) */}
           <ImageSection
             images={article.images || []}
             articleId={article.id}
             onUpdate={loadArticleInfo}
           />
 
-          <InfoSection article={article} onUpdate={loadArticleInfo} />
-
+          {/* 3) 댓글 */}
           <CommentsSection
             comments={comments}
             postId={article.id}
