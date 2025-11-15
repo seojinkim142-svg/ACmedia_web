@@ -1,115 +1,76 @@
 import { supabase } from "../supabaseClient";
-import { useState } from "react";
 
-const sourceList = ["기사", "인스타", "AI", "창의"];
-const statusList = ["리뷰", "작업", "업로드", "추천", "중복", "보류", "업로드대기"];
+interface Props {
+  article: any;
+  onUpdate: () => void;
+}
 
-export default function InfoSection({ article, onUpdate }: any) {
-  const [title, setTitle] = useState(article.title || "");
-  const [summary, setSummary] = useState(article.summary || "");
-  const [body, setBody] = useState(article.body || "");
-  const [editor, setEditor] = useState(article.editor || "");
-  const [source, setSource] = useState(article.source || "기사");
-  const [contentSource, setContentSource] = useState(article.content_source || "");
-  const [status, setStatus] = useState(article.status || "리뷰");
-
-  const save = async () => {
-    await supabase
-      .from("articles")
-      .update({
-        title,
-        summary,
-        body,
-        editor,
-        source,
-        content_source: contentSource,
-        status,
-      })
-      .eq("id", article.id);
-
-    alert("저장되었습니다.");
+export default function InfoSection({ article, onUpdate }: Props) {
+  const updateField = async (field: string, value: any) => {
+    await supabase.from("articles").update({ [field]: value }).eq("id", article.id);
     onUpdate();
   };
 
   return (
-    <div className="space-y-4">
+    <div className="w-full space-y-4">
 
-      <div>
-        <label className="font-semibold">제목</label>
-        <input
-          className="border p-2 rounded w-full"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-        />
-      </div>
-
-      <div>
-        <label className="font-semibold">요약</label>
-        <textarea
-          className="border p-2 rounded w-full"
-          rows={3}
-          value={summary}
-          onChange={(e) => setSummary(e.target.value)}
-        />
-      </div>
-
-      <div>
-        <label className="font-semibold">본문</label>
-        <textarea
-          className="border p-2 rounded w-full"
-          rows={8}
-          value={body}
-          onChange={(e) => setBody(e.target.value)}
-        />
-      </div>
-
+      {/* 에디터 */}
       <div>
         <label className="font-semibold">에디터</label>
         <input
-          className="border p-2 rounded w-full"
-          value={editor}
-          onChange={(e) => setEditor(e.target.value)}
+          className="border rounded p-2 w-full"
+          value={article.editor || ""}
+          onChange={(e) => updateField("editor", e.target.value)}
         />
       </div>
 
+      {/* 출처 */}
       <div>
         <label className="font-semibold">출처</label>
         <select
-          className="border p-2 rounded w-full"
-          value={source}
-          onChange={(e) => setSource(e.target.value)}
+          className="border rounded p-2 w-full"
+          value={article.source || "기사"}
+          onChange={(e) => updateField("source", e.target.value)}
         >
-          {sourceList.map((s) => (
-            <option key={s}>{s}</option>
-          ))}
+          <option>기사</option>
+          <option>인스타</option>
+          <option>AI</option>
+          <option>창의</option>
         </select>
       </div>
 
+      {/* 콘텐츠 출처 */}
       <div>
         <label className="font-semibold">콘텐츠 출처</label>
         <input
-          className="border p-2 rounded w-full"
-          value={contentSource}
-          onChange={(e) => setContentSource(e.target.value)}
+          className="border rounded p-2 w-full"
+          value={article.content_source || ""}
+          onChange={(e) => updateField("content_source", e.target.value)}
         />
       </div>
 
+      {/* 상태 */}
       <div>
         <label className="font-semibold">상태</label>
         <select
-          className="border p-2 rounded w-full"
-          value={status}
-          onChange={(e) => setStatus(e.target.value)}
+          className="border rounded p-2 w-full"
+          value={article.status || ""}
+          onChange={(e) => updateField("status", e.target.value)}
         >
-          {statusList.map((s) => (
-            <option key={s}>{s}</option>
-          ))}
+          <option>리뷰</option>
+          <option>작업</option>
+          <option>업로드</option>
+          <option>추천</option>
+          <option>중복</option>
+          <option>보류</option>
+          <option>업로드대기</option>
         </select>
       </div>
 
+      {/* 저장 버튼 */}
       <button
-        className="bg-green-600 text-white py-2 rounded w-full"
-        onClick={save}
+        className="w-full py-3 bg-green-600 text-white rounded"
+        onClick={() => alert("저장되었습니다.")}
       >
         저장
       </button>

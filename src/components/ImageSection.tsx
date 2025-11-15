@@ -2,137 +2,97 @@ import { useState } from "react";
 import { supabase } from "../supabaseClient";
 import { uploadImage } from "../lib/uploadImages";
 
-interface ImageSectionProps {
+interface Props {
   images: string[];
   articleId: number;
   onUpdate: () => void;
 }
 
-export default function ImageSection({
-  images,
-  articleId,
-  onUpdate,
-}: ImageSectionProps) {
-  const [index, setIndex] = useState<number>(0);
-  const [preview, setPreview] = useState<string | null>(null);
+export default function ImageSection({ images, articleId, onUpdate }: Props) {
+  const [index, setIndex] = useState(0);
+  const current = images.length > 0 ? images[index] : "https://placehold.co/120x120?text=No+Image";
 
-  const next = () => {
-    if (images.length > 0) {
-      setIndex((prev: number) => (prev + 1) % images.length);
-    }
-  };
-
-  const prev = () => {
-    if (images.length > 0) {
-      setIndex((prev: number) => (prev - 1 + images.length) % images.length);
-    }
-  };
-
-  const downloadImg = (url: string) => {
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "image.png";
-    a.click();
-  };
-
-  const deleteImg = async () => {
-    const newList = images.filter((_, i: number) => i !== index);
+  const deleteImage = async () => {
+    const updated = images.filter((_, i) => i !== index);
 
     await supabase
       .from("articles")
-      .update({ images: newList })
+      .update({ images: updated })
       .eq("id", articleId);
 
     onUpdate();
   };
 
   const uploadNew = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files || !e.target.files[0]) return;
+    if (!e.target.files?.[0]) return;
 
     const url = await uploadImage(e.target.files[0]);
-    if (!url) return;
-
-    const newList = [...images, url];
+    const updated = [...images, url];
 
     await supabase
       .from("articles")
-      .update({ images: newList })
+      .update({ images: updated })
       .eq("id", articleId);
 
     onUpdate();
   };
 
   return (
-    <div className="mb-6">
-      {/* 전체 이미지 큰 미리보기 */}
-      {preview && (
-        <div
-          className="fixed inset-0 bg-black/80 flex items-center justify-center z-50"
-          onClick={() => setPreview(null)}
+    <div className="w-full flex flex-col items-center gap-4">
+
+      {/* 큰 이미지 */}
+      <img src={current} className="w-64 h-64 object-cover border rounded" />
+
+      {/* 좌우 버튼 */}
+      <div className="flex gap-6">
+        <button
+          className="px-4 py-2 bg-gray-700 text-white rounded"
+          onClick={() => setIndex((i) => (i - 1 + images.length) % images.length)}
         >
-          <img src={preview} className="max-w-[90vw] max-h-[90vh]" />
-        </div>
-      )}
+          &lt;
+        </button>
 
-      {/* 이미지 슬라이더 */}
-      {images.length > 0 && (
-        <div className="text-center mb-4">
-          <div className="relative flex justify-center items-center">
-            <button
-              className="absolute left-0 bg-gray-700 text-white px-2 py-1 rounded"
-              onClick={prev}
-            >
-              ‹
-            </button>
+        <button
+          className="px-4 py-2 bg-gray-700 text-white rounded"
+          onClick={() => setIndex((i) => (i + 1) % images.length)}
+        >
+          &gt;
+        </button>
+      </div>
 
-            <img
-              src={images[index]}
-              className="w-64 h-64 object-cover rounded cursor-pointer"
-              onClick={() => setPreview(images[index])}
-            />
+      {/* 다운로드 & 삭제 */}
+      <div className="flex gap-4">
+        <a
+          href={current}
+          download
+          className="px-4 py-2 bg-blue-600 text-white rounded"
+        >
+          다운로드
+        </a>
 
-            <button
-              className="absolute right-0 bg-gray-700 text-white px-2 py-1 rounded"
-              onClick={next}
-            >
-              ›
-            </button>
-          </div>
+        <button
+          onClick={deleteImage}
+          className="px-4 py-2 bg-red-600 text-white rounded"
+        >
+          삭제
+        </button>
+      </div>
 
-          {/* 썸네일 목록 */}
-          <div className="flex justify-center mt-3 gap-2">
-            {images.map((img: string, i: number) => (
-              <img
-                key={i}
-                src={img}
-                className={`w-14 h-14 cursor-pointer border ${
-                  i === index ? "border-blue-500" : "border-gray-300"
-                }`}
-                onClick={() => setIndex(i)}
-              />
-            ))}
-          </div>
+      {/* 썸네일 */}
+      <div className="flex gap-2 flex-wrap justify-center">
+        {images.map((img, i) => (
+          <img
+            key={i}
+            src={img}
+            className={`w-12 h-12 border rounded cursor-pointer ${
+              i === index ? "ring-2 ring-blue-500" : ""
+            }`}
+            onClick={() => setIndex(i)}
+          />
+        ))}
+      </div>
 
-          {/* 다운로드 / 삭제 */}
-          <div className="flex justify-center gap-3 mt-4">
-            <button
-              className="px-3 py-1 bg-gray-800 text-white rounded"
-              onClick={() => downloadImg(images[index])}
-            >
-              다운로드
-            </button>
-
-            <button
-              className="px-3 py-1 bg-red-600 text-white rounded"
-              onClick={deleteImg}
-            >
-              삭제
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* 이미지 업로드 */}
+      {/* 업로드 */}
       <input type="file" accept="image/*" onChange={uploadNew} />
     </div>
   );

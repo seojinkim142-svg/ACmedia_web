@@ -40,40 +40,75 @@ export default function DetailModal({ isOpen, onClose, item }: DetailModalProps)
 
   useEffect(() => {
     if (item?.id) {
-      setArticle(item);
       loadArticleInfo();
       loadComments();
     }
   }, [item]);
 
-  /** 팝업 자체가 열려있는지만 판단 */
-  if (!isOpen) return null;
-  if (!article) return null;
+  if (!isOpen || !item) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex justify-center items-start z-50 overflow-hidden">
-      <div className="bg-white w-full max-w-2xl rounded-xl shadow-xl max-h-[90vh] overflow-y-auto mt-10">
+    <div className="fixed inset-0 bg-black/40 z-50 flex justify-center items-start overflow-auto">
+      <div className="bg-white w-full max-w-2xl rounded-lg shadow-xl mt-10 max-h-[90vh] overflow-auto">
 
-        {/* Header */}
+        {/* HEADER */}
         <div className="flex justify-between items-center p-4 border-b">
           <h2 className="text-xl font-bold">{article?.title}</h2>
           <button onClick={onClose} className="text-2xl text-gray-600">×</button>
         </div>
 
-        {/* Body */}
-        <div className="p-4 space-y-10">
+        {/* BODY */}
+        <div className="p-4 space-y-6">
 
-          {/* 1) 제목 + 요약 + 본문 + 에디터 + 출처 + 상태 */}
-          <InfoSection article={article} onUpdate={loadArticleInfo} />
+          {/* 제목 */}
+          <div>
+            <label className="font-semibold">제목</label>
+            <input
+              className="border rounded p-2 w-full"
+              value={article?.title || ""}
+              onChange={(e) =>
+                setArticle((prev: any) => ({ ...prev, title: e.target.value }))
+              }
+            />
+          </div>
 
-          {/* 2) 이미지 (슬라이더 + 다운로드 + 삭제 + 썸네일 + 업로드) */}
+          {/* 요약 */}
+          <div>
+            <label className="font-semibold">요약</label>
+            <textarea
+              rows={3}
+              className="border rounded p-2 w-full"
+              value={article?.summary || ""}
+              onChange={(e) =>
+                setArticle((prev: any) => ({ ...prev, summary: e.target.value }))
+              }
+            />
+          </div>
+
+          {/* 본문 */}
+          <div>
+            <label className="font-semibold">본문</label>
+            <textarea
+              rows={6}
+              className="border rounded p-2 w-full"
+              value={article?.body || ""}
+              onChange={(e) =>
+                setArticle((prev: any) => ({ ...prev, body: e.target.value }))
+              }
+            />
+          </div>
+
+          {/* 이미지 슬라이더 */}
           <ImageSection
-            images={article.images || []}
-            articleId={article.id}
+            images={article?.images || []}
+            articleId={article?.id}
             onUpdate={loadArticleInfo}
           />
 
-          {/* 3) 댓글 */}
+          {/* 에디터 + 출처 + 상태 */}
+          <InfoSection article={article} onUpdate={loadArticleInfo} />
+
+          {/* 댓글 */}
           <CommentsSection
             comments={comments}
             postId={article.id}
