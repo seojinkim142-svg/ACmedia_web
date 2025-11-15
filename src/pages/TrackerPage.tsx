@@ -33,43 +33,40 @@ const TrackerPage = () => {
   }, []);
 
   return (
-    <div className="max-w-3xl mt-6 px-4"> 
-      {/* mx-auto 제거해서 왼쪽 정렬 */}
-
-      <h1 className="text-2xl font-bold mb-4">트래커 페이지</h1>
+    <div className="max-w-3xl mt-4 px-4">
+      <h1 className="text-xl font-bold mb-2">트래커 페이지</h1>
 
       <div className="flex flex-col">
         {articles.map((item, index) => {
-          // 대표 이미지: images[0] 없으면 기본 이미지
           const previewImage =
             item.images && item.images.length > 0
               ? item.images[0]
-              : "https://placehold.co/120x120?text=No+Image";
+              : "https://placehold.co/80x80?text=No+Image";
 
           return (
             <div
               key={item.id}
               onClick={() => setOpenItem(item)}
-              className="flex items-center gap-4 py-4 border-b last:border-b-0 hover:bg-gray-50 transition-colors cursor-pointer"
+              className="flex items-center gap-3 py-2 border-b last:border-b-0 hover:bg-gray-50 transition-colors cursor-pointer"
             >
               {/* 번호 */}
-              <div className="text-3xl font-semibold text-gray-400 w-10 shrink-0 text-center">
+              <div className="text-lg font-semibold text-gray-500 w-8 shrink-0 text-center">
                 {index + 1}
               </div>
 
-              {/* 이미지 */}
+              {/* 이미지 (작게) */}
               <img
                 src={previewImage}
                 alt=""
-                className="w-20 h-20 rounded-md object-cover shrink-0"
+                className="w-14 h-14 rounded-md object-cover shrink-0"
               />
 
               {/* 텍스트 */}
               <div className="flex-1 min-w-0">
-                <div className="font-semibold text-gray-900 line-clamp-1">
+                <div className="font-medium text-gray-900 text-sm line-clamp-1">
                   {item.title}
                 </div>
-                <div className="text-gray-500 text-sm line-clamp-1">
+                <div className="text-gray-500 text-xs line-clamp-1">
                   {item.summary}
                 </div>
               </div>
