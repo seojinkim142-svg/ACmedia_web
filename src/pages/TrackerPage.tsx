@@ -37,7 +37,7 @@ const TrackerPage = () => {
       <h1 className="text-2xl font-bold mb-4">트래커 페이지</h1>
 
       <div className="flex flex-col">
-        {articles.map((item) => {
+        {articles.map((item, index) => {
           // 대표 이미지: images[0] 없으면 기본 이미지
           const previewImage =
             item.images && item.images.length > 0
@@ -52,7 +52,7 @@ const TrackerPage = () => {
             >
               {/* 번호 */}
               <div className="text-3xl font-semibold text-gray-400 w-10 shrink-0 text-center">
-                {item.id}
+                {index + 1}
               </div>
 
               {/* 이미지 */}
