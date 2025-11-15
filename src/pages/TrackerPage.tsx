@@ -33,7 +33,9 @@ const TrackerPage = () => {
   }, []);
 
   return (
-    <div className="max-w-3xl mx-auto mt-6 px-4">
+    <div className="max-w-3xl mt-6 px-4"> 
+      {/* mx-auto 제거해서 왼쪽 정렬 */}
+
       <h1 className="text-2xl font-bold mb-4">트래커 페이지</h1>
 
       <div className="flex flex-col">
