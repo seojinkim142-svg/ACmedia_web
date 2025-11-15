@@ -40,12 +40,17 @@ export default function DetailModal({ isOpen, onClose, item }: DetailModalProps)
 
   useEffect(() => {
     if (item?.id) {
+      setArticle(item); // ★ item 변경 즉시 article 반영
       loadArticleInfo();
       loadComments();
     }
   }, [item]);
 
-  if (!isOpen || !item) return null;
+  // ★ 팝업 열림 여부만 체크 (핵심 수정)
+  if (!isOpen) return null;
+
+  // ★ article 상태 체크 (item 대신)
+  if (!article) return null;
 
   return (
     <div className="fixed inset-0 bg-black/40 z-50 flex justify-center items-start overflow-auto">
@@ -65,7 +70,7 @@ export default function DetailModal({ isOpen, onClose, item }: DetailModalProps)
             <label className="font-semibold">제목</label>
             <input
               className="border rounded p-2 w-full"
-              value={article?.title || ""}
+              value={article.title || ""}
               onChange={(e) =>
                 setArticle((prev: any) => ({ ...prev, title: e.target.value }))
               }
@@ -78,7 +83,7 @@ export default function DetailModal({ isOpen, onClose, item }: DetailModalProps)
             <textarea
               rows={3}
               className="border rounded p-2 w-full"
-              value={article?.summary || ""}
+              value={article.summary || ""}
               onChange={(e) =>
                 setArticle((prev: any) => ({ ...prev, summary: e.target.value }))
               }
@@ -91,7 +96,7 @@ export default function DetailModal({ isOpen, onClose, item }: DetailModalProps)
             <textarea
               rows={6}
               className="border rounded p-2 w-full"
-              value={article?.body || ""}
+              value={article.body || ""}
               onChange={(e) =>
                 setArticle((prev: any) => ({ ...prev, body: e.target.value }))
               }
@@ -100,12 +105,12 @@ export default function DetailModal({ isOpen, onClose, item }: DetailModalProps)
 
           {/* 이미지 슬라이더 */}
           <ImageSection
-            images={article?.images || []}
-            articleId={article?.id}
+            images={article.images || []}
+            articleId={article.id}
             onUpdate={loadArticleInfo}
           />
 
-          {/* 에디터 + 출처 + 상태 */}
+          {/* 에디터 / 출처 / 콘텐츠 출처 / 상태 */}
           <InfoSection article={article} onUpdate={loadArticleInfo} />
 
           {/* 댓글 */}
