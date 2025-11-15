@@ -1,20 +1,22 @@
 import { useEffect, useState } from "react";
 import ImageSection from "./ImageSection";
 import InfoSection from "./InfoSection";
+import CommentsSection from "./CommentsSection";
 import { supabase } from "../supabaseClient";
 
-interface DetailProps {
+interface DetailModalProps {
   isOpen: boolean;
   onClose: () => void;
   item: any | null;
 }
 
-export default function DetailModal({ isOpen, onClose, item }: DetailProps) {
-  if (!isOpen || !item) return null;
-
+export default function DetailModal({ isOpen, onClose, item }: DetailModalProps) {
   const [article, setArticle] = useState<any>(item);
+  const [comments, setComments] = useState<any[]>([]);
 
-  const loadArticle = async () => {
+  const loadArticleInfo = async () => {
+    if (!item?.id) return;
+
     const { data } = await supabase
       .from("articles")
       .select("*")
@@ -24,53 +26,57 @@ export default function DetailModal({ isOpen, onClose, item }: DetailProps) {
     if (data) setArticle(data);
   };
 
+  const loadComments = async () => {
+    if (!item?.id) return;
+
+    const { data } = await supabase
+      .from("comments")
+      .select("*")
+      .eq("post_id", item.id)
+      .order("created_at", { ascending: true });
+
+    if (data) setComments(data);
+  };
+
   useEffect(() => {
-    if (item?.id) loadArticle();
+    if (item?.id) {
+      loadArticleInfo();
+      loadComments();
+    }
   }, [item]);
 
+  if (!isOpen || !item) return null;
+
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-      <div className="bg-white w-full max-w-3xl rounded-xl shadow-xl max-h-[95vh] overflow-y-auto p-6 relative">
+    <div className="fixed inset-0 bg-black/40 flex justify-center items-start z-50 overflow-auto">
+      <div className="bg-white w-full max-w-2xl rounded-xl shadow-xl max-h-[90vh] overflow-hidden mt-10">
 
-        {/* ➤ 닫기 버튼 (원래 위치: 우측 상단) */}
-        <button
-          onClick={onClose}
-          className="absolute top-3 right-4 text-2xl text-gray-600 hover:text-black"
-        >
-          ×
-        </button>
+        {/* Header */}
+        <div className="flex justify-between items-center p-4 border-b">
+          <h2 className="text-xl font-bold">{article?.title}</h2>
+          <button onClick={onClose} className="text-2xl text-gray-600">×</button>
+        </div>
 
-        {/* ➤ 제목 */}
-        <h2 className="text-xl font-semibold mb-4">{article.title}</h2>
+        {/* Body */}
+        <div className="p-4 space-y-8 overflow-y-auto">
 
-        {/* ➤ 요약 */}
-        <label className="font-semibold mb-1 block">요약</label>
-        <textarea
-          className="w-full border rounded p-2 mb-4"
-          rows={3}
-          value={article.summary || ""}
-          readOnly
-        />
+          {/* 이미지 */}
+          <ImageSection
+            images={article?.images || []}
+            articleId={article?.id}
+            onUpdate={loadArticleInfo}
+          />
 
-        {/* ➤ 본문 */}
-        <label className="font-semibold mb-1 block">본문</label>
-        <textarea
-          className="w-full border rounded p-2 mb-4"
-          rows={8}
-          value={article.body || ""}
-          readOnly
-        />
+          {/* 정보 섹션(제목/요약/본문/출처/상태 등) */}
+          <InfoSection article={article} onUpdate={loadArticleInfo} />
 
-        {/* ➤ 이미지 슬라이더 + 썸네일 + 다운로드/삭제 */}
-        <ImageSection
-          images={article.images || []}
-          articleId={article.id}
-          onUpdate={loadArticle}
-        />
-
-        {/* ➤ 에디터/출처/상태 등 세팅 */}
-        <InfoSection article={article} onUpdate={loadArticle} />
-
+          {/* 댓글 */}
+          <CommentsSection
+            comments={comments}
+            postId={article.id}
+            onUpdate={loadComments}
+          />
+        </div>
       </div>
     </div>
   );

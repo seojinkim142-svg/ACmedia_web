@@ -1,19 +1,30 @@
 import { supabase } from "../supabaseClient";
 import { useState } from "react";
 
-const sources = ["기사", "인스타", "AI", "창의"];
-const statuses = ["리뷰", "작업", "업로드", "추천", "중복", "보류", "업로드대기"];
+const sourceList = ["기사", "인스타", "AI", "창의"];
+const statusList = ["리뷰", "작업", "업로드", "추천", "중복", "보류", "업로드대기"];
 
-export default function InfoSection({ article, onUpdate }: any) {
+interface InfoProps {
+  article: any;
+  onUpdate: () => void;
+}
+
+export default function InfoSection({ article, onUpdate }: InfoProps) {
+  const [title, setTitle] = useState(article.title);
+  const [summary, setSummary] = useState(article.summary);
+  const [body, setBody] = useState(article.body);
   const [editor, setEditor] = useState(article.editor || "");
-  const [source, setSource] = useState(article.source || "");
+  const [source, setSource] = useState(article.source);
   const [contentSource, setContentSource] = useState(article.content_source || "");
-  const [status, setStatus] = useState(article.status || "");
+  const [status, setStatus] = useState(article.status);
 
   const save = async () => {
     await supabase
       .from("articles")
       .update({
+        title,
+        summary,
+        body,
         editor,
         source,
         content_source: contentSource,
@@ -26,10 +37,43 @@ export default function InfoSection({ article, onUpdate }: any) {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
 
+      {/* 제목 */}
       <div>
-        <label className="font-semibold">에디터</label>
+        <h3 className="font-bold mb-1">제목</h3>
+        <input
+          className="border rounded p-2 w-full"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+        />
+      </div>
+
+      {/* 요약 */}
+      <div>
+        <h3 className="font-bold mb-1">요약</h3>
+        <textarea
+          className="border rounded p-2 w-full"
+          rows={3}
+          value={summary}
+          onChange={(e) => setSummary(e.target.value)}
+        />
+      </div>
+
+      {/* 본문 */}
+      <div>
+        <h3 className="font-bold mb-1">본문</h3>
+        <textarea
+          className="border rounded p-2 w-full"
+          rows={8}
+          value={body}
+          onChange={(e) => setBody(e.target.value)}
+        />
+      </div>
+
+      {/* 에디터 */}
+      <div>
+        <h3 className="font-bold mb-1">에디터</h3>
         <input
           className="border rounded p-2 w-full"
           value={editor}
@@ -37,21 +81,23 @@ export default function InfoSection({ article, onUpdate }: any) {
         />
       </div>
 
+      {/* 출처 */}
       <div>
-        <label className="font-semibold">출처</label>
+        <h3 className="font-bold mb-1">출처</h3>
         <select
-          className="border rounded p-2 w-full"
+          className="border rounded p-2"
           value={source}
           onChange={(e) => setSource(e.target.value)}
         >
-          {sources.map((s) => (
+          {sourceList.map((s) => (
             <option key={s}>{s}</option>
           ))}
         </select>
       </div>
 
+      {/* 콘텐츠 출처 */}
       <div>
-        <label className="font-semibold">콘텐츠 출처</label>
+        <h3 className="font-bold mb-1">콘텐츠 출처</h3>
         <input
           className="border rounded p-2 w-full"
           value={contentSource}
@@ -59,22 +105,24 @@ export default function InfoSection({ article, onUpdate }: any) {
         />
       </div>
 
+      {/* 상태 */}
       <div>
-        <label className="font-semibold">상태</label>
+        <h3 className="font-bold mb-1">상태</h3>
         <select
-          className="border rounded p-2 w-full"
+          className="border rounded p-2"
           value={status}
           onChange={(e) => setStatus(e.target.value)}
         >
-          {statuses.map((s) => (
+          {statusList.map((s) => (
             <option key={s}>{s}</option>
           ))}
         </select>
       </div>
 
+      {/* 저장 */}
       <button
-        className="w-full py-2 bg-green-600 text-white rounded"
         onClick={save}
+        className="px-4 py-2 w-full bg-green-600 text-white rounded"
       >
         저장
       </button>

@@ -7,12 +7,12 @@ interface Article {
   title: string;
   summary: string;
   body: string;
-  editor: string;
   source: string;
-  content_source: string;
   status: string;
+  editor?: string;
+  content_source?: string;
   images: string[] | null;
-  created_at: string;
+  created_at?: string; // ★ 날짜 오류 해결을 위해 추가
 }
 
 export default function TrackerPage() {
@@ -20,12 +20,12 @@ export default function TrackerPage() {
   const [openItem, setOpenItem] = useState<Article | null>(null);
 
   const loadArticles = async () => {
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from("articles")
       .select("*")
       .order("id", { ascending: true });
 
-    if (!error && data) setArticles(data);
+    if (data) setArticles(data);
   };
 
   useEffect(() => {
@@ -33,24 +33,24 @@ export default function TrackerPage() {
   }, []);
 
   return (
-    <div className="w-full px-6">
-      <h1 className="text-xl font-bold mb-4">트래커 페이지</h1>
+    <div className="w-full mt-6 px-6">
 
-      <table className="w-full border-collapse text-sm">
+      {/* 테이블 (엑셀 스타일) */}
+      <table className="w-full text-left border-collapse">
         <thead>
           <tr className="border-b bg-gray-100">
-            <th className="p-2 w-10 text-left">번호</th>
-            <th className="p-2 w-20 text-left">사진</th>
-            <th className="p-2 w-32 text-left">날짜</th>
-            <th className="p-2 w-20 text-left">에디터</th>
-            <th className="p-2 text-left">제목</th>
-            <th className="p-2 w-20 text-left">상태</th>
+            <th className="py-2 px-1 text-sm w-10">번호</th>
+            <th className="py-2 px-1 text-sm w-20">사진</th>
+            <th className="py-2 px-1 text-sm w-24">날짜</th>
+            <th className="py-2 px-1 text-sm w-24">에디터</th>
+            <th className="py-2 px-1 text-sm">제목</th>
+            <th className="py-2 px-1 text-sm w-20">상태</th>
           </tr>
         </thead>
 
         <tbody>
           {articles.map((item, index) => {
-            const preview =
+            const previewImage =
               item.images && item.images.length > 0
                 ? item.images[0]
                 : "https://placehold.co/120x120?text=No+Image";
@@ -59,37 +59,52 @@ export default function TrackerPage() {
               <tr
                 key={item.id}
                 className="border-b hover:bg-gray-50 cursor-pointer"
-                onClick={() => setOpenItem(item)}
               >
-                <td className="p-2">{index + 1}</td>
 
-                <td className="p-2">
+                {/* 번호 */}
+                <td className="py-2 px-1 text-sm">{index + 1}</td>
+
+                {/* 사진 */}
+                <td className="py-2 px-1">
                   <img
-                    src={preview}
-                    className="w-12 h-12 object-cover rounded"
+                    src={previewImage}
+                    className="w-14 h-14 object-cover rounded shrink-0"
+                    onClick={() => setOpenItem(item)}
                   />
                 </td>
 
-                <td className="p-2">
-                  {new Date(item.created_at).toLocaleDateString()}
+                {/* 날짜 */}
+                <td className="py-2 px-1 text-sm">
+                  {item.created_at ? item.created_at.slice(0, 10) : ""}
                 </td>
 
-                <td className="p-2">{item.editor || ""}</td>
+                {/* 에디터 */}
+                <td className="py-2 px-1 text-sm">
+                  {item.editor || ""}
+                </td>
 
-                <td className="p-2">{item.title}</td>
+                {/* 제목 */}
+                <td
+                  className="py-2 px-1 text-sm underline text-blue-600"
+                  onClick={() => setOpenItem(item)}
+                >
+                  {item.title}
+                </td>
 
-                <td className="p-2">{item.status}</td>
+                {/* 상태 */}
+                <td className="py-2 px-1 text-sm">{item.status}</td>
               </tr>
             );
           })}
         </tbody>
       </table>
 
+      {/* 상세 모달 */}
       <DetailModal
         isOpen={openItem !== null}
         onClose={() => {
           setOpenItem(null);
-          loadArticles();
+          loadArticles(); // 수정 후 갱신
         }}
         item={openItem}
       />
