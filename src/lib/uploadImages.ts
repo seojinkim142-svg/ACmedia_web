@@ -1,11 +1,17 @@
 import { supabase } from "../supabaseClient";
 
 export async function uploadImage(file: File) {
-  const fileName = `${Date.now()}-${file.name}`;
+  const fileExt = file.name.split(".").pop();
+  const fileName = `${Date.now()}.${fileExt}`;
+  const filePath = fileName;
 
   const { error } = await supabase.storage
     .from("images")
-    .upload(fileName, file);
+    .upload(filePath, file, {
+      cacheControl: "3600",
+      upsert: false,
+      contentType: file.type,
+    });
 
   if (error) {
     console.error("Upload Error:", error);
@@ -14,7 +20,7 @@ export async function uploadImage(file: File) {
 
   const { data: publicUrl } = supabase.storage
     .from("images")
-    .getPublicUrl(fileName);
+    .getPublicUrl(filePath);
 
   return publicUrl.publicUrl;
 }
