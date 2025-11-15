@@ -52,7 +52,7 @@ const TrackerPage = () => {
             >
               {/* 번호 */}
               <div className="text-3xl font-semibold text-gray-400 w-10 shrink-0 text-center">
-                {index}
+                {index + 1}
               </div>
 
               {/* 이미지 */}
