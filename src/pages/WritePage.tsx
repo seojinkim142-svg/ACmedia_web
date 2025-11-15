@@ -1,10 +1,3 @@
-<<<<<<< HEAD
-
-=======
-export default function WritePage() {
-  return <h1 className="text-2xl font-bold">글쓰기 페이지</h1>
-}
->>>>>>> 85ba7d202302762a459de2f2a6c09057dcf5298f
 import { useState } from "react";
 import { supabase } from "../supabaseClient";
 import { uploadImage } from "../lib/uploadImages";
@@ -116,7 +109,6 @@ const WritePage = () => {
             <p className="text-blue-600 text-sm mt-1">업로드 중...</p>
           )}
 
-          {/* 업로드된 이미지 미리보기 */}
           <div className="flex gap-2 mt-3 flex-wrap">
             {images.map((img, i) => (
               <img
@@ -165,8 +157,4 @@ const WritePage = () => {
   );
 };
 
-<<<<<<< HEAD
 export default WritePage;
-=======
-export default WritePage;
->>>>>>> 85ba7d202302762a459de2f2a6c09057dcf5298f
