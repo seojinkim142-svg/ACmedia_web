@@ -11,6 +11,7 @@ const WritePage = () => {
   const [body, setBody] = useState("");
 
   const [source, setSource] = useState("기사");
+  const [contentSource, setContentSource] = useState(""); // 새로 추가됨
   const [status, setStatus] = useState("리뷰");
 
   const [images, setImages] = useState<string[]>([]);
@@ -40,6 +41,7 @@ const WritePage = () => {
       summary,
       body,
       source,
+      content_source: contentSource,   // DB 저장 필드 (추가됨)
       status,
       images,
       created_at: new Date().toISOString(),
@@ -56,6 +58,7 @@ const WritePage = () => {
     setSummary("");
     setBody("");
     setImages([]);
+    setContentSource(""); // 초기화
   };
 
   return (
@@ -96,6 +99,7 @@ const WritePage = () => {
           />
         </div>
 
+        {/* 이미지 업로드 */}
         <div>
           <label className="font-bold">이미지 업로드</label>
           <input
@@ -120,6 +124,7 @@ const WritePage = () => {
           </div>
         </div>
 
+        {/* 출처 */}
         <div>
           <label className="font-bold">출처</label>
           <select
@@ -133,6 +138,19 @@ const WritePage = () => {
           </select>
         </div>
 
+        {/* 콘텐츠 출처 - 추가된 영역 */}
+        <div>
+          <label className="font-bold">콘텐츠 출처</label>
+          <input
+            type="text"
+            value={contentSource}
+            onChange={(e) => setContentSource(e.target.value)}
+            className="border p-2 rounded-md ml-2 w-full mt-1"
+            placeholder="예: 미국 CNN, Reddit r/pics, 인스타그램 계정명 등"
+          />
+        </div>
+
+        {/* 상태 */}
         <div>
           <label className="font-bold">상태</label>
           <select
