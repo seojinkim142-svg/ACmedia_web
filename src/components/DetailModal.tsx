@@ -1,24 +1,16 @@
 import { useEffect, useState } from "react";
 import ImageSection from "./ImageSection";
 import InfoSection from "./InfoSection";
-import CommentsSection from "./CommentsSection";
 import ImagePreviewModal from "./ImagePreviewModal";
+import CommentsSection from "./CommentsSection";
 import { supabase } from "../supabaseClient";
 
-interface DetailModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  item: any | null;
-}
-
-const DetailModal = ({ isOpen, onClose, item }: DetailModalProps) => {
-  if (!isOpen || !item) return null;
-
+export default function DetailModal({ isOpen, onClose, item }: any) {
   const [article, setArticle] = useState<any>(item);
   const [comments, setComments] = useState<any[]>([]);
-  const [previewData, setPreviewData] = useState<any>(null);
+  const [previewIndex, setPreviewIndex] = useState<number | null>(null);
 
-  const loadArticleInfo = async () => {
+  const loadArticle = async () => {
     const { data } = await supabase.from("articles").select("*").eq("id", item.id).single();
     if (data) setArticle(data);
   };
@@ -29,68 +21,47 @@ const DetailModal = ({ isOpen, onClose, item }: DetailModalProps) => {
       .select("*")
       .eq("post_id", item.id)
       .order("created_at", { ascending: true });
-
     if (data) setComments(data);
   };
 
   useEffect(() => {
-    loadArticleInfo();
-    loadComments();
+    if (item?.id) {
+      loadArticle();
+      loadComments();
+    }
   }, [item]);
 
-  return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-5000">
-      <div className="bg-white w-full max-w-2xl rounded-xl shadow-xl max-h-[90vh] overflow-hidden flex flex-col">
+  if (!isOpen || !article) return null;
 
+  return (
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+      <div className="bg-white w-full max-w-2xl rounded-lg shadow-xl max-h-[90vh] overflow-hidden flex flex-col">
+
+        {/* header */}
         <div className="flex justify-between items-center p-4 border-b">
-          <h2 className="text-xl font-semibold">{article.title}</h2>
-          <button className="text-2xl text-gray-600" onClick={onClose}>
-            ×
-          </button>
+          <h2 className="font-bold text-lg">{article.title}</h2>
+          <button onClick={onClose} className="text-2xl">&times;</button>
         </div>
 
-        <div className="p-4 overflow-y-auto space-y-8">
-
-          <div>
-            <h3 className="font-bold mb-1">요약</h3>
-            <p>{article.summary}</p>
-          </div>
-
-          <div>
-            <h3 className="font-bold mb-1">본문</h3>
-            <p className="whitespace-pre-line">{article.body}</p>
-          </div>
-
+        {/* body */}
+        <div className="p-4 overflow-y-auto space-y-6">
           <ImageSection
             images={article.images || []}
             articleId={article.id}
-            onUpdate={loadArticleInfo}
-            onPreview={(idx: number) =>
-              setPreviewData({
-                images: article.images,
-                index: idx,
-                articleId: article.id,
-              })
-            }
+            onUpdate={loadArticle}
+            onPreview={setPreviewIndex}
           />
-
-          <InfoSection article={article} onUpdate={loadArticleInfo} />
-
+          <InfoSection article={article} onUpdate={loadArticle} />
           <CommentsSection comments={comments} postId={article.id} onUpdate={loadComments} />
         </div>
       </div>
 
-      {previewData && (
-        <ImagePreviewModal
-          images={previewData.images}
-          startIndex={previewData.index}
-          articleId={previewData.articleId}
-          onUpdate={loadArticleInfo}
-          onClose={() => setPreviewData(null)}
-        />
-      )}
+      <ImagePreviewModal
+        images={article.images || []}
+        index={previewIndex}
+        onClose={() => setPreviewIndex(null)}
+        onSelect={setPreviewIndex}
+      />
     </div>
   );
-};
-
-export default DetailModal;
+}

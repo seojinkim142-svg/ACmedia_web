@@ -9,106 +9,79 @@ export default function WritePage() {
   const [title, setTitle] = useState("");
   const [summary, setSummary] = useState("");
   const [body, setBody] = useState("");
-  const [editor, setEditor] = useState("");      // ← 추가됨
+  const [editor, setEditor] = useState("");
+
   const [source, setSource] = useState("기사");
   const [status, setStatus] = useState("리뷰");
-  const [images, setImages] = useState<string[]>([]);
+  const [contentSource, setContentSource] = useState("");
 
-  
-  const uploadNewImage = async (e: any) => {
+  const [images, setImages] = useState<string[]>([]);
+  const [uploading, setUploading] = useState(false);
+
+  const uploadImg = async (e: any) => {
     if (!e.target.files[0]) return;
+    setUploading(true);
     const url = await uploadImage(e.target.files[0]);
-    if (url) setImages((prev) => [...prev, url]);
+    if (url) setImages([...images, url]);
+    setUploading(false);
   };
 
-const saveArticle = async () => {
-  const { data, error } = await supabase.from("articles").insert({
-    title,
-    summary,
-    body,
-    editor,
-    source,
-    status,
-    images,
-  });
+  const saveArticle = async () => {
+    const { error } = await supabase.from("articles").insert({
+      title,
+      summary,
+      body,
+      editor,
+      source,
+      status,
+      content_source: contentSource,
+      images, // TEXT[]
+    });
 
-  console.log("data:", data);
-  console.log("error:", error);
+    if (error) {
+      alert("저장 실패: " + error.message);
+      console.error(error);
+      return;
+    }
 
-  if (error) {
-    alert("DB 오류: " + error.message);
-    return;
-  }
-
-  alert("저장 완료");
-};
-
+    alert("저장 완료");
+    setTitle("");
+    setSummary("");
+    setBody("");
+    setEditor("");
+    setContentSource("");
+    setImages([]);
+  };
 
   return (
-    <div className="max-w-xl mx-auto mt-6 space-y-4">
-      <h1 className="text-2xl font-bold mb-4">새 글 작성</h1>
+    <div className="max-w-xl mx-auto p-4 space-y-4">
+      <h2 className="text-2xl font-bold">글쓰기</h2>
 
-      <input
-        className="w-full border p-2 rounded"
-        placeholder="제목"
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-      />
+      <input className="border p-2 w-full" value={title} onChange={e => setTitle(e.target.value)} placeholder="제목" />
 
-      <input
-        className="w-full border p-2 rounded"
-        placeholder="에디터"
-        value={editor}
-        onChange={(e) => setEditor(e.target.value)}
-      />
+      <textarea className="border p-2 w-full" value={summary} onChange={e => setSummary(e.target.value)} placeholder="요약" />
 
-      <textarea
-        className="w-full border p-2 rounded"
-        rows={3}
-        placeholder="요약"
-        value={summary}
-        onChange={(e) => setSummary(e.target.value)}
-      />
+      <textarea className="border p-2 w-full h-40" value={body} onChange={e => setBody(e.target.value)} placeholder="본문" />
 
-      <textarea
-        className="w-full border p-2 rounded"
-        rows={7}
-        placeholder="본문"
-        value={body}
-        onChange={(e) => setBody(e.target.value)}
-      />
+      <input className="border p-2 w-full" value={editor} onChange={e => setEditor(e.target.value)} placeholder="에디터" />
 
-      <div>
-        <span className="font-semibold mr-2">출처</span>
-        <select className="border p-1 rounded" value={source} onChange={(e) => setSource(e.target.value)}>
-          {sourceList.map((s) => (
-            <option key={s}>{s}</option>
-          ))}
+      <input className="border p-2 w-full" value={contentSource} onChange={e => setContentSource(e.target.value)} placeholder="콘텐츠 출처(URL)" />
+
+      <div className="flex gap-2">
+        <select value={source} onChange={e => setSource(e.target.value)} className="border p-2">
+          {sourceList.map(s => <option key={s}>{s}</option>)}
+        </select>
+
+        <select value={status} onChange={e => setStatus(e.target.value)} className="border p-2">
+          {statusList.map(s => <option key={s}>{s}</option>)}
         </select>
       </div>
 
-      <div>
-        <span className="font-semibold mr-2">상태</span>
-        <select className="border p-1 rounded" value={status} onChange={(e) => setStatus(e.target.value)}>
-          {statusList.map((s) => (
-            <option key={s}>{s}</option>
-          ))}
-        </select>
-      </div>
+      <input type="file" accept="image/*" onChange={uploadImg} />
+      {uploading && <p>업로드 중...</p>}
 
-      <div>
-        <span className="font-semibold">이미지</span>
-        <input type="file" accept="image/*" onChange={uploadNewImage} className="block mt-1" />
-
-        <div className="flex gap-2 mt-2">
-          {images.map((img, idx) => (
-            <img key={idx} src={img} className="w-16 h-16 object-cover rounded" />
-          ))}
-        </div>
-      </div>
-
-      <button onClick={saveArticle} className="w-full py-2 bg-blue-600 text-white rounded">
-        저장
+      <button onClick={saveArticle} className="px-4 py-2 bg-blue-600 text-white rounded">
+        저장하기
       </button>
     </div>
   );
