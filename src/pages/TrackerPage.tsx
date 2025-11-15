@@ -12,7 +12,7 @@ interface Article {
   editor?: string;
   content_source?: string;
   images: string[] | null;
-  created_at?: string; // ★ 날짜 오류 해결을 위해 추가
+  created_at?: string;
 }
 
 export default function TrackerPage() {
@@ -35,7 +35,6 @@ export default function TrackerPage() {
   return (
     <div className="w-full mt-6 px-6">
 
-      {/* 테이블 (엑셀 스타일) */}
       <table className="w-full text-left border-collapse">
         <thead>
           <tr className="border-b bg-gray-100">
@@ -51,7 +50,7 @@ export default function TrackerPage() {
         <tbody>
           {articles.map((item, index) => {
             const previewImage =
-              item.images && item.images.length > 0
+              item.images?.length
                 ? item.images[0]
                 : "https://placehold.co/120x120?text=No+Image";
 
@@ -59,8 +58,8 @@ export default function TrackerPage() {
               <tr
                 key={item.id}
                 className="border-b hover:bg-gray-50 cursor-pointer"
+                onClick={() => setOpenItem(item)}   // ★ 팝업
               >
-
                 {/* 번호 */}
                 <td className="py-2 px-1 text-sm">{index + 1}</td>
 
@@ -68,25 +67,23 @@ export default function TrackerPage() {
                 <td className="py-2 px-1">
                   <img
                     src={previewImage}
-                    className="w-14 h-14 object-cover rounded shrink-0"
-                    onClick={() => setOpenItem(item)}
+                    className="w-14 h-14 object-cover rounded"
+                    onClick={(e) => { e.stopPropagation(); setOpenItem(item); }}
                   />
                 </td>
 
                 {/* 날짜 */}
                 <td className="py-2 px-1 text-sm">
-                  {item.created_at ? item.created_at.slice(0, 10) : ""}
+                  {item.created_at?.slice(0, 10)}
                 </td>
 
                 {/* 에디터 */}
-                <td className="py-2 px-1 text-sm">
-                  {item.editor || ""}
-                </td>
+                <td className="py-2 px-1 text-sm">{item.editor || ""}</td>
 
                 {/* 제목 */}
                 <td
                   className="py-2 px-1 text-sm underline text-blue-600"
-                  onClick={() => setOpenItem(item)}
+                  onClick={(e) => { e.stopPropagation(); setOpenItem(item); }}
                 >
                   {item.title}
                 </td>
@@ -99,12 +96,11 @@ export default function TrackerPage() {
         </tbody>
       </table>
 
-      {/* 상세 모달 */}
       <DetailModal
         isOpen={openItem !== null}
         onClose={() => {
           setOpenItem(null);
-          loadArticles(); // 수정 후 갱신
+          loadArticles();
         }}
         item={openItem}
       />
