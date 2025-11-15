@@ -14,30 +14,35 @@ export default function WritePage() {
   const [status, setStatus] = useState("리뷰");
   const [images, setImages] = useState<string[]>([]);
 
+  
   const uploadNewImage = async (e: any) => {
     if (!e.target.files[0]) return;
     const url = await uploadImage(e.target.files[0]);
     if (url) setImages((prev) => [...prev, url]);
   };
 
-  const saveArticle = async () => {
-    await supabase.from("articles").insert({
-      title,
-      summary,
-      body,
-      editor,          // ← 저장
-      source,
-      status,
-      images,
-    });
+const saveArticle = async () => {
+  const { data, error } = await supabase.from("articles").insert({
+    title,
+    summary,
+    body,
+    editor,
+    source,
+    status,
+    images,
+  });
 
-    alert("저장 완료");
-    setTitle("");
-    setSummary("");
-    setBody("");
-    setEditor("");
-    setImages([]);
-  };
+  console.log("data:", data);
+  console.log("error:", error);
+
+  if (error) {
+    alert("DB 오류: " + error.message);
+    return;
+  }
+
+  alert("저장 완료");
+};
+
 
   return (
     <div className="max-w-xl mx-auto mt-6 space-y-4">
