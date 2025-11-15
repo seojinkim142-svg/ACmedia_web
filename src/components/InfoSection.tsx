@@ -7,6 +7,7 @@ const statusList = ["리뷰", "작업", "업로드", "추천", "중복", "보류
 export default function InfoSection({ article, onUpdate }: any) {
   const [source, setSource] = useState(article.source);
   const [status, setStatus] = useState(article.status);
+  const [editor, setEditor] = useState(article.editor || ""); // ← 추가됨
   const [contentSource, setContentSource] = useState(article.content_source || "");
 
   const save = async () => {
@@ -15,6 +16,7 @@ export default function InfoSection({ article, onUpdate }: any) {
       .update({
         source,
         status,
+        editor,          // ← 저장
         content_source: contentSource,
       })
       .eq("id", article.id);
@@ -25,21 +27,21 @@ export default function InfoSection({ article, onUpdate }: any) {
 
   return (
     <div className="space-y-4">
-
       <div>
-        <h3 className="font-bold">한눈에 보기</h3>
-        <p>{article.summary}</p>
-      </div>
-
-      <div>
-        <h3 className="font-bold">본문</h3>
-        <p className="whitespace-pre-line">{article.body}</p>
+        <h3 className="font-bold">에디터</h3>
+        <input
+          className="border rounded p-1 w-full"
+          value={editor}
+          onChange={(e) => setEditor(e.target.value)}
+        />
       </div>
 
       <div>
         <h3 className="font-bold">출처</h3>
         <select className="border p-1 rounded" value={source} onChange={(e) => setSource(e.target.value)}>
-          {sourceList.map((s) => <option key={s}>{s}</option>)}
+          {sourceList.map((s) => (
+            <option key={s}>{s}</option>
+          ))}
         </select>
       </div>
 
@@ -55,7 +57,9 @@ export default function InfoSection({ article, onUpdate }: any) {
       <div>
         <h3 className="font-bold">상태</h3>
         <select className="border p-1 rounded" value={status} onChange={(e) => setStatus(e.target.value)}>
-          {statusList.map((s) => <option key={s}>{s}</option>)}
+          {statusList.map((s) => (
+            <option key={s}>{s}</option>
+          ))}
         </select>
       </div>
 
