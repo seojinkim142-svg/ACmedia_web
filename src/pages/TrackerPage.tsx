@@ -22,12 +22,14 @@ const TrackerPage = () => {
   const [openItem, setOpenItem] = useState<Article | null>(null);
 
   const loadArticles = async () => {
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from("articles")
       .select("*")
       .order("id", { ascending: true });
 
-    if (!error && data) setArticles(data);
+    if (data) {
+      setArticles(data);
+    }
   };
 
   useEffect(() => {
@@ -35,61 +37,66 @@ const TrackerPage = () => {
   }, []);
 
   return (
-    <div className="w-full px-4 mt-4">
-      <h1 className="text-xl font-bold mb-3">트래커 페이지</h1>
+    <div className="w-full mt-4 px-4 flex justify-start">
+      <div className="w-full max-w-[900px]">
 
-      <table className="w-full border-collapse text-sm">
-        <thead>
-          <tr className="border-b bg-gray-100 text-left">
-            <th className="w-10 p-2">번호</th>
-            <th className="w-20 p-2">사진</th>
-            <th className="w-32 p-2">날짜</th>
-            <th className="w-24 p-2">에디터</th>
-            <th className="p-2">제목</th>
-            <th className="w-20 p-2">상태</th>
-          </tr>
-        </thead>
+        <h1 className="text-lg font-bold mb-2">트래커 페이지</h1>
 
-        <tbody>
-          {articles.map((item, index) => {
-            const previewImage =
-              item.images && item.images.length > 0
-                ? item.images[0]
-                : DEFAULT_IMAGE;
+        <table className="w-full border-collapse text-[12px]">
+          <thead>
+            <tr className="border-b bg-gray-100">
+              <th className="p-1 w-10 text-left">번호</th>
+              <th className="p-1 w-16 text-left">사진</th>
+              <th className="p-1 w-28 text-left">날짜</th>
+              <th className="p-1 w-20 text-left">에디터</th>
+              <th className="p-1 text-left">제목</th>
+              <th className="p-1 w-16 text-left">상태</th>
+            </tr>
+          </thead>
 
-            return (
-              <tr
-                key={item.id}
-                className="border-b hover:bg-gray-50 cursor-pointer"
-                onClick={() => setOpenItem(item)}
-              >
-                <td className="p-2 text-center">{index + 1}</td>
+          <tbody>
+            {articles.map((item, index) => {
+              const previewImage =
+                item.images && item.images.length > 0
+                  ? item.images[0]
+                  : DEFAULT_IMAGE;
 
-                <td className="p-2">
-                  <img
-                    src={previewImage}
-                    className="w-14 h-14 object-cover rounded"
-                  />
-                </td>
+              return (
+                <tr
+                  key={item.id}
+                  className="border-b hover:bg-gray-50 cursor-pointer"
+                  style={{ height: "32px" }}
+                  onClick={() => setOpenItem(item)}
+                >
+                  <td className="p-1 text-center">{index + 1}</td>
 
-                <td className="p-2">{item.created_at?.slice(0, 10)}</td>
-                <td className="p-2">{item.editor || ""}</td>
-                <td className="p-2">{item.title}</td>
-                <td className="p-2">{item.status}</td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+                  <td className="p-1">
+                    <img
+                      src={previewImage}
+                      className="w-10 h-10 object-cover rounded"
+                    />
+                  </td>
 
-      <DetailModal
-        isOpen={openItem !== null}
-        onClose={() => {
-          setOpenItem(null);
-          loadArticles();
-        }}
-        item={openItem}
-      />
+                  <td className="p-1">{item.created_at?.slice(0, 10)}</td>
+                  <td className="p-1">{item.editor || ""}</td>
+                  <td className="p-1">{item.title}</td>
+                  <td className="p-1">{item.status}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+
+        <DetailModal
+          isOpen={openItem !== null}
+          onClose={() => {
+            setOpenItem(null);
+            loadArticles();
+          }}
+          item={openItem}
+        />
+
+      </div>
     </div>
   );
 };
