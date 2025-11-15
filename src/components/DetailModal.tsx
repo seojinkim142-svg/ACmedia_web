@@ -17,22 +17,20 @@ const DetailModal = ({ isOpen, onClose, item }: DetailModalProps) => {
   const [source, setSource] = useState(item.source);
   const [status, setStatus] = useState(item.status);
 
+  // 댓글
   const [comment, setComment] = useState("");
   const [comments, setComments] = useState<any[]>([]);
-
   const [editId, setEditId] = useState<number | null>(null);
   const [editContent, setEditContent] = useState("");
 
+  // 이미지 상태
+  const [pendingImages, setPendingImages] = useState<string[]>(item.images || []);
   const [uploading, setUploading] = useState(false);
 
+  // 슬라이더
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  // 🔥 변경: 이미지 상태를 item에서 직접 수정하지 않고 별도 상태로 관리
-  const [pendingImages, setPendingImages] = useState<string[]>(item.images || []);
-
-  // -------------------------
-  // article 정보 불러오기
-  // -------------------------
+  // -------------------------  데이터 로드  -------------------------
   const loadArticleInfo = async () => {
     const { data } = await supabase
       .from("articles")
@@ -43,15 +41,10 @@ const DetailModal = ({ isOpen, onClose, item }: DetailModalProps) => {
     if (data) {
       if (data.source) setSource(data.source);
       if (data.status) setStatus(data.status);
-      if (data.images) {
-        setPendingImages(data.images);
-      }
+      if (data.images) setPendingImages(data.images);
     }
   };
 
-  // -------------------------
-  // 댓글 불러오기
-  // -------------------------
   const loadComments = async () => {
     const { data } = await supabase
       .from("comments")
@@ -69,24 +62,22 @@ const DetailModal = ({ isOpen, onClose, item }: DetailModalProps) => {
     }
   }, [item]);
 
-  // -------------------------
-  // 🔥 출처/상태 + pendingImages 최종 저장
-  // -------------------------
-  const handleSaveArticleInfo = async () => {
-    await supabase.from("articles").update({
-      source,
-      status,
-      images: pendingImages,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", item.id);
+  // -------------------------  저장 (출처 + 상태 + 이미지)  -------------------------
+  const handleSaveArticle = async () => {
+    await supabase
+      .from("articles")
+      .update({
+        source,
+        status,
+        images: pendingImages,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", item.id);
 
     alert("저장되었습니다.");
   };
 
-  // -------------------------
-  // 댓글 저장
-  // -------------------------
+  // -------------------------  댓글 작성  -------------------------
   const handleSaveComment = async () => {
     if (!comment.trim()) return;
 
@@ -99,39 +90,27 @@ const DetailModal = ({ isOpen, onClose, item }: DetailModalProps) => {
     loadComments();
   };
 
-  // -------------------------
-  // 댓글 삭제
-  // -------------------------
+  // -------------------------  댓글 삭제  -------------------------
   const handleDeleteComment = async (id: number) => {
     await supabase.from("comments").delete().eq("id", id);
     loadComments();
   };
 
-  // -------------------------
-  // 댓글 수정
-  // -------------------------
+  // -------------------------  댓글 수정  -------------------------
   const handleEditSave = async () => {
     if (!editContent.trim()) return;
 
-    await supabase.from("comments").update({ content: editContent }).eq("id", editId);
+    await supabase
+      .from("comments")
+      .update({ content: editContent })
+      .eq("id", editId);
+
     setEditId(null);
     setEditContent("");
     loadComments();
   };
 
-  // -------------------------
-  // 이미지 다운로드
-  // -------------------------
-  const handleDownloadImage = (url: string) => {
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = "image.jpg";
-    link.click();
-  };
-
-  // -------------------------
-  // 🔥 이미지 업로드 (DB 저장 ❌ / pendingImages에만 저장 ⭕)
-  // -------------------------
+  // -------------------------  이미지 업로드 (DB 저장 X / 미리보기만)  -------------------------
   const handleUploadImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
 
@@ -141,16 +120,25 @@ const DetailModal = ({ isOpen, onClose, item }: DetailModalProps) => {
     const url = await uploadImage(file);
 
     if (url) {
-      const newList = [...pendingImages, url];
-      setPendingImages(newList);  // DB 반영은 하지 않음
+      const newImages = [...pendingImages, url];
+      setPendingImages(newImages); // DB 저장 없음
     }
 
     setUploading(false);
   };
 
-  // -------------------------------------------------
-  // UI
-  // -------------------------------------------------
+  // -------------------------  슬라이더 이동  -------------------------
+  const nextImage = () => {
+    if (pendingImages.length === 0) return;
+    setCurrentIndex((prev) => (prev + 1) % pendingImages.length);
+  };
+
+  const prevImage = () => {
+    if (pendingImages.length === 0) return;
+    setCurrentIndex((prev) => (prev - 1 + pendingImages.length) % pendingImages.length);
+  };
+
+  // ------------------------- UI ------------------------------
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-9999">
       <div className="bg-white w-full max-w-2xl rounded-xl shadow-xl max-h-[90vh] overflow-hidden flex flex-col">
@@ -175,62 +163,33 @@ const DetailModal = ({ isOpen, onClose, item }: DetailModalProps) => {
             <p className="text-gray-700 whitespace-pre-line">{item.body}</p>
           </div>
 
-          {/* --------------------------- */}
           {/* 이미지 슬라이더 */}
-          {/* --------------------------- */}
           {pendingImages.length > 0 && (
-            <div className="space-y-3 mt-4">
+            <div className="space-y-3">
               <div className="relative flex justify-center items-center">
-
-                {/* Prev */}
                 <button
-                  className="absolute left-0 px-3 py-2 bg-black/50 text-white rounded-full"
-                  onClick={() =>
-                    setCurrentIndex((prev) =>
-                      prev === 0 ? pendingImages.length - 1 : prev - 1
-                    )
-                  }
+                  onClick={prevImage}
+                  className="absolute left-0 px-3 py-2 text-white bg-black/50 rounded-full"
                 >
                   ‹
                 </button>
 
-                {/* Main image */}
                 <img
                   src={pendingImages[currentIndex]}
                   className="w-64 h-64 object-cover rounded-lg shadow"
                 />
 
-                {/* Next */}
                 <button
-                  className="absolute right-0 px-3 py-2 bg-black/50 text-white rounded-full"
-                  onClick={() =>
-                    setCurrentIndex((prev) =>
-                      prev === pendingImages.length - 1 ? 0 : prev + 1
-                    )
-                  }
+                  onClick={nextImage}
+                  className="absolute right-0 px-3 py-2 text-white bg-black/50 rounded-full"
                 >
                   ›
                 </button>
               </div>
 
-              {/* Download + Upload */}
-              <div className="flex justify-center gap-3">
-                <button
-                  onClick={() => handleDownloadImage(pendingImages[currentIndex])}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md"
-                >
-                  다운로드
-                </button>
-
-                <label className="px-4 py-2 bg-gray-700 text-white rounded-md cursor-pointer">
-                  업로드
-                  <input type="file" className="hidden" onChange={handleUploadImage} />
-                </label>
-              </div>
-
-              {/* Thumbnails */}
+              {/* 썸네일 */}
               <div className="flex justify-center gap-2">
-                {pendingImages.map((img, i) => (
+                {pendingImages.map((img: string, i: number) => (
                   <img
                     key={i}
                     src={img}
@@ -244,21 +203,30 @@ const DetailModal = ({ isOpen, onClose, item }: DetailModalProps) => {
             </div>
           )}
 
-          {/* 별도 이미지 업로드 영역 유지 */}
+          {/* 이미지 업로드 */}
           <div>
             <h4 className="font-bold mb-1">이미지 업로드</h4>
-            <input type="file" accept="image/*" onChange={handleUploadImage} />
-            {uploading && <p className="text-blue-600">업로드 중...</p>}
+
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleUploadImage}
+              className="border p-2 rounded-md"
+            />
+
+            {uploading && (
+              <div className="text-blue-600 text-sm mt-2">업로드 중...</div>
+            )}
           </div>
 
-          {/* 출처/상태 */}
-          <div className="space-y-3">
+          {/* 출처 / 상태 */}
+          <div className="space-y-3 mt-4">
             <div>
               <h4 className="font-bold mb-1">콘텐츠 출처</h4>
               <select
+                className="border rounded-md px-3 py-1"
                 value={source}
                 onChange={(e) => setSource(e.target.value)}
-                className="border px-3 py-1 rounded-md"
               >
                 {sourceList.map((s) => (
                   <option key={s} value={s}>{s}</option>
@@ -269,19 +237,19 @@ const DetailModal = ({ isOpen, onClose, item }: DetailModalProps) => {
             <div>
               <h4 className="font-bold mb-1">상태</h4>
               <select
+                className="border rounded-md px-3 py-1"
                 value={status}
                 onChange={(e) => setStatus(e.target.value)}
-                className="border px-3 py-1 rounded-md"
               >
-                {statusList.map((s) => (
-                  <option key={s} value={s}>{s}</option>
+                {statusList.map((st) => (
+                  <option key={st} value={st}>{st}</option>
                 ))}
               </select>
             </div>
 
             <button
-              onClick={handleSaveArticleInfo}
-              className="px-4 py-2 bg-green-600 text-white rounded-md"
+              onClick={handleSaveArticle}
+              className="px-4 py-2 bg-green-600 text-white rounded-lg"
             >
               저장
             </button>
