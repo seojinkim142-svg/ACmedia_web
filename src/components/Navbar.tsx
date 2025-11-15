@@ -1,13 +1,67 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 export default function Navbar() {
+  const location = useLocation();
+
+  const isActive = (path: string) => location.pathname === path;
+
   return (
     <nav className="w-full bg-gray-900 text-white px-6 py-4 flex gap-6">
-      <Link to="/tracker">트래커</Link>
-      <Link to="/feed">피드</Link>
-      <Link to="/upload">업로드/보류/중복</Link>
-      <Link to="/database">데이터베이스</Link>
-      <Link to="/write">글쓰기</Link>
+
+      <Link
+        to="/tracker"
+        className={`px-3 py-1 rounded ${
+          isActive("/tracker")
+            ? "bg-white text-black font-semibold"
+            : "hover:text-gray-300"
+        }`}
+      >
+        트래커
+      </Link>
+
+      <Link
+        to="/feed"
+        className={`px-3 py-1 rounded ${
+          isActive("/feed")
+            ? "bg-white text-black font-semibold"
+            : "hover:text-gray-300"
+        }`}
+      >
+        피드
+      </Link>
+
+      <Link
+        to="/upload"
+        className={`px-3 py-1 rounded ${
+          isActive("/upload")
+            ? "bg-white text-black font-semibold"
+            : "hover:text-gray-300"
+        }`}
+      >
+        업로드/보류/중복
+      </Link>
+
+      <Link
+        to="/database"
+        className={`px-3 py-1 rounded ${
+          isActive("/database")
+            ? "bg-white text-black font-semibold"
+            : "hover:text-gray-300"
+        }`}
+      >
+        데이터베이스
+      </Link>
+
+      <Link
+        to="/write"
+        className={`px-3 py-1 rounded ${
+          isActive("/write")
+            ? "bg-white text-black font-semibold"
+            : "hover:text-gray-300"
+        }`}
+      >
+        글쓰기
+      </Link>
     </nav>
   );
 }
