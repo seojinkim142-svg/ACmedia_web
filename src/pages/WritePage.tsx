@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { supabase } from "../supabaseClient";
 import { uploadImage } from "../lib/uploadImages";
+import Navbar from "../components/Navbar";
 
 const sourceList = ["기사", "인스타", "AI", "창의"];
 const statusList = ["리뷰", "작업", "업로드", "추천", "중복", "보류", "업로드대기"];
@@ -9,80 +10,137 @@ export default function WritePage() {
   const [title, setTitle] = useState("");
   const [summary, setSummary] = useState("");
   const [body, setBody] = useState("");
-  const [editor, setEditor] = useState("");
-
-  const [source, setSource] = useState("기사");
-  const [status, setStatus] = useState("리뷰");
-  const [contentSource, setContentSource] = useState("");
-
   const [images, setImages] = useState<string[]>([]);
-  const [uploading, setUploading] = useState(false);
+  const [editor, setEditor] = useState("");
+  const [source, setSource] = useState("기사");
+  const [contentSource, setContentSource] = useState("");
+  const [status, setStatus] = useState("리뷰");
 
-  const uploadImg = async (e: any) => {
-    if (!e.target.files[0]) return;
-    setUploading(true);
+  const uploadNewImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files?.[0]) return;
+
     const url = await uploadImage(e.target.files[0]);
-    if (url) setImages([...images, url]);
-    setUploading(false);
+    if (url) setImages((prev) => [...prev, url]);
   };
 
   const saveArticle = async () => {
-    const { error } = await supabase.from("articles").insert({
+    await supabase.from("articles").insert({
       title,
       summary,
       body,
+      images,
       editor,
       source,
-      status,
       content_source: contentSource,
-      images, // TEXT[]
+      status,
     });
 
-    if (error) {
-      alert("저장 실패: " + error.message);
-      console.error(error);
-      return;
-    }
-
-    alert("저장 완료");
+    alert("저장되었습니다!");
     setTitle("");
     setSummary("");
     setBody("");
-    setEditor("");
-    setContentSource("");
     setImages([]);
+    setEditor("");
+    setSource("기사");
+    setContentSource("");
+    setStatus("리뷰");
   };
 
   return (
-    <div className="max-w-xl mx-auto p-4 space-y-4">
-      <h2 className="text-2xl font-bold">글쓰기</h2>
+    <div className="w-full">
+      <Navbar />
 
-      <input className="border p-2 w-full" value={title} onChange={e => setTitle(e.target.value)} placeholder="제목" />
+      {/* 전체 좌측 정렬 적용 */}
+      <div className="flex flex-col items-start w-full px-6 mt-6 gap-4">
 
-      <textarea className="border p-2 w-full" value={summary} onChange={e => setSummary(e.target.value)} placeholder="요약" />
+        {/* 제목 */}
+        <label className="font-semibold">제목</label>
+        <input
+          className="border rounded p-2 w-full max-w-xl"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+        />
 
-      <textarea className="border p-2 w-full h-40" value={body} onChange={e => setBody(e.target.value)} placeholder="본문" />
+        {/* 요약 */}
+        <label className="font-semibold">요약</label>
+        <textarea
+          className="border rounded p-2 w-full max-w-xl"
+          rows={3}
+          value={summary}
+          onChange={(e) => setSummary(e.target.value)}
+        />
 
-      <input className="border p-2 w-full" value={editor} onChange={e => setEditor(e.target.value)} placeholder="에디터" />
+        {/* 본문 */}
+        <label className="font-semibold">본문</label>
+        <textarea
+          className="border rounded p-2 w-full max-w-xl"
+          rows={8}
+          value={body}
+          onChange={(e) => setBody(e.target.value)}
+        />
 
-      <input className="border p-2 w-full" value={contentSource} onChange={e => setContentSource(e.target.value)} placeholder="콘텐츠 출처(URL)" />
+        {/* 이미지 업로드 */}
+        <label className="font-semibold">이미지 업로드</label>
+        <input type="file" accept="image/*" onChange={uploadNewImage} />
 
-      <div className="flex gap-2">
-        <select value={source} onChange={e => setSource(e.target.value)} className="border p-2">
-          {sourceList.map(s => <option key={s}>{s}</option>)}
+        <div className="flex gap-2 flex-wrap mt-2">
+          {images.map((img, i) => (
+            <img
+              key={i}
+              src={img}
+              className="w-20 h-20 object-cover border rounded"
+            />
+          ))}
+        </div>
+
+        {/* 에디터 */}
+        <label className="font-semibold">에디터</label>
+        <input
+          className="border rounded p-2 w-full max-w-xl"
+          value={editor}
+          onChange={(e) => setEditor(e.target.value)}
+        />
+
+        {/* 출처 */}
+        <label className="font-semibold">출처</label>
+        <select
+          className="border rounded p-2 w-full max-w-xl"
+          value={source}
+          onChange={(e) => setSource(e.target.value)}
+        >
+          {sourceList.map((s) => (
+            <option key={s}>{s}</option>
+          ))}
         </select>
 
-        <select value={status} onChange={e => setStatus(e.target.value)} className="border p-2">
-          {statusList.map(s => <option key={s}>{s}</option>)}
+        {/* 콘텐츠 출처 */}
+        <label className="font-semibold">콘텐츠 출처</label>
+        <input
+          className="border rounded p-2 w-full max-w-xl"
+          value={contentSource}
+          onChange={(e) => setContentSource(e.target.value)}
+        />
+
+        {/* 상태 */}
+        <label className="font-semibold">상태</label>
+        <select
+          className="border rounded p-2 w-full max-w-xl"
+          value={status}
+          onChange={(e) => setStatus(e.target.value)}
+        >
+          {statusList.map((s) => (
+            <option key={s}>{s}</option>
+          ))}
         </select>
+
+        {/* 저장 */}
+        <button
+          className="px-6 py-3 bg-green-600 text-white rounded mt-4"
+          onClick={saveArticle}
+        >
+          저장
+        </button>
       </div>
-
-      <input type="file" accept="image/*" onChange={uploadImg} />
-      {uploading && <p>업로드 중...</p>}
-
-      <button onClick={saveArticle} className="px-4 py-2 bg-blue-600 text-white rounded">
-        저장하기
-      </button>
     </div>
   );
 }
