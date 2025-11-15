@@ -12,13 +12,18 @@ interface Article {
   status: string;
   images: string[] | null;
   created_at?: string;
-  editor?: string; // editor 기본값 없음 ("")
+  editor?: string;
 }
 
 const TrackerPage = () => {
   const [articles, setArticles] = useState<Article[]>([]);
   const [openItem, setOpenItem] = useState<Article | null>(null);
-  const [previewImage, setPreviewImage] = useState<string | null>(null);
+
+  const [previewData, setPreviewData] = useState<{
+    images: string[];
+    index: number;
+    articleId: number;
+  } | null>(null);
 
   const loadArticles = async () => {
     const { data } = await supabase
@@ -64,25 +69,27 @@ const TrackerPage = () => {
               className="grid grid-cols-[70px_110px_80px_1fr_80px] items-center gap-3 py-2 border-b last:border-b-0 hover:bg-gray-50 cursor-pointer"
               onClick={() => setOpenItem(item)}
             >
-              {/* 사진 (이미지 미리보기) */}
+              {/* ========= 사진 ========= */}
               <img
                 src={preview}
                 className="w-12 h-12 rounded-md object-cover mx-auto cursor-pointer"
                 onClick={(e) => {
                   e.stopPropagation();
-                  setPreviewImage(preview);
+                  setPreviewData({
+                    images: item.images || [],
+                    index: 0,
+                    articleId: item.id,
+                  });
                 }}
               />
 
-              {/* 날짜 */}
+              {/* ========= 날짜 ========= */}
               <div className="text-center text-sm">{dateStr}</div>
 
-              {/* 에디터 (기본값 없음) */}
-              <div className="text-center text-sm">
-                {item.editor || ""}
-              </div>
+              {/* ========= 에디터 ========= */}
+              <div className="text-center text-sm">{item.editor || ""}</div>
 
-              {/* 제목 (본문 팝업) */}
+              {/* ========= 제목 ========= */}
               <div
                 className="text-sm font-medium text-gray-900 line-clamp-1 cursor-pointer"
                 onClick={(e) => {
@@ -93,7 +100,7 @@ const TrackerPage = () => {
                 {item.title}
               </div>
 
-              {/* 상태 */}
+              {/* ========= 상태 ========= */}
               <div className="text-center text-sm">{item.status}</div>
             </div>
           );
@@ -111,10 +118,15 @@ const TrackerPage = () => {
       />
 
       {/* ===== 이미지 미리보기 모달 ===== */}
-      <ImagePreviewModal
-        image={previewImage}
-        onClose={() => setPreviewImage(null)}
-      />
+      {previewData && (
+        <ImagePreviewModal
+          images={previewData.images}
+          startIndex={previewData.index}
+          articleId={previewData.articleId}
+          onUpdate={loadArticles}
+          onClose={() => setPreviewData(null)}
+        />
+      )}
     </div>
   );
 };

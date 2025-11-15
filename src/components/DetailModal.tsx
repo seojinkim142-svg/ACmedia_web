@@ -17,10 +17,20 @@ const DetailModal = ({ isOpen, onClose, item }: DetailModalProps) => {
 
   const [article, setArticle] = useState<any>(item);
   const [comments, setComments] = useState<any[]>([]);
-  const [previewImage, setPreviewImage] = useState<string | null>(null);
+
+  const [previewData, setPreviewData] = useState<{
+    images: string[];
+    index: number;
+    articleId: number;
+  } | null>(null);
 
   const loadArticleInfo = async () => {
-    const { data } = await supabase.from("articles").select("*").eq("id", item.id).single();
+    const { data } = await supabase
+      .from("articles")
+      .select("*")
+      .eq("id", item.id)
+      .single();
+
     if (data) setArticle(data);
   };
 
@@ -45,7 +55,7 @@ const DetailModal = ({ isOpen, onClose, item }: DetailModalProps) => {
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-5000">
       <div className="bg-white w-full max-w-2xl rounded-xl shadow-xl max-h-[90vh] overflow-hidden flex flex-col">
 
-        {/* HEADER */}
+        {/* ===== HEADER ===== */}
         <div className="flex justify-between items-center p-4 border-b">
           <h2 className="text-xl font-semibold">{article.title}</h2>
           <button onClick={onClose} className="text-gray-500 text-2xl">
@@ -53,7 +63,7 @@ const DetailModal = ({ isOpen, onClose, item }: DetailModalProps) => {
           </button>
         </div>
 
-        {/* BODY (Scroll) */}
+        {/* ===== BODY ===== */}
         <div className="p-4 overflow-y-auto space-y-8">
 
           {/* 요약 */}
@@ -68,15 +78,22 @@ const DetailModal = ({ isOpen, onClose, item }: DetailModalProps) => {
             <p className="whitespace-pre-line">{article.body}</p>
           </div>
 
-          {/* 이미지 슬라이더 */}
+          {/* 이미지 섹션 */}
           <ImageSection
             images={article.images || []}
             articleId={article.id}
             onUpdate={loadArticleInfo}
-            onPreview={(url) => setPreviewImage(url)}
+            onPreview={(url) => {
+              const idx = article.images.indexOf(url);
+              setPreviewData({
+                images: article.images,
+                index: idx,
+                articleId: article.id,
+              });
+            }}
           />
 
-          {/* 출처 / 상태 / 저장 */}
+          {/* 출처/상태 */}
           <InfoSection article={article} onUpdate={loadArticleInfo} />
 
           {/* 댓글 */}
@@ -89,7 +106,15 @@ const DetailModal = ({ isOpen, onClose, item }: DetailModalProps) => {
       </div>
 
       {/* 이미지 프리뷰 */}
-      <ImagePreviewModal image={previewImage} onClose={() => setPreviewImage(null)} />
+      {previewData && (
+        <ImagePreviewModal
+          images={previewData.images}
+          startIndex={previewData.index}
+          articleId={previewData.articleId}
+          onUpdate={loadArticleInfo}
+          onClose={() => setPreviewData(null)}
+        />
+      )}
     </div>
   );
 };
