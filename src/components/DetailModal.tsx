@@ -1,37 +1,14 @@
 import { useEffect, useState } from "react";
 import ImageSection from "./ImageSection";
 import InfoSection from "./InfoSection";
-import CommentsSection from "./CommentsSection";
 import { supabase } from "../supabaseClient";
 
-const DEFAULT_IMAGE = "https://placehold.co/120x120?text=No+Image";
-
-interface Article {
-  id: number;
-  title: string;
-  summary: string;
-  body: string;
-  source: string;
-  status: string;
-  editor: string | null;
-  content_source: string | null;
-  images: string[] | null;
-  created_at: string;
-}
-
-interface DetailModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  item: Article | null;
-}
-
-const DetailModal = ({ isOpen, onClose, item }: DetailModalProps) => {
+export default function DetailModal({ isOpen, onClose, item }: any) {
   if (!isOpen || !item) return null;
 
-  const [article, setArticle] = useState<Article>(item);
-  const [comments, setComments] = useState<any[]>([]);
+  const [article, setArticle] = useState<any>(item);
 
-  const loadArticleInfo = async () => {
+  const loadArticle = async () => {
     const { data } = await supabase
       .from("articles")
       .select("*")
@@ -41,77 +18,50 @@ const DetailModal = ({ isOpen, onClose, item }: DetailModalProps) => {
     if (data) setArticle(data);
   };
 
-  const loadComments = async () => {
-    const { data } = await supabase
-      .from("comments")
-      .select("*")
-      .eq("post_id", item.id)
-      .order("created_at", { ascending: true });
-
-    if (data) setComments(data);
-  };
-
   useEffect(() => {
-    if (item?.id) {
-      loadArticleInfo();
-      loadComments();
-    }
+    if (item?.id) loadArticle();
   }, [item]);
 
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-      <div className="bg-white w-full max-w-2xl rounded-xl shadow-xl max-h-[90vh] overflow-hidden flex flex-col">
+      <div className="bg-white w-full max-w-3xl rounded-xl shadow-xl max-h-[95vh] overflow-y-auto p-6">
 
-        {/* HEADER */}
-        <div className="flex justify-between items-center p-4 border-b">
-          <h2 className="text-xl font-semibold">{article.title}</h2>
-          <button onClick={onClose} className="text-gray-500 text-2xl">×</button>
-        </div>
+        {/* 제목 */}
+        <h2 className="text-xl font-semibold mb-4">{article.title}</h2>
 
-        {/* BODY */}
-        <div className="p-4 overflow-y-auto space-y-6">
+        {/* 요약 */}
+        <textarea
+          className="w-full border rounded p-2 mb-4"
+          rows={3}
+          value={article.summary || ""}
+          readOnly
+        />
 
-          {/* 요약 */}
-          <div>
-            <textarea
-              readOnly
-              className="w-full border rounded p-2 text-sm h-20"
-              value={article.summary || ""}
-              placeholder="요약"
-            />
-          </div>
+        {/* 본문 */}
+        <textarea
+          className="w-full border rounded p-2 mb-4"
+          rows={8}
+          value={article.body || ""}
+          readOnly
+        />
 
-          {/* 본문 */}
-          <div>
-            <textarea
-              readOnly
-              className="w-full border rounded p-2 text-sm h-48 whitespace-pre-line"
-              value={article.body || ""}
-              placeholder="본문"
-            />
-          </div>
+        {/* 이미지 섹션 */}
+        <ImageSection
+          images={article.images || []}
+          articleId={article.id}
+          onUpdate={loadArticle}
+        />
 
-          {/* 이미지 */}
-          <ImageSection
-            images={article.images?.length ? article.images : [DEFAULT_IMAGE]}
-            articleId={article.id}
-            onUpdate={loadArticleInfo}
-          />
+        {/* 정보 입력 파트 */}
+        <InfoSection article={article} onUpdate={loadArticle} />
 
-          {/* 출처 / 에디터 / 상태 / 저장 */}
-          <InfoSection article={article} onUpdate={loadArticleInfo} />
-
-          {/* 댓글 */}
-          <CommentsSection
-            comments={comments}
-            postId={article.id}
-            onUpdate={loadComments}
-          />
-
-        </div>
+        <button
+          onClick={onClose}
+          className="w-full mt-4 py-2 bg-gray-600 text-white rounded"
+        >
+          닫기
+        </button>
       </div>
     </div>
   );
-};
-
-export default DetailModal;
+}

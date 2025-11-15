@@ -1,23 +1,23 @@
 import { supabase } from "../supabaseClient";
 import { useState } from "react";
 
-const sourceList = ["기사", "인스타", "AI", "창의"];
-const statusList = ["리뷰", "작업", "업로드", "추천", "중복", "보류", "업로드대기"];
+const sources = ["기사", "인스타", "AI", "창의"];
+const statuses = ["리뷰", "작업", "업로드", "추천", "중복", "보류", "업로드대기"];
 
 export default function InfoSection({ article, onUpdate }: any) {
-  const [source, setSource] = useState(article.source);
-  const [status, setStatus] = useState(article.status);
-  const [editor, setEditor] = useState(article.editor || ""); // ← 추가됨
+  const [editor, setEditor] = useState(article.editor || "");
+  const [source, setSource] = useState(article.source || "");
   const [contentSource, setContentSource] = useState(article.content_source || "");
+  const [status, setStatus] = useState(article.status || "");
 
   const save = async () => {
     await supabase
       .from("articles")
       .update({
+        editor,
         source,
-        status,
-        editor,          // ← 저장
         content_source: contentSource,
+        status,
       })
       .eq("id", article.id);
 
@@ -27,43 +27,55 @@ export default function InfoSection({ article, onUpdate }: any) {
 
   return (
     <div className="space-y-4">
+
       <div>
-        <h3 className="font-bold">에디터</h3>
+        <label className="font-semibold">에디터</label>
         <input
-          className="border rounded p-1 w-full"
+          className="border rounded p-2 w-full"
           value={editor}
           onChange={(e) => setEditor(e.target.value)}
         />
       </div>
 
       <div>
-        <h3 className="font-bold">출처</h3>
-        <select className="border p-1 rounded" value={source} onChange={(e) => setSource(e.target.value)}>
-          {sourceList.map((s) => (
+        <label className="font-semibold">출처</label>
+        <select
+          className="border rounded p-2 w-full"
+          value={source}
+          onChange={(e) => setSource(e.target.value)}
+        >
+          {sources.map((s) => (
             <option key={s}>{s}</option>
           ))}
         </select>
       </div>
 
       <div>
-        <h3 className="font-bold">콘텐츠 출처</h3>
+        <label className="font-semibold">콘텐츠 출처</label>
         <input
-          className="border rounded p-1 w-full"
+          className="border rounded p-2 w-full"
           value={contentSource}
           onChange={(e) => setContentSource(e.target.value)}
         />
       </div>
 
       <div>
-        <h3 className="font-bold">상태</h3>
-        <select className="border p-1 rounded" value={status} onChange={(e) => setStatus(e.target.value)}>
-          {statusList.map((s) => (
+        <label className="font-semibold">상태</label>
+        <select
+          className="border rounded p-2 w-full"
+          value={status}
+          onChange={(e) => setStatus(e.target.value)}
+        >
+          {statuses.map((s) => (
             <option key={s}>{s}</option>
           ))}
         </select>
       </div>
 
-      <button onClick={save} className="px-4 py-2 bg-green-600 text-white rounded">
+      <button
+        className="w-full py-2 bg-green-600 text-white rounded"
+        onClick={save}
+      >
         저장
       </button>
     </div>
