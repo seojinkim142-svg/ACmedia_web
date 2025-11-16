@@ -14,11 +14,11 @@ export default function AdminUsersPage() {
     try {
       setLoading(true);
 
-      // 🔥 구방식 URL → 최신 Edge Function URL로 변경
+      // ✔ 최신 Edge Function URL
       const url = `https://rrmftksdyottcnobiqbd.functions.supabase.co/list-users`;
 
       const res = await fetch(url, {
-        method: "POST",
+        method: "GET",  // 🔥 POST → GET으로 변경
         headers: {
           Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
           "Content-Type": "application/json",
