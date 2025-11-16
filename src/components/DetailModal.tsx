@@ -158,7 +158,7 @@ export default function DetailModal({ isOpen, onClose, item }: DetailModalProps)
             />
           </div>
 
-          {/* ✔ 하단 저장 버튼 (이거 하나만 남김) */}
+          {/* BGM 아래 저장 버튼 (유일한 하단 저장 버튼) */}
           <button
             onClick={handleSave}
             className="w-full bg-green-600 text-white py-3 rounded-lg font-semibold shadow"
