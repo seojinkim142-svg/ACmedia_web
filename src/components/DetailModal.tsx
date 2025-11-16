@@ -62,7 +62,7 @@ export default function DetailModal({ isOpen, onClose, item }: DetailModalProps)
         editor: article.editor,
         images: article.images,
 
-        // 추가된 필드
+        // 추가 필드
         source_url: article.source_url,
         bgm: article.bgm,
 
@@ -77,6 +77,7 @@ export default function DetailModal({ isOpen, onClose, item }: DetailModalProps)
     <div className="fixed inset-0 bg-black/40 z-9000 flex justify-center items-start overflow-auto">
       <div className="bg-white w-full max-w-2xl rounded-lg shadow-xl mt-10 max-h-[90vh] overflow-hidden flex flex-col">
 
+        {/* HEADER */}
         <div className="relative border-b px-4 py-3 flex items-center">
           <h2 className="text-xl font-bold pr-32">{article.title}</h2>
 
@@ -95,8 +96,10 @@ export default function DetailModal({ isOpen, onClose, item }: DetailModalProps)
           </button>
         </div>
 
+        {/* BODY */}
         <div className="p-4 space-y-6 overflow-y-auto">
 
+          {/* 제목 */}
           <div>
             <label className="font-semibold">제목</label>
             <input
@@ -108,6 +111,7 @@ export default function DetailModal({ isOpen, onClose, item }: DetailModalProps)
             />
           </div>
 
+          {/* 요약 */}
           <div>
             <label className="font-semibold">요약</label>
             <textarea
@@ -120,6 +124,7 @@ export default function DetailModal({ isOpen, onClose, item }: DetailModalProps)
             />
           </div>
 
+          {/* 본문 */}
           <div>
             <label className="font-semibold">본문</label>
             <textarea
@@ -132,15 +137,19 @@ export default function DetailModal({ isOpen, onClose, item }: DetailModalProps)
             />
           </div>
 
+          {/* 이미지 섹션 */}
           <ImageSection
             images={article.images || []}
             articleId={article.id}
             onUpdate={loadArticleInfo}
           />
 
+          {/* 기본 정보 섹션 */}
           <InfoSection article={article} onUpdate={loadArticleInfo} />
 
-          {/* 추가된 출처 URL */}
+          {/* ---------- 이동된 위치 ---------- */}
+
+          {/* 출처 URL */}
           <div>
             <label className="font-semibold">출처 URL</label>
             <input
@@ -155,7 +164,7 @@ export default function DetailModal({ isOpen, onClose, item }: DetailModalProps)
             />
           </div>
 
-          {/* 추가된 BGM 자료 */}
+          {/* BGM 자료 */}
           <div>
             <label className="font-semibold">BGM 자료</label>
             <input
@@ -170,6 +179,9 @@ export default function DetailModal({ isOpen, onClose, item }: DetailModalProps)
             />
           </div>
 
+          {/* ---------- 이동 끝 ---------- */}
+
+          {/* 댓글 */}
           <CommentsSection
             comments={comments}
             postId={article.id}
