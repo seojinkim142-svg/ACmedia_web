@@ -16,13 +16,13 @@ interface Article {
   content_source?: string;
   images: string[] | null;
   created_at?: string;
+  bgm?: string;
 }
 
 export default function TrackerPage() {
   const [articles, setArticles] = useState<Article[]>([]);
   const [openItem, setOpenItem] = useState<Article | null>(null);
 
-  // 이미지 메뉴
   const [imageMenu, setImageMenu] = useState<{
     x: number;
     y: number;
@@ -41,13 +41,14 @@ export default function TrackerPage() {
     if (data) setArticles(data);
   };
 
-  const updateField = async (id: number, field: string, value: any) => {
-    await supabase.from("articles").update({ [field]: value }).eq("id", id);
+  useEffect(() => {
     loadArticles();
+  }, []);
 
-    if (openItem?.id === id) {
-      setOpenItem((prev) => (prev ? { ...prev, [field]: value } : prev));
-    }
+  const handleUpdated = (updated: Article) => {
+    setArticles(prev =>
+      prev.map(a => (a.id === updated.id ? updated : a))
+    );
   };
 
   const uploadNewImage = async (file: File, articleId: number) => {
@@ -65,10 +66,6 @@ export default function TrackerPage() {
 
     loadArticles();
   };
-
-  useEffect(() => {
-    loadArticles();
-  }, []);
 
   return (
     <div
@@ -88,11 +85,12 @@ export default function TrackerPage() {
         </div>
       )}
 
-      {/* 테이블 */}
       <TrackerTable
         articles={articles}
         onDoubleClick={setOpenItem}
-        onInlineUpdate={updateField}
+        onInlineUpdate={(id, field, value) =>
+          supabase.from("articles").update({ [field]: value }).eq("id", id).then(() => loadArticles())
+        }
         onImageClick={(e, item) =>
           setImageMenu({
             x: e.clientX,
@@ -103,7 +101,6 @@ export default function TrackerPage() {
         }
       />
 
-      {/* 이미지 메뉴 */}
       <ImageMenu
         menu={imageMenu}
         onPreview={(url) => setPreviewImage(url)}
@@ -117,14 +114,11 @@ export default function TrackerPage() {
         onClose={() => setImageMenu(null)}
       />
 
-      {/* 팝업 */}
       <DetailModal
         isOpen={openItem !== null}
-        onClose={() => {
-          setOpenItem(null);
-          loadArticles();
-        }}
+        onClose={() => { setOpenItem(null); loadArticles(); }}
         item={openItem}
+        onUpdated={handleUpdated}   // ★ 변경된 내용 TrackerPage에 반영
       />
     </div>
   );

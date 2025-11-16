@@ -8,9 +8,10 @@ interface DetailModalProps {
   isOpen: boolean;
   onClose: () => void;
   item: any | null;
+  onUpdated?: (updated: any) => void;  // ★ TrackerPage에게 변경 전달
 }
 
-export default function DetailModal({ isOpen, onClose, item }: DetailModalProps) {
+export default function DetailModal({ isOpen, onClose, item, onUpdated }: DetailModalProps) {
   const [article, setArticle] = useState<any>(item);
   const [comments, setComments] = useState<any[]>([]);
 
@@ -50,7 +51,7 @@ export default function DetailModal({ isOpen, onClose, item }: DetailModalProps)
   if (!article) return null;
 
   const handleSave = async () => {
-    await supabase
+    const { data, error } = await supabase
       .from("articles")
       .update({
         title: article.title,
@@ -64,7 +65,20 @@ export default function DetailModal({ isOpen, onClose, item }: DetailModalProps)
         images: article.images,
         updated_at: new Date().toISOString(),
       })
-      .eq("id", article.id);
+      .eq("id", article.id)
+      .select()
+      .single();
+
+    if (error) {
+      alert("저장 실패: " + error.message);
+      return;
+    }
+
+    // 최신 article 데이터로 갱신
+    if (data) setArticle(data);
+
+    // TrackerPage에게 반영
+    if (onUpdated) onUpdated(data);
 
     alert("저장되었습니다.");
   };
@@ -85,7 +99,6 @@ export default function DetailModal({ isOpen, onClose, item }: DetailModalProps)
             저장
           </button>
 
-          {/* 닫기 */}
           <button
             onClick={onClose}
             className="absolute right-4 top-3 text-2xl text-gray-600"
@@ -142,15 +155,14 @@ export default function DetailModal({ isOpen, onClose, item }: DetailModalProps)
             onUpdate={loadArticleInfo}
           />
 
-          {/* 출처/상태/콘텐츠출처/에디터 */}
+          {/* 출처 / 상태 / 콘텐츠출처 / 에디터 */}
           <InfoSection article={article} onUpdate={loadArticleInfo} />
 
-          {/* BGM 입력칸 */}
+          {/* BGM 입력 */}
           <div>
             <label className="font-semibold">BGM</label>
             <input
               className="border rounded p-2 w-full"
-              placeholder="예: 가수 :       , 제목:      "
               value={article.bgm || ""}
               onChange={(e) =>
                 setArticle((prev: any) => ({ ...prev, bgm: e.target.value }))
@@ -158,7 +170,7 @@ export default function DetailModal({ isOpen, onClose, item }: DetailModalProps)
             />
           </div>
 
-          {/* BGM 아래 저장 버튼 — (하단 유일한 저장 버튼) */}
+          {/* 하단 저장 버튼 */}
           <button
             onClick={handleSave}
             className="w-full bg-green-600 text-white py-3 rounded-lg font-semibold shadow"
