@@ -53,6 +53,16 @@ export default function InfoSection({ article, onUpdate }: InfoSectionProps) {
         />
       </div>
 
+      {/* 🔥 출처 URL — 추가됨 */}
+      <div>
+        <label className="font-semibold">출처 URL</label>
+        <input
+          className="border rounded p-2 w-full"
+          value={article.url || ""}
+          onChange={(e) => updateField("url", e.target.value)}
+        />
+      </div>
+
       {/* 상태 */}
       <div>
         <label className="font-semibold">상태</label>
