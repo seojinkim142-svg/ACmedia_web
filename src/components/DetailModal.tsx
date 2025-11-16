@@ -73,11 +73,11 @@ export default function DetailModal({ isOpen, onClose, item }: DetailModalProps)
     <div className="fixed inset-0 bg-black/40 z-9000 flex justify-center items-start overflow-auto">
       <div className="bg-white w-full max-w-2xl rounded-lg shadow-xl mt-10 max-h-[90vh] overflow-hidden flex flex-col">
 
-        {/* 상단 고정 헤더 */}
+        {/* 상단 헤더 (고정) */}
         <div className="border-b px-4 py-3 flex items-center bg-white sticky top-0 z-50">
           <h2 className="text-xl font-bold pr-32">{article.title}</h2>
 
-          {/* 상단 저장 버튼 */}
+          {/* 상단 우측 고정 저장 버튼 */}
           <button
             onClick={handleSave}
             className="absolute right-14 top-3 bg-green-600 text-white px-4 py-2 rounded shadow"
@@ -85,7 +85,7 @@ export default function DetailModal({ isOpen, onClose, item }: DetailModalProps)
             저장
           </button>
 
-          {/* X 닫기 */}
+          {/* 닫기 */}
           <button
             onClick={onClose}
             className="absolute right-4 top-3 text-2xl text-gray-600"
@@ -94,7 +94,7 @@ export default function DetailModal({ isOpen, onClose, item }: DetailModalProps)
           </button>
         </div>
 
-        {/* 메인 내용 스크롤 */}
+        {/* 본문 영역 */}
         <div className="p-4 space-y-6 overflow-y-auto">
 
           {/* 제목 */}
@@ -142,10 +142,10 @@ export default function DetailModal({ isOpen, onClose, item }: DetailModalProps)
             onUpdate={loadArticleInfo}
           />
 
-          {/* 출처 / 상태 / 콘텐츠출처 / 에디터 */}
+          {/* 출처/상태/콘텐츠출처/에디터 */}
           <InfoSection article={article} onUpdate={loadArticleInfo} />
 
-          {/* BGM 입력칸 - InfoSection 바로 아래 */}
+          {/* BGM 입력칸 */}
           <div>
             <label className="font-semibold">BGM</label>
             <input
@@ -158,7 +158,7 @@ export default function DetailModal({ isOpen, onClose, item }: DetailModalProps)
             />
           </div>
 
-          {/* 하단 저장 버튼 (BGM 아래) */}
+          {/* ✔ 하단 저장 버튼 (이거 하나만 남김) */}
           <button
             onClick={handleSave}
             className="w-full bg-green-600 text-white py-3 rounded-lg font-semibold shadow"
