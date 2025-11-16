@@ -150,7 +150,7 @@ export default function DetailModal({ isOpen, onClose, item }: DetailModalProps)
             <label className="font-semibold">BGM</label>
             <input
               className="border rounded p-2 w-full"
-              placeholder="예: https://youtu.be/xxxx"
+              placeholder="예: 가수 :       , 제목:      "
               value={article.bgm || ""}
               onChange={(e) =>
                 setArticle((prev: any) => ({ ...prev, bgm: e.target.value }))
