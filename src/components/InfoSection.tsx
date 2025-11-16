@@ -71,13 +71,6 @@ export default function InfoSection({ article, onUpdate }: InfoSectionProps) {
         </select>
       </div>
 
-      {/* 저장 */}
-      <button
-        className="w-full py-3 bg-green-600 text-white rounded"
-        onClick={() => alert("저장되었습니다.")}
-      >
-        저장
-      </button>
     </div>
   );
 }
