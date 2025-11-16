@@ -17,6 +17,7 @@ interface Article {
   content_source?: string;
   images: string[] | null;
   created_at?: string;
+  bgm?: string;
   latest_comment?: string; // ★ 추가됨
 }
 
@@ -34,33 +35,40 @@ export default function TrackerPage() {
 
   const [previewImage, setPreviewImage] = useState<string | null>(null);
 
-  // 최신 댓글 포함해서 articles 불러오기
+  // ★★★★★
+  // 완전 안정 버전 loadArticles
+  // Supabase 조인 없이 각각 최신 댓글 불러오기
+  // ★★★★★
   const loadArticles = async () => {
-    const { data } = await supabase
+    // 1) articles 먼저 불러오기
+    const { data: art, error } = await supabase
       .from("articles")
-      .select(
-        `
-        *,
-        comments:comments(content, created_at)
-      `
-      )
+      .select("*")
       .order("id", { ascending: true });
 
-    if (!data) return;
+    if (error || !art) {
+      setArticles([]);
+      return;
+    }
 
-    // comments 중 가장 최신 댓글 추출
-    const mapped = data.map((a: any) => {
-      let latest = "";
-      if (a.comments && a.comments.length > 0) {
-        const sorted = [...a.comments].sort(
-          (x, y) => new Date(y.created_at).getTime() - new Date(x.created_at).getTime()
-        );
-        latest = sorted[0].content;
-      }
-      return { ...a, latest_comment: latest };
-    });
+    // 2) 각 article에 대해 최신 댓글 1개씩 불러오기
+    const result: Article[] = [];
 
-    setArticles(mapped);
+    for (const a of art) {
+      const { data: cs } = await supabase
+        .from("comments")
+        .select("content, created_at")
+        .eq("post_id", a.id)
+        .order("created_at", { ascending: false })
+        .limit(1);
+
+      result.push({
+        ...a,
+        latest_comment: cs?.[0]?.content || "",
+      });
+    }
+
+    setArticles(result);
   };
 
   useEffect(() => {
@@ -94,7 +102,7 @@ export default function TrackerPage() {
       className="w-full mt-6 px-6"
       onClick={() => setImageMenu(null)}
     >
-      {/* 이미지 미리보기 */}
+      {/* 이미지 크게 미리보기 */}
       {previewImage && (
         <div
           className="fixed inset-0 bg-black/70 flex justify-center items-center z-50"
@@ -111,7 +119,11 @@ export default function TrackerPage() {
         articles={articles}
         onDoubleClick={setOpenItem}
         onInlineUpdate={(id, field, value) =>
-          supabase.from("articles").update({ [field]: value }).eq("id", id).then(loadArticles)
+          supabase
+            .from("articles")
+            .update({ [field]: value })
+            .eq("id", id)
+            .then(() => loadArticles())
         }
         onImageClick={(e, item) =>
           setImageMenu({
@@ -121,7 +133,7 @@ export default function TrackerPage() {
             id: item.id,
           })
         }
-        onMemoClick={(item) => setMemoItem(item)} // ★ 메모 열기
+        onMemoClick={(item) => setMemoItem(item)} // ★ 메모 클릭 핸들러
       />
 
       <ImageMenu
@@ -137,6 +149,7 @@ export default function TrackerPage() {
         onClose={() => setImageMenu(null)}
       />
 
+      {/* 상세 편집 모달 */}
       <DetailModal
         isOpen={openItem !== null}
         onClose={() => { setOpenItem(null); loadArticles(); }}
@@ -144,7 +157,7 @@ export default function TrackerPage() {
         onUpdated={handleUpdated}
       />
 
-      {/* ★ 메모 모달 */}
+      {/* ★ 메모 / 댓글 모달 */}
       {memoItem && (
         <CommentsModal
           item={memoItem}
