@@ -65,7 +65,7 @@ export default function TrackerRow({
       {/* 제목 — 길이에 따라 글씨 크기 자동 조정 */}
       <td
         className={`
-          py-2 px-1 cursor-pointer max-w-[260px] truncate
+          py-2 px-1 cursor-pointer max-w-[140px] truncate
           ${
             item.title.length < 25
               ? "text-sm"

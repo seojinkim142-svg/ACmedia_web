@@ -39,7 +39,7 @@ export default function TrackerTable({
           <th className="py-2 px-1 w-24 text-sm">에디터</th>
 
           {/* ⭐ 제목 칼럼 폭 제한 추가 */}
-          <th className="py-2 px-1 w-[260px] text-sm">제목</th>
+          <th className="py-2 px-1 w-[140px] text-sm">제목</th>
 
           <th className="py-2 px-1 w-20 text-sm">상태</th>
           <th className="py-2 px-1 w-40 text-sm">메모</th>
