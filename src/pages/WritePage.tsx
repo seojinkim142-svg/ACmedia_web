@@ -3,7 +3,17 @@ import { supabase } from "../supabaseClient";
 import { uploadImage } from "../lib/uploadImages";
 
 const sourceList = ["기사", "인스타", "AI", "창의"];
-const statusList = ["리뷰", "작업", "업로드", "추천", "중복", "보류", "업로드대기"];
+const statusList = [
+  "리뷰",
+  "추천",
+  "보류",
+  "본문 생성",
+  "본문 완료",
+  "이미지 생성",
+  "이미지 완료",
+  "업로드 대기",
+  "업로드",
+];
 
 export default function WritePage() {
   const [title, setTitle] = useState("");
