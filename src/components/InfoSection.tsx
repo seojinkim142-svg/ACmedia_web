@@ -18,14 +18,19 @@ export default function InfoSection({ article, onUpdate }: InfoSectionProps) {
   return (
     <div className="w-full space-y-4">
 
-      {/* 에디터 */}
+      {/* 에디터 -> 드롭다운 변환 */}
       <div>
         <label className="font-semibold">에디터</label>
-        <input
+        <select
           className="border rounded p-2 w-full"
           value={article.editor || ""}
           onChange={(e) => updateField("editor", e.target.value)}
-        />
+        >
+          <option value="">선택하세요</option>
+          <option value="지민">지민</option>
+          <option value="지안">지안</option>
+          <option value="아라">아라</option>
+        </select>
       </div>
 
       {/* 출처 */}
@@ -53,7 +58,7 @@ export default function InfoSection({ article, onUpdate }: InfoSectionProps) {
         />
       </div>
 
-      {/* 🔥 출처 URL — 추가됨 */}
+      {/* 출처 URL */}
       <div>
         <label className="font-semibold">출처 URL</label>
         <input
