@@ -13,6 +13,11 @@ export default function WritePage() {
   const [editor, setEditor] = useState("");
   const [source, setSource] = useState("기사");
   const [contentSource, setContentSource] = useState("");
+
+  // 추가된 상태값
+  const [sourceUrl, setSourceUrl] = useState("");
+  const [bgm, setBgm] = useState("");
+
   const [status, setStatus] = useState("리뷰");
 
   const uploadNewImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -31,6 +36,11 @@ export default function WritePage() {
       editor,
       source,
       content_source: contentSource,
+
+      // 추가된 부분
+      source_url: sourceUrl,
+      bgm,
+
       status,
     });
 
@@ -42,16 +52,15 @@ export default function WritePage() {
     setEditor("");
     setSource("기사");
     setContentSource("");
+    setSourceUrl("");   // 추가
+    setBgm("");         // 추가
     setStatus("리뷰");
   };
 
   return (
     <div className="w-full">
-
-      {/* 전체 좌측 정렬 */}
       <div className="flex flex-col items-start w-full px-6 mt-6 gap-4">
 
-        {/* 제목 */}
         <label className="font-semibold">제목</label>
         <input
           className="border rounded p-2 w-full"
@@ -59,7 +68,6 @@ export default function WritePage() {
           onChange={(e) => setTitle(e.target.value)}
         />
 
-        {/* 요약 */}
         <label className="font-semibold">요약</label>
         <textarea
           className="border rounded p-2 w-full"
@@ -68,7 +76,6 @@ export default function WritePage() {
           onChange={(e) => setSummary(e.target.value)}
         />
 
-        {/* 본문 */}
         <label className="font-semibold">본문</label>
         <textarea
           className="border rounded p-2 w-full"
@@ -77,11 +84,9 @@ export default function WritePage() {
           onChange={(e) => setBody(e.target.value)}
         />
 
-        {/* 이미지 업로드 */}
         <label className="font-semibold">이미지 업로드</label>
         <input type="file" accept="image/*" onChange={uploadNewImage} />
 
-        {/* 업로드된 이미지 썸네일 */}
         <div className="flex gap-2 flex-wrap mt-2">
           {images.map((img, i) => (
             <img
@@ -92,7 +97,6 @@ export default function WritePage() {
           ))}
         </div>
 
-        {/* 에디터 */}
         <label className="font-semibold">에디터</label>
         <input
           className="border rounded p-2 w-full"
@@ -100,7 +104,6 @@ export default function WritePage() {
           onChange={(e) => setEditor(e.target.value)}
         />
 
-        {/* 출처 */}
         <label className="font-semibold">출처</label>
         <select
           className="border rounded p-2 w-full"
@@ -112,7 +115,6 @@ export default function WritePage() {
           ))}
         </select>
 
-        {/* 콘텐츠 출처 */}
         <label className="font-semibold">콘텐츠 출처</label>
         <input
           className="border rounded p-2 w-full"
@@ -120,7 +122,22 @@ export default function WritePage() {
           onChange={(e) => setContentSource(e.target.value)}
         />
 
-        {/* 상태 */}
+        {/* 추가된 출처 URL */}
+        <label className="font-semibold">출처 URL</label>
+        <input
+          className="border rounded p-2 w-full"
+          value={sourceUrl}
+          onChange={(e) => setSourceUrl(e.target.value)}
+        />
+
+        {/* 추가된 BGM 자료 */}
+        <label className="font-semibold">BGM 자료</label>
+        <input
+          className="border rounded p-2 w-full"
+          value={bgm}
+          onChange={(e) => setBgm(e.target.value)}
+        />
+
         <label className="font-semibold">상태</label>
         <select
           className="border rounded p-2 w-full"
@@ -132,7 +149,6 @@ export default function WritePage() {
           ))}
         </select>
 
-        {/* 저장 버튼 */}
         <button
           className="px-6 py-3 bg-green-600 text-white rounded mt-4"
           onClick={saveArticle}
