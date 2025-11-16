@@ -52,8 +52,8 @@ export default function WritePage() {
     setEditor("");
     setSource("기사");
     setContentSource("");
-    setSourceUrl("");   // 추가
-    setBgm("");         // 추가
+    setSourceUrl("");
+    setBgm("");
     setStatus("리뷰");
   };
 
@@ -97,12 +97,18 @@ export default function WritePage() {
           ))}
         </div>
 
+        {/* 🔥 에디터 드롭다운으로 변경 */}
         <label className="font-semibold">에디터</label>
-        <input
+        <select
           className="border rounded p-2 w-full"
           value={editor}
           onChange={(e) => setEditor(e.target.value)}
-        />
+        >
+          <option value="">선택하세요</option>
+          <option value="지민">지민</option>
+          <option value="지안">지안</option>
+          <option value="아라">아라</option>
+        </select>
 
         <label className="font-semibold">출처</label>
         <select
@@ -122,7 +128,6 @@ export default function WritePage() {
           onChange={(e) => setContentSource(e.target.value)}
         />
 
-        {/* 추가된 출처 URL */}
         <label className="font-semibold">출처 URL</label>
         <input
           className="border rounded p-2 w-full"
@@ -130,7 +135,6 @@ export default function WritePage() {
           onChange={(e) => setSourceUrl(e.target.value)}
         />
 
-        {/* 추가된 BGM 자료 */}
         <label className="font-semibold">BGM 자료</label>
         <input
           className="border rounded p-2 w-full"

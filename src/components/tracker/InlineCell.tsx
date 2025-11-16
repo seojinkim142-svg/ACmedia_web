@@ -24,7 +24,10 @@ export default function InlineCell({
           <select
             className="border rounded px-1"
             value={value || ""}
-            onChange={(e) => onUpdate(e.target.value)}
+            onChange={(e) => {
+              onUpdate(e.target.value);  
+              setEditing(false);         // 🔥 선택 즉시 edit 종료
+            }}
             onBlur={() => setEditing(false)}
           >
             {options.map((o) => (

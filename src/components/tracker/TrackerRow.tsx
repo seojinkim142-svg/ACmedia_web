@@ -65,7 +65,9 @@ export default function TrackerRow({
 
       {/* 에디터 */}
       <InlineCell
+        type="select"
         value={item.editor || ""}
+        options={["지민", "지안", "아라"]}
         onUpdate={(val) => onInlineUpdate(item.id, "editor", val)}
       />
 
