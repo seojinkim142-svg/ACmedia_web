@@ -1,10 +1,9 @@
 import { useEffect, useState } from "react";
-import { supabase } from "../supabaseClient";
 
 interface UserRow {
   id: string;
   email: string | null;
-  role: string;
+  role: string | null;
 }
 
 export default function AdminUsersPage() {
@@ -12,24 +11,38 @@ export default function AdminUsersPage() {
   const [loading, setLoading] = useState(true);
 
   const loadUsers = async () => {
-    setLoading(true);
+    try {
+      setLoading(true);
 
-    const { data, error } = await supabase.auth.admin.listUsers();
+      const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/list-users`;
 
-    if (error) {
-      alert("유저 로드 실패: " + error.message);
+      const res = await fetch(url, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      const result = await res.json();
+
+      if (result.error) {
+        alert("유저 로드 실패: " + result.error);
+        return;
+      }
+
+      const formatted = result.users.map((u: any) => ({
+        id: u.id,
+        email: u.email,
+        role: u.role ?? "user",
+      }));
+
+      setUsers(formatted);
+    } catch (err) {
+      alert("오류 발생: " + (err as any).message);
+    } finally {
       setLoading(false);
-      return;
     }
-
-    const formatted: UserRow[] = data.users.map((u) => ({
-      id: u.id,
-      email: u.email ?? null,   // ★ undefined → null 변환
-      role: u.role ?? "user",
-    }));
-
-    setUsers(formatted);
-    setLoading(false);
   };
 
   useEffect(() => {
@@ -38,52 +51,26 @@ export default function AdminUsersPage() {
 
   return (
     <div className="w-full p-6">
-      <h1 className="text-2xl font-bold mb-6">유저 목록</h1>
+      <h1 className="text-2xl font-bold mb-4">유저 목록</h1>
 
       {loading ? (
-        <div className="text-gray-600">불러오는 중...</div>
+        <p>불러오는 중...</p>
       ) : (
         <table className="w-full border-collapse text-left">
           <thead>
             <tr className="border-b bg-gray-100">
-              <th className="py-2 px-2 w-20">ID</th>
-              <th className="py-2 px-2 w-60">유저 이메일</th>
-              <th className="py-2 px-2 w-40">권한</th>
+              <th className="py-2 px-3">ID</th>
+              <th className="py-2 px-3">이메일</th>
+              <th className="py-2 px-3">권한</th>
             </tr>
           </thead>
 
           <tbody>
             {users.map((u) => (
               <tr key={u.id} className="border-b hover:bg-gray-50">
-                <td className="py-2 px-2 text-sm">{u.id.slice(0, 8)}...</td>
-
-                <td className="py-2 px-2 text-sm">{u.email}</td>
-
-                <td className="py-2 px-2">
-                  <select
-                    className="border rounded px-2 py-1"
-                    defaultValue={u.role}
-                    onChange={async (e) => {
-                      const newRole = e.target.value;
-
-                      const { error } = await supabase.auth.admin.updateUserById(
-                        u.id,
-                        { role: newRole }
-                      );
-
-                      if (error) {
-                        alert("권한 변경 실패: " + error.message);
-                        return;
-                      }
-
-                      alert("권한 변경 완료");
-                      loadUsers();
-                    }}
-                  >
-                    <option value="user">user</option>
-                    <option value="admin">admin</option>
-                  </select>
-                </td>
+                <td className="py-2 px-3">{u.id}</td>
+                <td className="py-2 px-3">{u.email}</td>
+                <td className="py-2 px-3">{u.role}</td>
               </tr>
             ))}
           </tbody>
