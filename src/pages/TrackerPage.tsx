@@ -4,6 +4,7 @@ import { supabase } from "../supabaseClient";
 import { uploadImage } from "../lib/uploadImages";
 import TrackerTable from "../components/tracker/TrackerTable";
 import ImageMenu from "../components/tracker/ImageMenu";
+import CommentsModal from "../components/tracker/CommentsModal";
 
 interface Article {
   id: number;
@@ -16,12 +17,13 @@ interface Article {
   content_source?: string;
   images: string[] | null;
   created_at?: string;
-  bgm?: string;
+  latest_comment?: string; // ★ 추가됨
 }
 
 export default function TrackerPage() {
   const [articles, setArticles] = useState<Article[]>([]);
   const [openItem, setOpenItem] = useState<Article | null>(null);
+  const [memoItem, setMemoItem] = useState<Article | null>(null);
 
   const [imageMenu, setImageMenu] = useState<{
     x: number;
@@ -32,13 +34,33 @@ export default function TrackerPage() {
 
   const [previewImage, setPreviewImage] = useState<string | null>(null);
 
+  // 최신 댓글 포함해서 articles 불러오기
   const loadArticles = async () => {
     const { data } = await supabase
       .from("articles")
-      .select("*")
+      .select(
+        `
+        *,
+        comments:comments(content, created_at)
+      `
+      )
       .order("id", { ascending: true });
 
-    if (data) setArticles(data);
+    if (!data) return;
+
+    // comments 중 가장 최신 댓글 추출
+    const mapped = data.map((a: any) => {
+      let latest = "";
+      if (a.comments && a.comments.length > 0) {
+        const sorted = [...a.comments].sort(
+          (x, y) => new Date(y.created_at).getTime() - new Date(x.created_at).getTime()
+        );
+        latest = sorted[0].content;
+      }
+      return { ...a, latest_comment: latest };
+    });
+
+    setArticles(mapped);
   };
 
   useEffect(() => {
@@ -89,7 +111,7 @@ export default function TrackerPage() {
         articles={articles}
         onDoubleClick={setOpenItem}
         onInlineUpdate={(id, field, value) =>
-          supabase.from("articles").update({ [field]: value }).eq("id", id).then(() => loadArticles())
+          supabase.from("articles").update({ [field]: value }).eq("id", id).then(loadArticles)
         }
         onImageClick={(e, item) =>
           setImageMenu({
@@ -99,6 +121,7 @@ export default function TrackerPage() {
             id: item.id,
           })
         }
+        onMemoClick={(item) => setMemoItem(item)} // ★ 메모 열기
       />
 
       <ImageMenu
@@ -118,8 +141,16 @@ export default function TrackerPage() {
         isOpen={openItem !== null}
         onClose={() => { setOpenItem(null); loadArticles(); }}
         item={openItem}
-        onUpdated={handleUpdated}   // ★ 변경된 내용 TrackerPage에 반영
+        onUpdated={handleUpdated}
       />
+
+      {/* ★ 메모 모달 */}
+      {memoItem && (
+        <CommentsModal
+          item={memoItem}
+          onClose={() => setMemoItem(null)}
+        />
+      )}
     </div>
   );
 }
