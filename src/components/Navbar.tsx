@@ -62,6 +62,18 @@ export default function Navbar() {
       >
         글쓰기
       </Link>
+
+      {/* ★ 추가: 관리자 메뉴 */}
+      <Link
+        to="/admin/users"
+        className={`px-3 py-1 rounded ${
+          isActive("/admin/users")
+            ? "bg-white text-black font-semibold"
+            : "hover:text-gray-300"
+        }`}
+      >
+        관리자
+      </Link>
     </nav>
   );
 }
