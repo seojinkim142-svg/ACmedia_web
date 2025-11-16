@@ -28,6 +28,7 @@ export default function TrackerRow({
   onInlineUpdate,
   onImageClick,
 }: TrackerRowProps) {
+  
   const preview =
     item.images?.length
       ? item.images[0]
@@ -38,12 +39,16 @@ export default function TrackerRow({
       className="border-b hover:bg-gray-50"
       onDoubleClick={() => onDoubleClick(item)}
     >
+      {/* 번호 */}
       <td className="py-2 px-1 text-sm">{index + 1}</td>
 
-      {/* 사진 */}
+      {/* 사진 클릭 → 메뉴 호출 */}
       <td
         className="py-2 px-1 cursor-pointer"
-        onClick={(e) => onImageClick(e, item)}
+        onClick={(e) => {
+          e.stopPropagation();
+          onImageClick(e, item);
+        }}
       >
         <img
           src={preview}
@@ -75,7 +80,15 @@ export default function TrackerRow({
       <InlineCell
         type="select"
         value={item.status}
-        options={["리뷰", "작업", "업로드", "추천", "중복", "보류", "업로드대기"]}
+        options={[
+          "리뷰",
+          "작업",
+          "업로드",
+          "추천",
+          "중복",
+          "보류",
+          "업로드대기",
+        ]}
         onUpdate={(val) => onInlineUpdate(item.id, "status", val)}
       />
     </tr>

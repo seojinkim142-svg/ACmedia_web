@@ -5,7 +5,7 @@ export default function ImagePreviewModal({ images, index, onClose, onSelect }: 
   const prev = () => onSelect((index - 1 + images.length) % images.length);
 
   return (
-    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[9999]" onClick={onClose}>
+    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-9999" onClick={onClose}>
       <div className="relative" onClick={(e) => e.stopPropagation()}>
         <img src={images[index]} className="max-w-[90vw] max-h-[90vh] rounded" />
 
