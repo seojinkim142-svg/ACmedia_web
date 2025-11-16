@@ -61,11 +61,6 @@ export default function DetailModal({ isOpen, onClose, item }: DetailModalProps)
         content_source: article.content_source,
         editor: article.editor,
         images: article.images,
-
-        // 추가 필드
-        source_url: article.source_url,
-        bgm: article.bgm,
-
         updated_at: new Date().toISOString(),
       })
       .eq("id", article.id);
@@ -77,10 +72,16 @@ export default function DetailModal({ isOpen, onClose, item }: DetailModalProps)
     <div className="fixed inset-0 bg-black/40 z-9000 flex justify-center items-start overflow-auto">
       <div className="bg-white w-full max-w-2xl rounded-lg shadow-xl mt-10 max-h-[90vh] overflow-hidden flex flex-col">
 
-        {/* HEADER */}
-        <div className="relative border-b px-4 py-3 flex items-center">
+        {/* ------------------------- */}
+        {/*     헤더 영역 (고정됨)      */}
+        {/* ------------------------- */}
+
+        <div className="border-b px-4 py-3 flex items-center bg-white sticky top-0 z-50">
+
+          {/* 제목 */}
           <h2 className="text-xl font-bold pr-32">{article.title}</h2>
 
+          {/* 저장 */}
           <button
             onClick={handleSave}
             className="absolute right-14 top-3 bg-green-600 text-white px-4 py-2 rounded shadow"
@@ -88,6 +89,7 @@ export default function DetailModal({ isOpen, onClose, item }: DetailModalProps)
             저장
           </button>
 
+          {/* 닫기 X */}
           <button
             onClick={onClose}
             className="absolute right-4 top-3 text-2xl text-gray-600"
@@ -96,10 +98,13 @@ export default function DetailModal({ isOpen, onClose, item }: DetailModalProps)
           </button>
         </div>
 
-        {/* BODY */}
+        {/* ------------------------- */}
+        {/*     본문 - 스크롤 되는 영역  */}
+        {/* ------------------------- */}
+
         <div className="p-4 space-y-6 overflow-y-auto">
 
-          {/* 제목 */}
+          {/* 제목 수정 */}
           <div>
             <label className="font-semibold">제목</label>
             <input
@@ -144,42 +149,8 @@ export default function DetailModal({ isOpen, onClose, item }: DetailModalProps)
             onUpdate={loadArticleInfo}
           />
 
-          {/* 기본 정보 섹션 */}
+          {/* 출처 / 상태 / 콘텐츠 출처 / 에디터 */}
           <InfoSection article={article} onUpdate={loadArticleInfo} />
-
-          {/* ---------- 이동된 위치 ---------- */}
-
-          {/* 출처 URL */}
-          <div>
-            <label className="font-semibold">출처 URL</label>
-            <input
-              className="border rounded p-2 w-full"
-              value={article.source_url || ""}
-              onChange={(e) =>
-                setArticle((prev: any) => ({
-                  ...prev,
-                  source_url: e.target.value,
-                }))
-              }
-            />
-          </div>
-
-          {/* BGM 자료 */}
-          <div>
-            <label className="font-semibold">BGM 자료</label>
-            <input
-              className="border rounded p-2 w-full"
-              value={article.bgm || ""}
-              onChange={(e) =>
-                setArticle((prev: any) => ({
-                  ...prev,
-                  bgm: e.target.value,
-                }))
-              }
-            />
-          </div>
-
-          {/* ---------- 이동 끝 ---------- */}
 
           {/* 댓글 */}
           <CommentsSection
