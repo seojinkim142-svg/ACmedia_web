@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import DetailModal from "../components/DetailModal";
 import { supabase } from "../supabaseClient";
+import { uploadImage } from "../lib/uploadImages";
 
 interface Article {
   id: number;
@@ -19,7 +20,15 @@ export default function TrackerPage() {
   const [articles, setArticles] = useState<Article[]>([]);
   const [openItem, setOpenItem] = useState<Article | null>(null);
   const [editing, setEditing] = useState<{ id: number; field: string } | null>(null);
-  const [previewImage, setPreviewImage] = useState<string | null>(null); // 사진 단일 팝업
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
+
+  // 사진 메뉴 (위치 + url + article id)
+  const [imageMenu, setImageMenu] = useState<{
+    x: number;
+    y: number;
+    url: string;
+    id: number;
+  } | null>(null);
 
   const loadArticles = async () => {
     const { data } = await supabase
@@ -34,6 +43,7 @@ export default function TrackerPage() {
     await supabase.from("articles").update({ [field]: value }).eq("id", id);
     loadArticles();
 
+    // DetailModal 동기화
     if (openItem?.id === id) {
       setOpenItem((prev) => (prev ? { ...prev, [field]: value } : prev));
     }
@@ -44,8 +54,10 @@ export default function TrackerPage() {
   }, []);
 
   return (
-    <div className="w-full mt-6 px-6">
-
+    <div
+      className="w-full mt-6 px-6"
+      onClick={() => setImageMenu(null)} // 바깥 클릭 시 메뉴 닫기
+    >
       {/* 사진 크게보기 팝업 */}
       {previewImage && (
         <div
@@ -56,6 +68,64 @@ export default function TrackerPage() {
             src={previewImage}
             className="max-w-[90vw] max-h-[90vh] rounded-lg shadow-xl"
           />
+        </div>
+      )}
+
+      {/* 사진 메뉴 팝업 */}
+      {imageMenu && (
+        <div
+          className="fixed bg-white border shadow-lg rounded z-50"
+          style={{ top: imageMenu.y, left: imageMenu.x }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <button
+            className="block w-full px-4 py-2 text-left hover:bg-gray-100"
+            onClick={() => {
+              setPreviewImage(imageMenu.url);
+              setImageMenu(null);
+            }}
+          >
+            미리보기
+          </button>
+
+          <button
+            className="block w-full px-4 py-2 text-left hover:bg-gray-100"
+            onClick={() => {
+              const link = document.createElement("a");
+              link.href = imageMenu.url;
+              link.download = `image-${Date.now()}.png`;
+              link.click();
+              setImageMenu(null);
+            }}
+          >
+            다운로드
+          </button>
+
+          <label className="block w-full px-4 py-2 text-left hover:bg-gray-100 cursor-pointer">
+            업로드
+            <input
+              type="file"
+              className="hidden"
+              accept="image/*"
+              onChange={async (e) => {
+                if (!e.target.files?.[0]) return;
+                const url = await uploadImage(e.target.files[0]);
+
+                const target = articles.find((a) => a.id === imageMenu.id);
+                const updatedImages = target?.images?.length
+                  ? [...target.images, url]
+                  : [url];
+
+                await supabase
+                  .from("articles")
+                  .update({ images: updatedImages })
+                  .eq("id", imageMenu.id);
+
+                loadArticles();
+                setImageMenu(null);
+              }}
+            />
+          </label>
         </div>
       )}
 
@@ -82,19 +152,24 @@ export default function TrackerPage() {
               <tr
                 key={item.id}
                 className="border-b hover:bg-gray-50"
-                onDoubleClick={() => setOpenItem(item)}  // ★ 더블클릭 → 팝업
+                onDoubleClick={() => setOpenItem(item)} // ★ 더블클릭 → 팝업
               >
                 {/* 번호 */}
                 <td className="py-2 px-1 text-sm">{index + 1}</td>
 
-                {/* 사진 단일클릭 → 미리보기 */}
+                {/* 사진 */}
                 <td className="py-2 px-1">
                   <img
                     src={preview}
                     className="w-14 h-14 object-cover rounded cursor-pointer"
                     onClick={(e) => {
                       e.stopPropagation();
-                      setPreviewImage(preview);   // ★ 단일 클릭 → 인라인 사진 팝업
+                      setImageMenu({
+                        x: e.clientX,
+                        y: e.clientY,
+                        url: preview,
+                        id: item.id,
+                      });
                     }}
                   />
                 </td>
@@ -102,7 +177,9 @@ export default function TrackerPage() {
                 {/* 날짜 inline edit */}
                 <td
                   className="py-2 px-1 text-sm cursor-pointer"
-                  onClick={() => setEditing({ id: item.id, field: "created_at" })}
+                  onClick={() =>
+                    setEditing({ id: item.id, field: "created_at" })
+                  }
                 >
                   {editing?.id === item.id && editing?.field === "created_at" ? (
                     <input
