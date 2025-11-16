@@ -77,12 +77,14 @@ export default function InfoSection({ article, onUpdate }: InfoSectionProps) {
           onChange={(e) => updateField("status", e.target.value)}
         >
           <option>리뷰</option>
-          <option>작업</option>
-          <option>업로드</option>
           <option>추천</option>
-          <option>중복</option>
           <option>보류</option>
-          <option>업로드대기</option>
+          <option>본문 생성</option>
+          <option>본문 완료</option>
+          <option>이미지 생성</option>
+          <option>이미지 완료</option>
+          <option>업로드 대기</option>
+          <option>업로드</option>
         </select>
       </div>
 
