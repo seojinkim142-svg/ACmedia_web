@@ -20,7 +20,7 @@ interface TrackerRowProps {
   onDoubleClick: (item: Article) => void;
   onInlineUpdate: (id: number, field: string, value: string) => void;
   onImageClick: (e: React.MouseEvent, item: Article) => void;
-  onMemoClick: (item: Article) => void; // ★ 추가
+  onMemoClick: (item: Article) => void;
 }
 
 export default function TrackerRow({
@@ -42,7 +42,10 @@ export default function TrackerRow({
 
       <td className="py-2 px-1 text-sm">{index + 1}</td>
 
-      <td className="py-2 px-1 cursor-pointer" onClick={(e) => { e.stopPropagation(); onImageClick(e, item); }}>
+      <td
+        className="py-2 px-1 cursor-pointer"
+        onClick={(e) => { e.stopPropagation(); onImageClick(e, item); }}
+      >
         <img src={preview} className="w-14 h-14 object-cover rounded" />
       </td>
 
@@ -59,20 +62,35 @@ export default function TrackerRow({
         onUpdate={(val) => onInlineUpdate(item.id, "editor", val)}
       />
 
-      <InlineCell
-        value={item.title}
-        highlight
-        onUpdate={(val) => onInlineUpdate(item.id, "title", val)}
-      />
+      {/* 제목 — 길이에 따라 글씨 크기 자동 조정 */}
+      <td
+        className={`
+          py-2 px-1 cursor-pointer max-w-[260px] truncate
+          ${
+            item.title.length < 25
+              ? "text-sm"
+              : item.title.length < 40
+              ? "text-xs"
+              : "text-[10px]"
+          }
+        `}
+        onClick={() => onDoubleClick(item)}
+      >
+        {item.title}
+      </td>
 
       <InlineCell
         type="select"
         value={item.status}
-        options={["리뷰", "추천", "보류", "본문 생성", "본문 완료", "이미지 생성", "이미지 완료", "업로드 대기", "업로드",]}
+        options={[
+          "리뷰", "추천", "보류",
+          "본문 생성", "본문 완료",
+          "이미지 생성", "이미지 완료",
+          "업로드 대기", "업로드",
+        ]}
         onUpdate={(val) => onInlineUpdate(item.id, "status", val)}
       />
 
-      {/* ★ 메모 칼럼 */}
       <td
         className="py-2 px-1 cursor-pointer text-sm text-gray-600"
         onClick={() => onMemoClick(item)}
