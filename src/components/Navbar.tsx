@@ -63,7 +63,7 @@ export default function Navbar() {
         글쓰기
       </Link>
 
-      {/* ★ 추가: 관리자 메뉴 */}
+      {/* ⭐ 관리자 메뉴 추가 */}
       <Link
         to="/admin/users"
         className={`px-3 py-1 rounded ${
@@ -74,6 +74,7 @@ export default function Navbar() {
       >
         관리자
       </Link>
+
     </nav>
   );
 }

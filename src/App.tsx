@@ -7,7 +7,6 @@ import UploadPage from "./pages/UploadPage";
 import DatabasePage from "./pages/DatabasePage";
 import WritePage from "./pages/WritePage";
 
-// ★ 관리자 페이지 추가
 import AdminUsersPage from "./pages/AdminUsersPage";
 
 export default function App() {
@@ -23,7 +22,7 @@ export default function App() {
         <Route path="/database" element={<DatabasePage />} />
         <Route path="/write" element={<WritePage />} />
 
-        {/* ★ 관리자 페이지 경로 추가 */}
+        {/* ⭐ 관리자 - 유저 목록 */}
         <Route path="/admin/users" element={<AdminUsersPage />} />
       </Routes>
     </div>
