@@ -14,7 +14,8 @@ export default function AdminUsersPage() {
     try {
       setLoading(true);
 
-      const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/list-users`;
+      // 🔥 구방식 URL → 최신 Edge Function URL로 변경
+      const url = `https://rrmftksdyottcnobiqbd.functions.supabase.co/list-users`;
 
       const res = await fetch(url, {
         method: "POST",
