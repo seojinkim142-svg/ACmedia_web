@@ -26,6 +26,7 @@ export default function TrackerPage() {
   const [openItem, setOpenItem] = useState<Article | null>(null);
   const [memoItem, setMemoItem] = useState<Article | null>(null);
   const [exporting, setExporting] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [imageMenu, setImageMenu] = useState<{ x: number; y: number; url: string; id: number } | null>(null);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
 
@@ -86,10 +87,16 @@ export default function TrackerPage() {
   const exportArticles = async () => {
     try {
       setExporting(true);
-      const { data, error } = await supabase
+      let query = supabase
         .from("articles")
         .select("id,title,summary,body,source,status,editor,content_source,bgm,created_at")
         .order("id", { ascending: true });
+
+      if (selectedIds.length > 0) {
+        query = query.in("id", selectedIds);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
 
@@ -185,6 +192,7 @@ export default function TrackerPage() {
           })
         }
         onMemoClick={(item) => setMemoItem(item)}
+        onSelectedChange={setSelectedIds}
       />
 
       <ImageMenu

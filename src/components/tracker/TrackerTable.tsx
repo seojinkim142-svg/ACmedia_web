@@ -22,6 +22,7 @@ interface TrackerTableProps {
   onInlineUpdate: (id: number, field: string, value: string) => Promise<unknown> | void;
   onImageClick: (e: MouseEvent, item: Article) => void;
   onMemoClick: (item: Article) => void;
+  onSelectedChange?: (ids: number[]) => void;
 }
 
 interface SelectedCell {
@@ -42,6 +43,7 @@ export default function TrackerTable({
   onInlineUpdate,
   onImageClick,
   onMemoClick,
+  onSelectedChange,
 }: TrackerTableProps) {
   const [selectedCell, setSelectedCell] = useState<SelectedCell | null>(null);
   const undoStack = useRef<HistoryEntry[]>([]);
@@ -62,13 +64,19 @@ export default function TrackerTable({
     setSelectedCell((prev) => {
       if (!prev) {
         return { rowIndex: 0, field: "created_at" };
-      }
+        }
       const clampedIndex = Math.min(prev.rowIndex, articles.length - 1);
       return { rowIndex: clampedIndex, field: prev.field };
     });
+  }, [articles.length]);
 
+  useEffect(() => {
     setSelectedIds((prev) => prev.filter((id) => articles.some((a) => a.id === id)));
-  }, [articles.length, articles]);
+  }, [articles]);
+
+  useEffect(() => {
+    onSelectedChange?.(selectedIds);
+  }, [selectedIds, onSelectedChange]);
 
   const handleUpdate = async (id: number, field: string, value: string) => {
     const rowIndex = articles.findIndex((a) => a.id === id);
