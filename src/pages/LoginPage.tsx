@@ -7,7 +7,6 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [status, setStatus] = useState("");
   const [loading, setLoading] = useState(false);
-  const [resetting, setResetting] = useState(false);
   const navigate = useNavigate();
 
   const signIn = async () => {
@@ -21,65 +20,37 @@ export default function LoginPage() {
     setStatus("");
 
     try {
-      const { data: sessionData, error: signInError } =
+      // 1) 먼저 인증 시도
+      const { data: signInData, error: signInError } =
         await supabase.auth.signInWithPassword({
           email: normalizedEmail,
           password,
         });
 
-      if (signInError || !sessionData.session) throw signInError;
+      if (signInError) throw signInError;
 
-      const userId = sessionData.session.user.id;
+      const user = signInData.user;
 
+      // 2) 로그인 성공 후, user.id 로 profiles 조회 (RLS 허용됨)
       const { data: profile, error: profileError } = await supabase
         .from("profiles")
-        .select("id")
-        .eq("id", userId)
-        .maybeSingle();
+        .select("role")
+        .eq("id", user.id)
+        .single();
 
-      if (profileError) {
-        throw profileError;
-      }
+      if (profileError) throw profileError;
 
       if (!profile) {
         setStatus("관리자가 등록한 이메일만 로그인할 수 있습니다.");
-        await supabase.auth.signOut();
         return;
       }
 
+      // 3) 정상 로그인 후 이동
       navigate("/tracker");
     } catch (err) {
       setStatus(`로그인 실패: ${(err as Error).message}`);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const sendResetEmail = async () => {
-    const normalizedEmail = email.trim().toLowerCase();
-    if (!normalizedEmail) {
-      alert("재설정 메일을 보낼 회사 이메일을 입력하세요.");
-      return;
-    }
-
-    setResetting(true);
-    setStatus("");
-
-    try {
-      const { error } = await supabase.auth.resetPasswordForEmail(
-        email: normalizedEmail,
-        {
-          redirectTo: `${window.location.origin}/auth/recovery`,
-        }
-      );
-
-      if (error) throw error;
-
-      setStatus("재설정 링크를 이메일로 보냈습니다. 받은 메일을 확인하세요.");
-    } catch (err) {
-      setStatus(`재설정 메일 발송 실패: ${(err as Error).message}`);
-    } finally {
-      setResetting(false);
     }
   };
 
@@ -112,15 +83,6 @@ export default function LoginPage() {
           disabled={loading}
         >
           {loading ? "로그인 중..." : "로그인"}
-        </button>
-
-        <button
-          type="button"
-          className="text-sm text-blue-600 underline"
-          onClick={sendResetEmail}
-          disabled={resetting}
-        >
-          {resetting ? "메일 발송 중..." : "비밀번호 재설정 이메일 받기"}
         </button>
 
         {status && <p className="text-sm text-red-600">{status}</p>}
