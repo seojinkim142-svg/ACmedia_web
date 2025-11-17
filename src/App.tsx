@@ -9,6 +9,7 @@ import WritePage from "./pages/WritePage";
 import AdminUsersPage from "./pages/AdminUsersPage";
 import LoginPage from "./pages/LoginPage";
 import MagicLinkPage from "./pages/MagicLinkPage";
+import ResetPassword from "./pages/ResetPassword";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 export default function App() {
@@ -79,6 +80,15 @@ export default function App() {
           element={
             <ProtectedRoute>
               <AdminUsersPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/settings/password"
+          element={
+            <ProtectedRoute>
+              <ResetPassword />
             </ProtectedRoute>
           }
         />
