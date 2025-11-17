@@ -1,5 +1,4 @@
-﻿import type { MouseEvent } from "react";
-import InlineCell from "./InlineCell";
+﻿import InlineCell from "./InlineCell";
 
 interface Article {
   id: number;
@@ -20,10 +19,12 @@ interface TrackerRowProps {
   item: Article;
   onDoubleClick: (item: Article) => void;
   onInlineUpdate: (id: number, field: string, value: string) => void;
-  onImageClick: (e: MouseEvent, item: Article) => void;
+  onImageClick: (e: React.MouseEvent, item: Article) => void;
   onMemoClick: (item: Article) => void;
   selectedCell?: { rowIndex: number; field: string } | null;
   onSelectCell: (rowIndex: number, field: string) => void;
+  rowSelected: boolean;
+  onToggleRow: (checked: boolean) => void;
 }
 
 export default function TrackerRow({
@@ -35,6 +36,8 @@ export default function TrackerRow({
   onMemoClick,
   selectedCell,
   onSelectCell,
+  rowSelected,
+  onToggleRow,
 }: TrackerRowProps) {
   const preview =
     item.images?.length
@@ -46,6 +49,16 @@ export default function TrackerRow({
 
   return (
     <tr className="border-b hover:bg-gray-50" onDoubleClick={() => onDoubleClick(item)}>
+      <td className="py-2 px-1 text-center">
+        <input
+          type="checkbox"
+          checked={rowSelected}
+          onChange={(e) => {
+            e.stopPropagation();
+            onToggleRow(e.target.checked);
+          }}
+        />
+      </td>
       <td className="py-2 px-1 text-sm">{index + 1}</td>
 
       <td className="py-2 px-1 cursor-pointer">

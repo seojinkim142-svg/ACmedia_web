@@ -47,10 +47,15 @@ export default function TrackerTable({
   const undoStack = useRef<HistoryEntry[]>([]);
   const redoStack = useRef<HistoryEntry[]>([]);
   const applyingHistory = useRef(false);
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const [bulkDate, setBulkDate] = useState("");
+  const [bulkEditor, setBulkEditor] = useState("");
+  const [bulkStatus, setBulkStatus] = useState("");
 
   useEffect(() => {
     if (articles.length === 0) {
       setSelectedCell(null);
+      setSelectedIds([]);
       return;
     }
 
@@ -61,7 +66,9 @@ export default function TrackerTable({
       const clampedIndex = Math.min(prev.rowIndex, articles.length - 1);
       return { rowIndex: clampedIndex, field: prev.field };
     });
-  }, [articles.length]);
+
+    setSelectedIds((prev) => prev.filter((id) => articles.some((a) => a.id === id)));
+  }, [articles.length, articles]);
 
   const handleUpdate = async (id: number, field: string, value: string) => {
     const rowIndex = articles.findIndex((a) => a.id === id);
@@ -152,37 +159,148 @@ export default function TrackerTable({
     return () => window.removeEventListener("keydown", handler);
   }, [selectedCell, articles]);
 
-  return (
-    <table className="w-full text-left border-collapse">
-      <thead>
-        <tr className="border-b bg-gray-100">
-          <th className="py-2 px-1 w-10 text-sm">#</th>
-          <th className="py-2 px-1 w-16 text-sm">사진</th>
-          <th className="py-2 px-1 w-28 text-sm">날짜</th>
-          <th className="py-2 px-1 w-20 text-sm">편집자</th>
-          <th className="py-2 px-2 w-[320px] text-sm">제목</th>
-          <th className="py-2 px-1 w-20 text-sm">상태</th>
-          <th className="py-2 px-2 w-[220px] text-sm">메모</th>
-        </tr>
-      </thead>
+  const toggleRowSelection = (id: number, checked: boolean) => {
+    setSelectedIds((prev) => {
+      if (checked) {
+        if (prev.includes(id)) return prev;
+        return [...prev, id];
+      }
+      return prev.filter((rowId) => rowId !== id);
+    });
+  };
 
-      <tbody>
-        {articles.map((item, index) => (
-          <TrackerRow
-            key={item.id}
-            index={index}
-            item={item}
-            onDoubleClick={onDoubleClick}
-            onInlineUpdate={handleUpdate}
-            onImageClick={onImageClick}
-            onMemoClick={onMemoClick}
-            selectedCell={selectedCell}
-            onSelectCell={(rowIdx, field) =>
-              setSelectedCell({ rowIndex: rowIdx, field })
-            }
-          />
-        ))}
-      </tbody>
-    </table>
+  const toggleAllRows = (checked: boolean) => {
+    if (checked) {
+      setSelectedIds(articles.map((a) => a.id));
+    } else {
+      setSelectedIds([]);
+    }
+  };
+
+  const applyBulk = async (field: string, value: string) => {
+    if (!value) {
+      alert("적용할 값을 입력하세요.");
+      return;
+    }
+    if (selectedIds.length === 0) {
+      alert("선택된 기사가 없습니다.");
+      return;
+    }
+    await Promise.all(selectedIds.map((id) => handleUpdate(id, field, value)));
+  };
+
+  const headerCheckboxRef = useRef<HTMLInputElement | null>(null);
+  useEffect(() => {
+    if (!headerCheckboxRef.current) return;
+    const allCount = articles.length;
+    const selectedCount = selectedIds.length;
+    headerCheckboxRef.current.indeterminate =
+      selectedCount > 0 && selectedCount < allCount;
+  }, [selectedIds, articles.length]);
+
+  return (
+    <div className="w-full">
+      <div className="w-full flex flex-wrap gap-2 mb-3">
+        <input
+          type="date"
+          className="border rounded px-2 py-1"
+          value={bulkDate}
+          onChange={(e) => setBulkDate(e.target.value)}
+        />
+        <button
+          className="px-3 py-1 bg-blue-600 text-white rounded disabled:opacity-60"
+          onClick={() => applyBulk("created_at", bulkDate)}
+          disabled={!bulkDate}
+        >
+          날짜 적용
+        </button>
+
+        <select
+          className="border rounded px-2 py-1"
+          value={bulkEditor}
+          onChange={(e) => setBulkEditor(e.target.value)}
+        >
+          <option value="">에디터 선택</option>
+          <option value="지민">지민</option>
+          <option value="지안">지안</option>
+          <option value="아라">아라</option>
+        </select>
+        <button
+          className="px-3 py-1 bg-blue-600 text-white rounded disabled:opacity-60"
+          onClick={() => applyBulk("editor", bulkEditor)}
+          disabled={!bulkEditor}
+        >
+          에디터 적용
+        </button>
+
+        <select
+          className="border rounded px-2 py-1"
+          value={bulkStatus}
+          onChange={(e) => setBulkStatus(e.target.value)}
+        >
+          <option value="">상태 선택</option>
+          <option value="리뷰">리뷰</option>
+          <option value="추천">추천</option>
+          <option value="보류">보류</option>
+          <option value="본문 작성">본문 작성</option>
+          <option value="본문 완료">본문 완료</option>
+          <option value="이미지 작성">이미지 작성</option>
+          <option value="이미지 완료">이미지 완료</option>
+          <option value="업로드 대기">업로드 대기</option>
+          <option value="업로드">업로드</option>
+        </select>
+        <button
+          className="px-3 py-1 bg-blue-600 text-white rounded disabled:opacity-60"
+          onClick={() => applyBulk("status", bulkStatus)}
+          disabled={!bulkStatus}
+        >
+          상태 적용
+        </button>
+      </div>
+
+      <table className="w-full text-left border-collapse">
+        <thead>
+          <tr className="border-b bg-gray-100">
+            <th className="py-2 px-1 w-8 text-sm text-center">
+              <input
+                type="checkbox"
+                ref={headerCheckboxRef}
+                checked={
+                  articles.length > 0 && selectedIds.length === articles.length
+                }
+                onChange={(e) => toggleAllRows(e.target.checked)}
+              />
+            </th>
+            <th className="py-2 px-1 w-10 text-sm">#</th>
+            <th className="py-2 px-1 w-16 text-sm">사진</th>
+            <th className="py-2 px-1 w-28 text-sm">날짜</th>
+            <th className="py-2 px-1 w-20 text-sm">편집자</th>
+            <th className="py-2 px-2 w-[320px] text-sm">제목</th>
+            <th className="py-2 px-1 w-20 text-sm">상태</th>
+            <th className="py-2 px-2 w-[220px] text-sm">메모</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {articles.map((item, index) => (
+            <TrackerRow
+              key={item.id}
+              index={index}
+              item={item}
+              onDoubleClick={onDoubleClick}
+              onInlineUpdate={handleUpdate}
+              onImageClick={onImageClick}
+              onMemoClick={onMemoClick}
+              selectedCell={selectedCell}
+              onSelectCell={(rowIdx, field) =>
+                setSelectedCell({ rowIndex: rowIdx, field })
+              }
+              rowSelected={selectedIds.includes(item.id)}
+              onToggleRow={(checked) => toggleRowSelection(item.id, checked)}
+            />
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }
