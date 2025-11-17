@@ -28,6 +28,8 @@ export default function UploadPage() {
   const [memoItem, setMemoItem] = useState<UploadArticle | null>(null);
   const [imageMenu, setImageMenu] = useState<{ x: number; y: number; url: string; id: number } | null>(null);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const [exporting, setExporting] = useState(false);
   const navigate = useNavigate();
 
   const loadArticles = async () => {
@@ -89,8 +91,88 @@ export default function UploadPage() {
     loadArticles();
   };
 
+  const exportArticles = async () => {
+    try {
+      setExporting(true);
+      let query = supabase
+        .from("articles")
+        .select("id,title,summary,body,source,status,editor,content_source,bgm,created_at")
+        .eq("status", "업로드")
+        .order("id", { ascending: true });
+
+      if (selectedIds.length > 0) {
+        query = query.in("id", selectedIds);
+      }
+
+      const { data, error } = await query;
+      if (error) throw error;
+
+      const headers = [
+        "ID",
+        "제목",
+        "요약",
+        "본문",
+        "출처",
+        "상태",
+        "에디터",
+        "콘텐츠 출처",
+        "BGM",
+        "작성일",
+      ];
+
+      const rows = (data ?? []).map((row) =>
+        [
+          row.id ?? "",
+          row.title ?? "",
+          row.summary ?? "",
+          row.body ?? "",
+          row.source ?? "",
+          row.status ?? "",
+          row.editor ?? "",
+          row.content_source ?? "",
+          row.bgm ?? "",
+          row.created_at ?? "",
+        ]
+          .map((value) => {
+            const str = String(value).replace(/"/g, '""');
+            return `"${str}"`;
+          })
+          .join(",")
+      );
+
+      const csvBody = [headers.join(","), ...rows].join("\r\n");
+      const csv = "\uFEFF" + csvBody;
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      const today = new Date().toISOString().split("T")[0];
+      link.href = url;
+      link.download = `upload-articles-${today}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      alert("데이터 내보내기 실패: " + (err as Error).message);
+    } finally {
+      setExporting(false);
+    }
+  };
+
   return (
     <div className="w-full mt-6 px-6" onClick={() => setImageMenu(null)}>
+      <div className="w-full flex justify-end mb-4">
+        <button
+          className="px-4 py-2 bg-green-600 text-white rounded disabled:opacity-60"
+          onClick={(e) => {
+            e.stopPropagation();
+            exportArticles();
+          }}
+          disabled={exporting}
+        >
+          {exporting ? "내보내는 중..." : "선택 데이터 Excel 내보내기"}
+        </button>
+      </div>
       {previewImage && (
         <div className="fixed inset-0 bg-black/70 flex justify-center items-center z-50" onClick={() => setPreviewImage(null)}>
           <img src={previewImage} className="max-w-[90vw] max-h-[90vh] rounded" />
@@ -114,6 +196,7 @@ export default function UploadPage() {
           })
         }
         onMemoClick={(item) => setMemoItem(item)}
+        onSelectedChange={setSelectedIds}
       />
 
       <ImageMenu
