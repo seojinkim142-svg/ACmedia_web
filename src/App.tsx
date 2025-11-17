@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, useLocation } from "react-router-dom";
 import Navbar from "./components/Navbar";
 
 import TrackerPage from "./pages/TrackerPage";
@@ -14,21 +14,29 @@ import PasswordRecoveryPage from "./pages/PasswordRecoveryPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 export default function App() {
+  const location = useLocation();
+
+  // Navbar를 보여주지 않을 경로 목록
+  const hideNavbarRoutes = [
+    "/signin",
+    "/auth/callback",
+    "/password-recovery",
+  ];
+
+  const showNavbar = !hideNavbarRoutes.includes(location.pathname);
+
   return (
     <div className="w-full min-h-screen">
-      <Navbar />
+
+      {showNavbar && <Navbar />}
 
       <Routes>
-        {/* 로그인 */}
         <Route path="/signin" element={<LoginPage />} />
-
-        {/* Supabase Auth Callback */}
         <Route path="/auth/callback" element={<MagicLinkPage />} />
 
-        {/* 🔥 Supabase 비밀번호 재설정 이메일 전용 페이지 */}
+        {/* 🔥 PW 재설정 이메일용 라우트 (로그인 필요 없음) */}
         <Route path="/password-recovery" element={<PasswordRecoveryPage />} />
 
-        {/* 메인 페이지 */}
         <Route
           path="/"
           element={
@@ -92,7 +100,7 @@ export default function App() {
           }
         />
 
-        {/* 로그인된 사용자의 "설정 → 비밀번호 변경" */}
+        {/* 로그인된 유저용 비밀번호 변경 페이지 */}
         <Route
           path="/settings/password"
           element={
