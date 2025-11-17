@@ -98,10 +98,15 @@ export default function TrackerRow({
         type="select"
         value={item.status}
         options={[
-          "리뷰", "추천", "보류",
-          "본문 작성", "본문 완료",
-          "이미지 작성", "이미지 완료",
-          "업로드 대기", "업로드",
+          "리뷰",
+          "추천",
+          "보류",
+          "본문 작성",
+          "본문 완료",
+          "이미지 작성",
+          "이미지 완료",
+          "업로드 대기",
+          "업로드",
         ]}
         onUpdate={(val) => onInlineUpdate(item.id, "status", val)}
         selected={isSelected("status")}
