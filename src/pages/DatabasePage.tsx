@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "../supabaseClient";
 import CommentsModal from "../components/tracker/CommentsModal";
+import { useNavigate } from "react-router-dom";
 
 interface DatabaseRow {
   id: number;
@@ -17,6 +18,9 @@ export default function DatabasePage() {
   const [rows, setRows] = useState<DatabaseRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [memoItem, setMemoItem] = useState<{ id: number; title?: string } | null>(null);
+  const [expandedTitles, setExpandedTitles] = useState<Record<string, boolean>>({});
+  const [expandedDates, setExpandedDates] = useState<Record<string, boolean>>({});
+  const navigate = useNavigate();
 
   const loadData = async () => {
     setLoading(true);
@@ -50,64 +54,144 @@ export default function DatabasePage() {
     loadData();
   }, []);
 
+  const titleGroups = useMemo(() => {
+    const map = new Map<string, DatabaseRow[]>();
+    rows.forEach((row) => {
+      const key = row.title || "(제목 없음)";
+      if (!map.has(key)) map.set(key, []);
+      map.get(key)!.push(row);
+    });
+    return Array.from(map.entries()).sort((a, b) => a[0].localeCompare(b[0]));
+  }, [rows]);
+
+  const dateGroups = useMemo(() => {
+    const map = new Map<string, DatabaseRow[]>();
+    rows.forEach((row) => {
+      const key = row.created_at?.slice(0, 10) || "(날짜 없음)";
+      if (!map.has(key)) map.set(key, []);
+      map.get(key)!.push(row);
+    });
+    return Array.from(map.entries()).sort((a, b) => b[0].localeCompare(a[0]));
+  }, [rows]);
+
+  const goToArticlePage = (row: DatabaseRow) => {
+    const target = row.status === "업로드" ? "/upload" : "/tracker";
+    navigate(target, { state: { focusId: row.id } });
+  };
+
   return (
-    <div className="w-full p-6">
-      <div className="flex items-center justify-between mb-4">
+    <div className="w-full p-6 space-y-6">
+      <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">데이터베이스</h1>
-        <button
-          className="px-4 py-2 bg-blue-600 text-white rounded"
-          onClick={loadData}
-        >
+        <button className="px-4 py-2 bg-blue-600 text-white rounded" onClick={loadData}>
           새로고침
         </button>
       </div>
 
-      <p className="text-sm text-gray-500 mb-4">
-        전체 기사 목록을 한 번에 확인할 수 있는 페이지입니다. 댓글 수를 포함한 주요 필드를 한눈에 확인하고, 필요한 경우 댓글 히스토리를 열람할 수 있습니다.
+      <p className="text-sm text-gray-500">
+        트래커와 업로드 페이지의 모든 기사를 한 번에 모아 보는 공간입니다. 제목이나 날짜를 기준으로 펼쳐서 원하는 기사를 찾고, 해당 페이지로 바로 이동할 수 있습니다.
       </p>
 
       {loading ? (
         <p>불러오는 중...</p>
       ) : (
-        <div className="overflow-x-auto border rounded">
-          <table className="min-w-full text-left text-sm border-collapse">
-            <thead>
-              <tr className="border-b bg-gray-100">
-                <th className="px-3 py-2">ID</th>
-                <th className="px-3 py-2 w-[280px]">제목</th>
-                <th className="px-3 py-2">상태</th>
-                <th className="px-3 py-2">에디터</th>
-                <th className="px-3 py-2">출처</th>
-                <th className="px-3 py-2">콘텐츠 출처</th>
-                <th className="px-3 py-2">작성일</th>
-                <th className="px-3 py-2 text-center">댓글 수</th>
-                <th className="px-3 py-2">댓글</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((row) => (
-                <tr key={row.id} className="border-b hover:bg-gray-50">
-                  <td className="px-3 py-2">{row.id}</td>
-                  <td className="px-3 py-2 truncate max-w-[300px]">{row.title}</td>
-                  <td className="px-3 py-2">{row.status}</td>
-                  <td className="px-3 py-2">{row.editor}</td>
-                  <td className="px-3 py-2">{row.source}</td>
-                  <td className="px-3 py-2 truncate max-w-[220px]">{row.content_source}</td>
-                  <td className="px-3 py-2">{row.created_at?.slice(0, 10)}</td>
-                  <td className="px-3 py-2 text-center">{row.comments_count}</td>
-                  <td className="px-3 py-2">
-                    <button
-                      className="px-3 py-1 text-sm bg-gray-200 rounded"
-                      onClick={() => setMemoItem({ id: row.id, title: row.title })}
-                    >
-                      히스토리
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <>
+          <section className="space-y-2">
+            <h2 className="text-lg font-semibold">제목별 보기</h2>
+            {titleGroups.map(([title, items]) => (
+              <div key={title} className="border rounded">
+                <button
+                  className="w-full text-left px-4 py-2 flex justify-between items-center hover:bg-gray-50"
+                  onClick={() =>
+                    setExpandedTitles((prev) => ({ ...prev, [title]: !prev[title] }))
+                  }
+                >
+                  <span>{title}</span>
+                  <span className="text-sm text-gray-500">{items.length}건</span>
+                </button>
+                {expandedTitles[title] && (
+                  <div className="divide-y">
+                    {items.map((row) => (
+                      <div key={row.id} className="px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                        <div>
+                          <p className="font-semibold">{row.status}</p>
+                          <p className="text-sm text-gray-600">
+                            에디터: {row.editor || "-"} / 작성일: {row.created_at?.slice(0, 10) || "-"}
+                          </p>
+                          <p className="text-sm text-gray-500">
+                            콘텐츠 출처: {row.content_source || "-"} / 댓글 {row.comments_count}개
+                          </p>
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            className="px-3 py-1 text-sm bg-blue-600 text-white rounded"
+                            onClick={() => goToArticlePage(row)}
+                          >
+                            페이지 이동
+                          </button>
+                          <button
+                            className="px-3 py-1 text-sm bg-gray-200 rounded"
+                            onClick={() => setMemoItem({ id: row.id, title: row.title })}
+                          >
+                            댓글
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+          </section>
+
+          <section className="space-y-2">
+            <h2 className="text-lg font-semibold">날짜별 보기</h2>
+            {dateGroups.map(([date, items]) => (
+              <div key={date} className="border rounded">
+                <button
+                  className="w-full text-left px-4 py-2 flex justify-between items-center hover:bg-gray-50"
+                  onClick={() =>
+                    setExpandedDates((prev) => ({ ...prev, [date]: !prev[date] }))
+                  }
+                >
+                  <span>{date}</span>
+                  <span className="text-sm text-gray-500">{items.length}건</span>
+                </button>
+                {expandedDates[date] && (
+                  <div className="divide-y">
+                    {items.map((row) => (
+                      <div key={row.id} className="px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                        <div>
+                          <p className="font-semibold truncate max-w-[360px]">{row.title}</p>
+                          <p className="text-sm text-gray-600">
+                            상태: {row.status} / 에디터: {row.editor || "-"}
+                          </p>
+                          <p className="text-sm text-gray-500">
+                            콘텐츠 출처: {row.content_source || "-"} / 댓글 {row.comments_count}개
+                          </p>
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            className="px-3 py-1 text-sm bg-blue-600 text-white rounded"
+                            onClick={() => goToArticlePage(row)}
+                          >
+                            페이지 이동
+                          </button>
+                          <button
+                            className="px-3 py-1 text-sm bg-gray-200 rounded"
+                            onClick={() => setMemoItem({ id: row.id, title: row.title })}
+                          >
+                            댓글
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+          </section>
+        </>
       )}
 
       {memoItem && (
