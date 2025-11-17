@@ -18,8 +18,19 @@ export default function PasswordRecoveryPage() {
         return;
       }
 
-      const { error } = await supabase.auth.getSessionFromUrl({
-        storeSession: true,
+      const search = new URLSearchParams(window.location.hash.replace("#", ""));
+      const access_token = search.get("access_token");
+      const refresh_token = search.get("refresh_token");
+
+      if (!access_token || !refresh_token) {
+        setStatus("링크에 필요한 토큰 정보가 없습니다.");
+        setSessionReady(false);
+        return;
+      }
+
+      const { error } = await supabase.auth.setSession({
+        access_token,
+        refresh_token,
       });
 
       if (error) {
@@ -116,4 +127,3 @@ export default function PasswordRecoveryPage() {
     </div>
   );
 }
-
