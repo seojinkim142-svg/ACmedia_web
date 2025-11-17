@@ -33,6 +33,7 @@ export default function TrackerPage() {
     const { data: art, error } = await supabase
       .from("articles")
       .select("*")
+      .neq("status", "업로드")
       .order("id", { ascending: true });
 
     if (error || !art) {
