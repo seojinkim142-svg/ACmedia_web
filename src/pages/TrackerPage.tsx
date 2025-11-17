@@ -18,7 +18,7 @@ interface Article {
   images: string[] | null;
   created_at?: string;
   bgm?: string;
-  latest_comment?: string; // ??異붽???
+  latest_comment?: string;
 }
 
 export default function TrackerPage() {
@@ -26,20 +26,9 @@ export default function TrackerPage() {
   const [openItem, setOpenItem] = useState<Article | null>(null);
   const [memoItem, setMemoItem] = useState<Article | null>(null);
   const [exporting, setExporting] = useState(false);
-
-  const [imageMenu, setImageMenu] = useState<{
-    x: number;
-    y: number;
-    url: string;
-    id: number;
-  } | null>(null);
-
+  const [imageMenu, setImageMenu] = useState<{ x: number; y: number; url: string; id: number } | null>(null);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
 
-  // ?끸쁾?끸쁾??
-  // ?꾩쟾 ?덉젙 踰꾩쟾 loadArticles
-  // Supabase 議곗씤 ?놁씠 媛곴컖 理쒖떊 ?볤? 遺덈윭?ㅺ린
-  // ?끸쁾?끸쁾??
   const loadArticles = async () => {
     const { data: art, error } = await supabase
       .from("articles")
@@ -81,24 +70,15 @@ export default function TrackerPage() {
   }, []);
 
   const handleUpdated = (updated: Article) => {
-    setArticles(prev =>
-      prev.map(a => (a.id === updated.id ? updated : a))
-    );
+    setArticles((prev) => prev.map((a) => (a.id === updated.id ? updated : a)));
   };
 
   const uploadNewImage = async (file: File, articleId: number) => {
     const url = await uploadImage(file);
-
     const target = articles.find((a) => a.id === articleId);
-    const updatedImages = target?.images?.length
-      ? [...target.images, url]
-      : [url];
+    const updatedImages = target?.images?.length ? [...target.images, url] : [url];
 
-    await supabase
-      .from("articles")
-      .update({ images: updatedImages })
-      .eq("id", articleId);
-
+    await supabase.from("articles").update({ images: updatedImages }).eq("id", articleId);
     loadArticles();
   };
 
@@ -107,28 +87,26 @@ export default function TrackerPage() {
       setExporting(true);
       const { data, error } = await supabase
         .from("articles")
-        .select(
-          "id,title,summary,body,source,status,editor,content_source,bgm,created_at"
-        )
+        .select("id,title,summary,body,source,status,editor,content_source,bgm,created_at")
         .order("id", { ascending: true });
 
       if (error) throw error;
 
       const headers = [
         "ID",
-        "?쒕ぉ",
-        "?붿빟",
-        "蹂몃Ц",
-        "異쒖쿂",
-        "?곹깭",
-        "?몄쭛??,
-        "肄섑뀗痢?異쒖쿂",
+        "제목",
+        "요약",
+        "본문",
+        "출처",
+        "상태",
+        "에디터",
+        "콘텐츠 출처",
         "BGM",
-        "?묒꽦??,
+        "작성일",
       ];
 
-      const rows = (data ?? []).map((row) => {
-        return [
+      const rows = (data ?? []).map((row) =>
+        [
           row.id ?? "",
           row.title ?? "",
           row.summary ?? "",
@@ -144,15 +122,12 @@ export default function TrackerPage() {
             const str = String(value).replace(/"/g, '""');
             return `"${str}"`;
           })
-          .join(",");
-      });
+          .join(",")
+      );
 
       const csvBody = [headers.join(","), ...rows].join("\r\n");
       const csv = "\uFEFF" + csvBody;
-      const blob = new Blob([csv], {
-        type: "text/csv;charset=utf-8;",
-      });
-
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       const today = new Date().toISOString().split("T")[0];
@@ -163,17 +138,14 @@ export default function TrackerPage() {
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
     } catch (err) {
-      alert("?곗씠???대낫?닿린 ?ㅽ뙣: " + (err as Error).message);
+      alert("데이터 내보내기 실패: " + (err as Error).message);
     } finally {
       setExporting(false);
     }
   };
 
   return (
-    <div
-      className="w-full mt-6 px-6"
-      onClick={() => setImageMenu(null)}
-    >
+    <div className="w-full mt-6 px-6" onClick={() => setImageMenu(null)}>
       <div className="w-full flex justify-end mb-4">
         <button
           className="px-4 py-2 bg-green-600 text-white rounded disabled:opacity-60"
@@ -183,32 +155,26 @@ export default function TrackerPage() {
           }}
           disabled={exporting}
         >
-          {exporting ? "?대낫?대뒗 以?.." : "?곗씠??Excel ?대낫?닿린"}
+          {exporting ? "내보내는 중..." : "데이터 Excel 내보내기"}
         </button>
       </div>
-      {/* ?대?吏 ?ш쾶 誘몃━蹂닿린 */}
+
       {previewImage && (
-        <div
-          className="fixed inset-0 bg-black/70 flex justify-center items-center z-50"
-          onClick={() => setPreviewImage(null)}
-        >
-          <img
-            src={previewImage}
-            className="max-w-[90vw] max-h-[90vh] rounded"
-          />
+        <div className="fixed inset-0 bg-black/70 flex justify-center items-center z-50" onClick={() => setPreviewImage(null)}>
+          <img src={previewImage} className="max-w-[90vw] max-h-[90vh] rounded" />
         </div>
       )}
 
       <TrackerTable
         articles={articles}
         onDoubleClick={setOpenItem}
-        onInlineUpdate={(id, field, value) =>
-          supabase
+        onInlineUpdate={async (id, field, value) => {
+          await supabase
             .from("articles")
             .update({ [field]: value })
-            .eq("id", id)
-            .then(() => loadArticles())
-        }
+            .eq("id", id);
+          await loadArticles();
+        }}
         onImageClick={(e, item) =>
           setImageMenu({
             x: e.clientX,
@@ -217,7 +183,7 @@ export default function TrackerPage() {
             id: item.id,
           })
         }
-        onMemoClick={(item) => setMemoItem(item)} // ??硫붾え ?대┃ ?몃뱾??
+        onMemoClick={(item) => setMemoItem(item)}
       />
 
       <ImageMenu
@@ -233,15 +199,16 @@ export default function TrackerPage() {
         onClose={() => setImageMenu(null)}
       />
 
-      {/* ?곸꽭 ?몄쭛 紐⑤떖 */}
       <DetailModal
         isOpen={openItem !== null}
-        onClose={() => { setOpenItem(null); loadArticles(); }}
+        onClose={() => {
+          setOpenItem(null);
+          loadArticles();
+        }}
         item={openItem}
         onUpdated={handleUpdated}
       />
 
-      {/* ??硫붾え / ?볤? 紐⑤떖 */}
       {memoItem && (
         <CommentsModal
           item={memoItem}
@@ -252,4 +219,3 @@ export default function TrackerPage() {
     </div>
   );
 }
-
