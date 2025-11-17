@@ -1,4 +1,4 @@
-import { Link, useLocation, useNavigate } from "react-router-dom";
+﻿import { Link, useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "../supabaseClient";
 
 export default function Navbar() {
@@ -41,7 +41,7 @@ export default function Navbar() {
         비밀번호 변경
       </Link>
       <button
-        className="ml-auto px-4 py-1.5 bg-red-500 hover:bg-red-600 rounded text-sm font-semibold"
+        className="ml-auto px-4 py-1.5 bg-indigo-500 hover:bg-red-600 rounded text-sm font-semibold"
         onClick={handleLogout}
       >
         로그아웃
