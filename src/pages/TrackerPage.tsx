@@ -198,11 +198,21 @@ export default function TrackerPage() {
       <ImageMenu
         menu={imageMenu}
         onPreview={(url) => setPreviewImage(url)}
-        onDownload={(url) => {
-          const link = document.createElement("a");
-          link.href = url;
-          link.download = `image-${Date.now()}.png`;
-          link.click();
+        onDownload={async (url) => {
+          try {
+            const response = await fetch(url);
+            if (!response.ok) throw new Error("Failed to download");
+            const blob = await response.blob();
+            const objectUrl = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = objectUrl;
+            link.download = `image-${Date.now()}.png`;
+            link.click();
+            URL.revokeObjectURL(objectUrl);
+          } catch (error) {
+            console.error(error);
+            alert("�̹��� �ٿ�ε��� �����Ͽ����ϴ�.");
+          }
         }}
         onUpload={uploadNewImage}
         onClose={() => setImageMenu(null)}
