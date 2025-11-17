@@ -8,10 +8,9 @@ interface UserRow {
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
-const FUNCTION_BASE = SUPABASE_URL.replace(
-  ".supabase.co",
-  ".functions.supabase.co"
-);
+
+// 🔥 올바른 Edge Function URL
+const FUNCTION_BASE = `${SUPABASE_URL}/functions/v1`;
 
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<UserRow[]>([]);
@@ -33,6 +32,7 @@ export default function AdminUsersPage() {
       });
 
       const result = await res.json();
+
       if (result.users) {
         const formatted = result.users.map((u: any) => ({
           id: u.id,
@@ -133,7 +133,7 @@ export default function AdminUsersPage() {
       return;
     }
 
-    alert("비밀번호를 변경했습니다.");
+    alert("비밀번호가 초기화되었습니다.");
   };
 
   const deleteUser = async (userId: string) => {
@@ -157,7 +157,7 @@ export default function AdminUsersPage() {
       return;
     }
 
-    alert("사용자를 삭제했습니다.");
+    alert("사용자가 삭제되었습니다.");
     loadUsers();
   };
 
@@ -165,6 +165,7 @@ export default function AdminUsersPage() {
     <div className="p-6 w-full">
       <h1 className="text-2xl font-bold mb-4">관리자 - 직원 계정 관리</h1>
 
+      {/* ---- 직원 계정 생성 ---- */}
       <div className="border rounded p-4 mb-6">
         <h2 className="text-xl font-semibold mb-3">직원 계정 생성</h2>
         <p className="text-sm text-gray-500 mb-4">
@@ -207,10 +208,13 @@ export default function AdminUsersPage() {
         </div>
       </div>
 
+      {/* ---- 등록된 사용자 목록 ---- */}
       <h2 className="text-xl font-semibold mb-3">등록된 사용자</h2>
 
       {loading ? (
         <p>불러오는 중...</p>
+      ) : users.length === 0 ? (
+        <p>등록된 사용자가 없습니다.</p>
       ) : (
         <table className="w-full border-collapse text-left">
           <thead>
