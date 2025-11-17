@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 
 interface UserRow {
   id: string;
@@ -6,39 +6,34 @@ interface UserRow {
   role: string;
 }
 
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const FUNCTION_BASE = SUPABASE_URL.replace(
+  ".supabase.co",
+  ".functions.supabase.co"
+);
+
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<UserRow[]>([]);
   const [loading, setLoading] = useState(true);
-
-  // 새 유저 생성 입력값
   const [newEmail, setNewEmail] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [newRole, setNewRole] = useState("viewer");
+  const [creatingUser, setCreatingUser] = useState(false);
 
-  const FUNCTION_BASE = import.meta.env.VITE_SUPABASE_URL.replace(
-    ".supabase.co",
-    ".functions.supabase.co"
-  );
-
-  // -------------------------------
-  // 유저 목록 불러오기
-  // -------------------------------
   const loadUsers = async () => {
     try {
       setLoading(true);
-
-      const url = `${FUNCTION_BASE}/list-users`;
-      const res = await fetch(url, {
+      const res = await fetch(`${FUNCTION_BASE}/list-users`, {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
           "Content-Type": "application/json",
         },
       });
 
       const result = await res.json();
       if (result.users) {
-        // profiles의 role도 함께 가져온 상태라고 가정
         const formatted = result.users.map((u: any) => ({
           id: u.id,
           email: u.email,
@@ -47,7 +42,7 @@ export default function AdminUsersPage() {
         setUsers(formatted);
       }
     } catch (err) {
-      alert("유저 불러오기 오류: " + err);
+      alert("사용자 목록을 불러오지 못했습니다: " + err);
     } finally {
       setLoading(false);
     }
@@ -57,76 +52,73 @@ export default function AdminUsersPage() {
     loadUsers();
   }, []);
 
-  // -------------------------------
-  // 유저 생성
-  // -------------------------------
   const createUser = async () => {
     if (!newEmail || !newPassword) {
-      alert("이메일과 비밀번호를 입력해주세요.");
+      alert("직원 이메일과 임시 비밀번호를 입력하세요.");
       return;
     }
 
-    const res = await fetch(`${FUNCTION_BASE}/create-user`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        email: newEmail,
-        password: newPassword,
-        role: newRole,
-      }),
-    });
+    setCreatingUser(true);
+    try {
+      const res = await fetch(`${FUNCTION_BASE}/create-user`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: newEmail.trim().toLowerCase(),
+          password: newPassword,
+          role: newRole,
+        }),
+      });
 
-    const data = await res.json();
+      const data = await res.json();
 
-    if (data.error) {
-      alert("유저 생성 실패: " + JSON.stringify(data.error));
-      return;
+      if (data.error) {
+        alert("사용자 생성 실패: " + JSON.stringify(data.error));
+        return;
+      }
+
+      alert("사용자가 생성되었습니다. 설정한 임시 비밀번호를 직원에게 전달하세요.");
+      setNewEmail("");
+      setNewPassword("");
+      setNewRole("viewer");
+      loadUsers();
+    } catch (err) {
+      alert("사용자 생성 실패: " + err);
+    } finally {
+      setCreatingUser(false);
     }
-
-    alert("유저가 생성되었습니다.");
-    setNewEmail("");
-    setNewPassword("");
-    setNewRole("viewer");
-    loadUsers();
   };
 
-  // -------------------------------
-  // 역할 변경
-  // -------------------------------
   const updateRole = async (userId: string, role: string) => {
-    // profiles.role 수정
-    const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/rest/v1/profiles?id=eq.${userId}`, {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/profiles?id=eq.${userId}`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
-        apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
-        Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
       },
       body: JSON.stringify({ role }),
     });
 
     if (!res.ok) {
-      alert("역할 수정 실패");
+      alert("권한을 업데이트하지 못했습니다.");
       return;
     }
 
     loadUsers();
   };
 
-  // -------------------------------
-  // 비밀번호 재설정
-  // -------------------------------
   const resetPassword = async (userId: string) => {
-    const newPass = prompt("새 비밀번호를 입력하세요:");
+    const newPass = prompt("새 비밀번호를 입력하세요.");
     if (!newPass) return;
 
     const res = await fetch(`${FUNCTION_BASE}/reset-password`, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
@@ -141,19 +133,16 @@ export default function AdminUsersPage() {
       return;
     }
 
-    alert("비밀번호가 변경되었습니다.");
+    alert("비밀번호를 변경했습니다.");
   };
 
-  // -------------------------------
-  // 유저 삭제
-  // -------------------------------
   const deleteUser = async (userId: string) => {
     if (!confirm("정말 삭제하시겠습니까?")) return;
 
     const res = await fetch(`${FUNCTION_BASE}/delete-user`, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
@@ -164,36 +153,36 @@ export default function AdminUsersPage() {
     const data = await res.json();
 
     if (data.error) {
-      alert("유저 삭제 실패: " + JSON.stringify(data.error));
+      alert("사용자 삭제 실패: " + JSON.stringify(data.error));
       return;
     }
 
-    alert("유저가 삭제되었습니다.");
+    alert("사용자를 삭제했습니다.");
     loadUsers();
   };
 
   return (
     <div className="p-6 w-full">
-      <h1 className="text-2xl font-bold mb-4">관리자 - 유저 관리</h1>
+      <h1 className="text-2xl font-bold mb-4">관리자 - 직원 계정 관리</h1>
 
-      {/* ------------------------- */}
-      {/* 새 유저 생성 섹션 */}
-      {/* ------------------------- */}
       <div className="border rounded p-4 mb-6">
-        <h2 className="text-xl font-semibold mb-3">새 유저 생성</h2>
+        <h2 className="text-xl font-semibold mb-3">직원 계정 생성</h2>
+        <p className="text-sm text-gray-500 mb-4">
+          이메일과 임시 비밀번호를 지정해 계정을 만든 뒤, 해당 정보를 직원에게 전달하세요.
+        </p>
 
-        <div className="flex flex-col gap-3 w-80">
+        <div className="flex flex-col gap-3 w-96">
           <input
             className="border rounded p-2"
-            placeholder="이메일"
+            placeholder="직원 이메일"
             value={newEmail}
             onChange={(e) => setNewEmail(e.target.value)}
           />
 
           <input
             className="border rounded p-2"
-            type="password"
-            placeholder="비밀번호"
+            placeholder="임시 비밀번호"
+            type="text"
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
           />
@@ -209,18 +198,16 @@ export default function AdminUsersPage() {
           </select>
 
           <button
-            className="bg-green-600 text-white py-2 rounded"
+            className="bg-green-600 text-white py-2 rounded disabled:opacity-60"
             onClick={createUser}
+            disabled={creatingUser}
           >
-            유저 생성
+            {creatingUser ? "계정 생성 중..." : "계정 만들기"}
           </button>
         </div>
       </div>
 
-      {/* ------------------------- */}
-      {/* 유저 목록 */}
-      {/* ------------------------- */}
-      <h2 className="text-xl font-semibold mb-3">유저 목록</h2>
+      <h2 className="text-xl font-semibold mb-3">등록된 사용자</h2>
 
       {loading ? (
         <p>불러오는 중...</p>
@@ -230,19 +217,16 @@ export default function AdminUsersPage() {
             <tr className="border-b bg-gray-100">
               <th className="py-2 px-3">ID</th>
               <th className="py-2 px-3">이메일</th>
-              <th className="py-2 px-3">역할</th>
-              <th className="py-2 px-3">비밀번호 변경</th>
+              <th className="py-2 px-3">권한</th>
+              <th className="py-2 px-3">비밀번호 초기화</th>
               <th className="py-2 px-3">삭제</th>
             </tr>
           </thead>
-
           <tbody>
             {users.map((u) => (
               <tr key={u.id} className="border-b">
                 <td className="py-2 px-3">{u.id}</td>
                 <td className="py-2 px-3">{u.email}</td>
-
-                {/* 역할 수정 */}
                 <td className="py-2 px-3">
                   <select
                     className="border rounded p-1"
@@ -254,8 +238,6 @@ export default function AdminUsersPage() {
                     <option value="viewer">뷰어</option>
                   </select>
                 </td>
-
-                {/* 비밀번호 변경 */}
                 <td className="py-2 px-3">
                   <button
                     className="text-blue-600 underline"
@@ -264,8 +246,6 @@ export default function AdminUsersPage() {
                     변경
                   </button>
                 </td>
-
-                {/* 삭제 */}
                 <td className="py-2 px-3">
                   <button
                     className="text-red-600 underline"

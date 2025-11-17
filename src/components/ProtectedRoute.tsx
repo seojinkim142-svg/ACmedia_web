@@ -10,6 +10,8 @@ interface ProtectedRouteProps {
 export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   const [session, setSession] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [profileChecked, setProfileChecked] = useState(false);
+  const [authorized, setAuthorized] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -19,17 +21,51 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
+    } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      setSession(nextSession);
     });
 
     return () => subscription.unsubscribe();
   }, []);
 
-  if (loading) return <p>Loading...</p>;
+  useEffect(() => {
+    let cancelled = false;
 
-  // 🔥 핵심: 로그인 안 되어 있으면 login 페이지로 이동
-  if (!session) {
+    const verifyProfile = async () => {
+      if (!session) {
+        setAuthorized(false);
+        setProfileChecked(true);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("id", session.user.id)
+        .maybeSingle();
+
+      if (cancelled) return;
+
+      if (error || !data) {
+        setAuthorized(false);
+        await supabase.auth.signOut();
+      } else {
+        setAuthorized(true);
+      }
+
+      setProfileChecked(true);
+    };
+
+    verifyProfile();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [session]);
+
+  if (loading || !profileChecked) return <p>Loading...</p>;
+
+  if (!session || !authorized) {
     return <Navigate to="/signin" replace />;
   }
 

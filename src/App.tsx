@@ -6,12 +6,9 @@ import FeedPage from "./pages/FeedPage";
 import UploadPage from "./pages/UploadPage";
 import DatabasePage from "./pages/DatabasePage";
 import WritePage from "./pages/WritePage";
-
 import AdminUsersPage from "./pages/AdminUsersPage";
-
 import LoginPage from "./pages/LoginPage";
-import SignUpPage from "./pages/SignUpPage";
-
+import MagicLinkPage from "./pages/MagicLinkPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 export default function App() {
@@ -20,11 +17,9 @@ export default function App() {
       <Navbar />
 
       <Routes>
-        {/* 🔓 로그인 / 회원가입 */}
         <Route path="/signin" element={<LoginPage />} />
-        <Route path="/signup" element={<SignUpPage />} />
+        <Route path="/auth/callback" element={<MagicLinkPage />} />
 
-        {/* 🔒 보호되는 영역 */}
         <Route
           path="/"
           element={
@@ -91,3 +86,4 @@ export default function App() {
     </div>
   );
 }
+
