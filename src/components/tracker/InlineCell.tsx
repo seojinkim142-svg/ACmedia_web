@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useEffect, useState } from "react";
 
 interface InlineCellProps {
   value: string | number | null | undefined;
@@ -6,6 +6,8 @@ interface InlineCellProps {
   options?: string[];
   onUpdate: (newValue: string) => void;
   highlight?: boolean;
+  selected?: boolean;
+  onSelect?: () => void;
 }
 
 export default function InlineCell({
@@ -14,8 +16,16 @@ export default function InlineCell({
   options = [],
   onUpdate,
   highlight = false,
+  selected = false,
+  onSelect,
 }: InlineCellProps) {
   const [editing, setEditing] = useState(false);
+
+  useEffect(() => {
+    if (!selected && editing) {
+      setEditing(false);
+    }
+  }, [selected, editing]);
 
   if (editing) {
     if (type === "select") {
@@ -25,10 +35,11 @@ export default function InlineCell({
             className="border rounded px-1"
             value={value || ""}
             onChange={(e) => {
-              onUpdate(e.target.value);  
-              setEditing(false);         // 🔥 선택 즉시 edit 종료
+              onUpdate(e.target.value);
+              setEditing(false);
             }}
             onBlur={() => setEditing(false)}
+            autoFocus
           >
             {options.map((o) => (
               <option key={o}>{o}</option>
@@ -46,6 +57,7 @@ export default function InlineCell({
           value={value || ""}
           onChange={(e) => onUpdate(e.target.value)}
           onBlur={() => setEditing(false)}
+          autoFocus
         />
       </td>
     );
@@ -53,12 +65,27 @@ export default function InlineCell({
 
   return (
     <td
+      tabIndex={0}
       className={`py-2 px-1 cursor-pointer ${
         highlight ? "underline text-blue-600" : ""
-      }`}
-      onClick={() => setEditing(true)}
+      } ${selected ? "ring-2 ring-blue-400 rounded" : ""}`}
+      onClick={(e) => {
+        e.stopPropagation();
+        if (!selected) {
+          onSelect?.();
+        } else {
+          setEditing(true);
+        }
+      }}
+      onFocus={() => onSelect?.()}
+      onKeyDown={(e) => {
+        if ((e.key === "Enter" || e.key === "F2") && selected) {
+          e.preventDefault();
+          setEditing(true);
+        }
+      }}
     >
-      {value}
+      {value ?? ""}
     </td>
   );
 }

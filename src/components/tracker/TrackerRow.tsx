@@ -1,4 +1,5 @@
-﻿import InlineCell from "./InlineCell";
+﻿import type { MouseEvent } from "react";
+import InlineCell from "./InlineCell";
 
 interface Article {
   id: number;
@@ -19,8 +20,10 @@ interface TrackerRowProps {
   item: Article;
   onDoubleClick: (item: Article) => void;
   onInlineUpdate: (id: number, field: string, value: string) => void;
-  onImageClick: (e: React.MouseEvent, item: Article) => void;
+  onImageClick: (e: MouseEvent, item: Article) => void;
   onMemoClick: (item: Article) => void;
+  selectedCell?: { rowIndex: number; field: string } | null;
+  onSelectCell: (rowIndex: number, field: string) => void;
 }
 
 export default function TrackerRow({
@@ -30,11 +33,16 @@ export default function TrackerRow({
   onInlineUpdate,
   onImageClick,
   onMemoClick,
+  selectedCell,
+  onSelectCell,
 }: TrackerRowProps) {
   const preview =
     item.images?.length
       ? item.images[0]
       : "https://placehold.co/108x135?text=No+Image";
+
+  const isSelected = (field: string) =>
+    selectedCell?.rowIndex === index && selectedCell?.field === field;
 
   return (
     <tr className="border-b hover:bg-gray-50" onDoubleClick={() => onDoubleClick(item)}>
@@ -57,16 +65,19 @@ export default function TrackerRow({
         type="date"
         value={item.created_at?.slice(0, 10)}
         onUpdate={(val) => onInlineUpdate(item.id, "created_at", val)}
+        selected={isSelected("created_at")}
+        onSelect={() => onSelectCell(index, "created_at")}
       />
 
       <InlineCell
         type="select"
         value={item.editor || ""}
-        options={["지윤", "지수", "하라"]}
+        options={["지민", "지안", "아라"]}
         onUpdate={(val) => onInlineUpdate(item.id, "editor", val)}
+        selected={isSelected("editor")}
+        onSelect={() => onSelectCell(index, "editor")}
       />
 
-      {/* 제목 길이에 따라 글자 크기 자동 조정 */}
       <td
         className={`
           py-2 px-2 cursor-pointer max-w-[320px] truncate
@@ -93,6 +104,8 @@ export default function TrackerRow({
           "업로드 대기", "업로드",
         ]}
         onUpdate={(val) => onInlineUpdate(item.id, "status", val)}
+        selected={isSelected("status")}
+        onSelect={() => onSelectCell(index, "status")}
       />
 
       <td
