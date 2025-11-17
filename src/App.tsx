@@ -19,10 +19,16 @@ export default function App() {
       <Navbar />
 
       <Routes>
+        {/* 로그인 */}
         <Route path="/signin" element={<LoginPage />} />
-        <Route path="/auth/callback" element={<MagicLinkPage />} />
-        <Route path="/auth/recovery" element={<PasswordRecoveryPage />} />
 
+        {/* Supabase Auth Callback */}
+        <Route path="/auth/callback" element={<MagicLinkPage />} />
+
+        {/* 🔥 Supabase 비밀번호 재설정 이메일 전용 페이지 */}
+        <Route path="/password-recovery" element={<PasswordRecoveryPage />} />
+
+        {/* 메인 페이지 */}
         <Route
           path="/"
           element={
@@ -86,6 +92,7 @@ export default function App() {
           }
         />
 
+        {/* 로그인된 사용자의 "설정 → 비밀번호 변경" */}
         <Route
           path="/settings/password"
           element={
@@ -98,4 +105,3 @@ export default function App() {
     </div>
   );
 }
-
