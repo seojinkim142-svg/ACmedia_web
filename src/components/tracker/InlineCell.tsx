@@ -58,7 +58,9 @@ export default function InlineCell({
             }}
             onBlur={() => setEditing(false)}
             autoFocus
-            ref={(el) => (controlRef.current = el)}
+            ref={(el) => {
+              controlRef.current = el;
+            }}
           >
             {options.map((o) => (
               <option key={o}>{o}</option>
@@ -77,7 +79,9 @@ export default function InlineCell({
           onChange={(e) => onUpdate(e.target.value)}
           onBlur={() => setEditing(false)}
           autoFocus
-          ref={(el) => (controlRef.current = el)}
+          ref={(el) => {
+            controlRef.current = el;
+          }}
         />
       </td>
     );
