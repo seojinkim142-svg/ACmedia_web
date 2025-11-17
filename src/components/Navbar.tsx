@@ -1,89 +1,51 @@
-﻿import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { supabase } from "../supabaseClient";
 
 export default function Navbar() {
   const location = useLocation();
+  const navigate = useNavigate();
 
   const isActive = (path: string) => location.pathname === path;
 
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    navigate("/signin");
+  };
+
+  const linkClass = (path: string) =>
+    `px-3 py-1 rounded ${
+      isActive(path) ? "bg-white text-black font-semibold" : "hover:text-gray-300"
+    }`;
+
   return (
-    <nav className="w-full bg-gray-900 text-white px-6 py-4 flex gap-6">
-      <Link
-        to="/tracker"
-        className={`px-3 py-1 rounded ${
-          isActive("/tracker")
-            ? "bg-white text-black font-semibold"
-            : "hover:text-gray-300"
-        }`}
-      >
+    <nav className="w-full bg-gray-900 text-white px-6 py-4 flex gap-4 items-center flex-wrap">
+      <Link to="/tracker" className={linkClass("/tracker")}>
         트래커
       </Link>
-
-      <Link
-        to="/feed"
-        className={`px-3 py-1 rounded ${
-          isActive("/feed")
-            ? "bg-white text-black font-semibold"
-            : "hover:text-gray-300"
-        }`}
-      >
+      <Link to="/feed" className={linkClass("/feed")}>
         피드
       </Link>
-
-      <Link
-        to="/upload"
-        className={`px-3 py-1 rounded ${
-          isActive("/upload")
-            ? "bg-white text-black font-semibold"
-            : "hover:text-gray-300"
-        }`}
-      >
+      <Link to="/upload" className={linkClass("/upload")}>
         업로드
       </Link>
-
-      <Link
-        to="/database"
-        className={`px-3 py-1 rounded ${
-          isActive("/database")
-            ? "bg-white text-black font-semibold"
-            : "hover:text-gray-300"
-        }`}
-      >
+      <Link to="/database" className={linkClass("/database")}>
         데이터베이스
       </Link>
-
-      <Link
-        to="/write"
-        className={`px-3 py-1 rounded ${
-          isActive("/write")
-            ? "bg-white text-black font-semibold"
-            : "hover:text-gray-300"
-        }`}
-      >
-        글쓰기
+      <Link to="/write" className={linkClass("/write")}>
+        작성기
       </Link>
-
-      {/* 관리자 메뉴 */}
-      <Link
-        to="/admin/users"
-        className={`px-3 py-1 rounded ${
-          isActive("/admin/users")
-            ? "bg-white text-black font-semibold"
-            : "hover:text-gray-300"
-        }`}
-      >
+      <Link to="/admin/users" className={linkClass("/admin/users")}>
         관리자
       </Link>
-
-      <Link
-        to="/settings/password"
-        className={`px-3 py-1 rounded ${
-          isActive("/settings/password")
-            ? "bg-white text-black font-semibold"
-            : "hover:text-gray-300"
-        }`}
-      >
+      <Link to="/settings/password" className={linkClass("/settings/password")}>
         비밀번호 변경
       </Link>
+      <button
+        className="ml-auto px-4 py-1.5 bg-red-500 hover:bg-red-600 rounded text-sm font-semibold"
+        onClick={handleLogout}
+      >
+        로그아웃
+      </button>
     </nav>
   );
 }
