@@ -242,6 +242,7 @@ export default function TrackerPage() {
         <CommentsModal
           item={memoItem}
           onClose={() => setMemoItem(null)}
+          onUpdated={loadArticles}
         />
       )}
     </div>
