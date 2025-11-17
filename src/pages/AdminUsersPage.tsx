@@ -1,4 +1,5 @@
 ﻿import { useEffect, useState } from "react";
+import { supabase } from "../supabaseClient";
 
 interface UserRow {
   id: string;
@@ -24,25 +25,22 @@ export default function AdminUsersPage() {
   const loadUsers = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`${FUNCTION_BASE}/list-users`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-          "Content-Type": "application/json",
-        },
-      });
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("id,email,role")
+        .order("email", { ascending: true });
 
-      const result = await res.json();
-      if (result.users) {
-        const formatted = result.users.map((u: any) => ({
-          id: u.id,
-          email: u.email,
-          role: u.role ?? "viewer",
-        }));
-        setUsers(formatted);
-      }
+      if (error) throw error;
+
+      setUsers(
+        (data ?? []).map((row) => ({
+          id: row.id,
+          email: row.email ?? "",
+          role: row.role ?? "viewer",
+        }))
+      );
     } catch (err) {
-      alert("사용자 목록을 불러오지 못했습니다: " + err);
+      alert("등록된 사용자를 불러오지 못했습니다: " + (err as Error).message);
     } finally {
       setLoading(false);
     }
@@ -262,3 +260,5 @@ export default function AdminUsersPage() {
     </div>
   );
 }
+
+
