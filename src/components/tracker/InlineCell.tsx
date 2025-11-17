@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from "react";
+﻿import { useEffect, useRef, useState } from "react";
 
 interface InlineCellProps {
   value: string | number | null | undefined;
@@ -20,12 +20,30 @@ export default function InlineCell({
   onSelect,
 }: InlineCellProps) {
   const [editing, setEditing] = useState(false);
+  const controlRef = useRef<HTMLInputElement | HTMLSelectElement | null>(null);
 
   useEffect(() => {
     if (!selected && editing) {
       setEditing(false);
     }
   }, [selected, editing]);
+
+  useEffect(() => {
+    if (!editing) return;
+
+    const handlePointerDown = (event: MouseEvent | TouchEvent) => {
+      if (controlRef.current && !controlRef.current.contains(event.target as Node)) {
+        setEditing(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handlePointerDown);
+    document.addEventListener("touchstart", handlePointerDown);
+    return () => {
+      document.removeEventListener("mousedown", handlePointerDown);
+      document.removeEventListener("touchstart", handlePointerDown);
+    };
+  }, [editing]);
 
   if (editing) {
     if (type === "select") {
@@ -40,6 +58,7 @@ export default function InlineCell({
             }}
             onBlur={() => setEditing(false)}
             autoFocus
+            ref={(el) => (controlRef.current = el)}
           >
             {options.map((o) => (
               <option key={o}>{o}</option>
@@ -58,6 +77,7 @@ export default function InlineCell({
           onChange={(e) => onUpdate(e.target.value)}
           onBlur={() => setEditing(false)}
           autoFocus
+          ref={(el) => (controlRef.current = el)}
         />
       </td>
     );

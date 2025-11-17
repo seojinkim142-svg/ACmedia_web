@@ -158,7 +158,7 @@ export default function TrackerTable({
         <tr className="border-b bg-gray-100">
           <th className="py-2 px-1 w-10 text-sm">#</th>
           <th className="py-2 px-1 w-16 text-sm">사진</th>
-          <th className="py-2 px-1 w-20 text-sm">날짜</th>
+          <th className="py-2 px-1 w-28 text-sm">날짜</th>
           <th className="py-2 px-1 w-20 text-sm">편집자</th>
           <th className="py-2 px-2 w-[320px] text-sm">제목</th>
           <th className="py-2 px-1 w-20 text-sm">상태</th>
