@@ -53,15 +53,27 @@ export default function DatabasePage() {
     setLoading(true);
     const { data, error } = await supabase
       .from("articles")
-      .select(
-        "id,title,status,editor,source,content_source,created_at,comments(count),bgm",
-      )
+      .select("id,title,status,editor,source,content_source,created_at,bgm")
       .order("created_at", { ascending: false });
 
     if (error || !data) {
       setRows([]);
       setLoading(false);
       return;
+    }
+
+    const ids = data.map((item) => item.id);
+    const commentCounts: Record<number, number> = {};
+
+    if (ids.length > 0) {
+      const { data: commentRows } = await supabase
+        .from("comments")
+        .select("post_id")
+        .in("post_id", ids);
+
+      commentRows?.forEach(({ post_id }) => {
+        commentCounts[post_id] = (commentCounts[post_id] ?? 0) + 1;
+      });
     }
 
     const formatted: DatabaseRow[] = data.map((item) => ({
@@ -72,7 +84,7 @@ export default function DatabasePage() {
       source: item.source ?? "",
       content_source: item.content_source ?? "",
       created_at: item.created_at ?? "",
-      comments_count: item.comments?.[0]?.count ?? 0,
+      comments_count: commentCounts[item.id] ?? 0,
       bgm: item.bgm ?? "",
     }));
 
