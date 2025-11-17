@@ -1,4 +1,4 @@
-import TrackerRow from "./TrackerRow";
+﻿import TrackerRow from "./TrackerRow";
 
 interface Article {
   id: number;
@@ -33,16 +33,18 @@ export default function TrackerTable({
     <table className="w-full text-left border-collapse">
       <thead>
         <tr className="border-b bg-gray-100">
-          <th className="py-2 px-1 w-10 text-sm">번호</th>
-          <th className="py-2 px-1 w-20 text-sm">사진</th>
-          <th className="py-2 px-1 w-24 text-sm">날짜</th>
-          <th className="py-2 px-1 w-24 text-sm">에디터</th>
+          <th className="py-2 px-1 w-10 text-sm">#</th>
+          <th className="py-2 px-1 w-16 text-sm">사진</th>
+          <th className="py-2 px-1 w-20 text-sm">날짜</th>
+          <th className="py-2 px-1 w-20 text-sm">편집자</th>
 
-          {/* ⭐ 제목 칼럼 폭 제한 추가 */}
-          <th className="py-2 px-1 w-[140px] text-sm">제목</th>
+          {/* 제목 칼럼 넉넉히 확보 */}
+          <th className="py-2 px-2 w-[320px] text-sm">제목</th>
 
           <th className="py-2 px-1 w-20 text-sm">상태</th>
-          <th className="py-2 px-1 w-40 text-sm">메모</th>
+
+          {/* 메모 영역도 충분히 */}
+          <th className="py-2 px-2 w-[220px] text-sm">메모</th>
         </tr>
       </thead>
 

@@ -1,4 +1,4 @@
-import InlineCell from "./InlineCell";
+﻿import InlineCell from "./InlineCell";
 
 interface Article {
   id: number;
@@ -31,7 +31,6 @@ export default function TrackerRow({
   onImageClick,
   onMemoClick,
 }: TrackerRowProps) {
-
   const preview =
     item.images?.length
       ? item.images[0]
@@ -39,12 +38,14 @@ export default function TrackerRow({
 
   return (
     <tr className="border-b hover:bg-gray-50" onDoubleClick={() => onDoubleClick(item)}>
-
       <td className="py-2 px-1 text-sm">{index + 1}</td>
 
       <td
         className="py-2 px-1 cursor-pointer"
-        onClick={(e) => { e.stopPropagation(); onImageClick(e, item); }}
+        onClick={(e) => {
+          e.stopPropagation();
+          onImageClick(e, item);
+        }}
       >
         <img src={preview} className="w-14 h-14 object-cover rounded" />
       </td>
@@ -58,14 +59,14 @@ export default function TrackerRow({
       <InlineCell
         type="select"
         value={item.editor || ""}
-        options={["지민", "지안", "아라"]}
+        options={["지윤", "지수", "하라"]}
         onUpdate={(val) => onInlineUpdate(item.id, "editor", val)}
       />
 
-      {/* 제목 — 길이에 따라 글씨 크기 자동 조정 */}
+      {/* 제목 길이에 따라 글자 크기 자동 조정 */}
       <td
         className={`
-          py-2 px-1 cursor-pointer max-w-[140px] truncate
+          py-2 px-2 cursor-pointer max-w-[320px] truncate
           ${
             item.title.length < 25
               ? "text-sm"
@@ -84,20 +85,19 @@ export default function TrackerRow({
         value={item.status}
         options={[
           "리뷰", "추천", "보류",
-          "본문 생성", "본문 완료",
-          "이미지 생성", "이미지 완료",
+          "본문 작성", "본문 완료",
+          "이미지 작성", "이미지 완료",
           "업로드 대기", "업로드",
         ]}
         onUpdate={(val) => onInlineUpdate(item.id, "status", val)}
       />
 
       <td
-        className="py-2 px-1 cursor-pointer text-sm text-gray-600"
+        className="py-2 px-2 cursor-pointer text-sm text-gray-600 max-w-[220px] truncate"
         onClick={() => onMemoClick(item)}
       >
-        {item.latest_comment ? item.latest_comment.slice(0, 20) : ""}
+        {item.latest_comment ? item.latest_comment.slice(0, 40) : ""}
       </td>
-
     </tr>
   );
 }
