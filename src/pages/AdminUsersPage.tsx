@@ -60,7 +60,7 @@ export default function AdminUsersPage() {
 
     setCreatingUser(true);
     try {
-      const res = await fetch(`${FUNCTION_BASE}/create-user`, {
+      const res = await fetch(`${FUNCTION_BASE}/create_user`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
@@ -139,7 +139,7 @@ export default function AdminUsersPage() {
   const deleteUser = async (userId: string) => {
     if (!confirm("정말 삭제하시겠습니까?")) return;
 
-    const res = await fetch(`${FUNCTION_BASE}/delete-user`, {
+    const res = await fetch(`${FUNCTION_BASE}/delete_user`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
