@@ -34,20 +34,23 @@ export default function TrackerRow({
   const preview =
     item.images?.length
       ? item.images[0]
-      : "https://placehold.co/120x120?text=No+Image";
+      : "https://placehold.co/108x135?text=No+Image";
 
   return (
     <tr className="border-b hover:bg-gray-50" onDoubleClick={() => onDoubleClick(item)}>
       <td className="py-2 px-1 text-sm">{index + 1}</td>
 
-      <td
-        className="py-2 px-1 cursor-pointer"
-        onClick={(e) => {
-          e.stopPropagation();
-          onImageClick(e, item);
-        }}
-      >
-        <img src={preview} className="w-14 h-14 object-cover rounded" />
+      <td className="py-2 px-1 cursor-pointer">
+        <div
+          className="w-14 rounded overflow-hidden"
+          style={{ aspectRatio: "4 / 5" }}
+          onClick={(e) => {
+            e.stopPropagation();
+            onImageClick(e, item);
+          }}
+        >
+          <img src={preview} className="w-full h-full object-cover" />
+        </div>
       </td>
 
       <InlineCell

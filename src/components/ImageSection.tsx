@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { supabase } from "../supabaseClient";
 import { uploadImage } from "../lib/uploadImages";
 
@@ -8,16 +8,33 @@ interface Props {
   onUpdate: () => void;
 }
 
+const REQUIRED_WIDTH = 1080;
+const REQUIRED_HEIGHT = 1350;
+
+async function readImageSize(file: File) {
+  return new Promise<{ width: number; height: number }>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () =>
+        resolve({ width: img.naturalWidth, height: img.naturalHeight });
+      img.onerror = reject;
+      img.src = reader.result as string;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
 export default function ImageSection({ images, articleId, onUpdate }: Props) {
   const [index, setIndex] = useState(0);
-  const [previewImage, setPreviewImage] = useState<string | null>(null); // ★ 이미지 팝업 복구
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
 
   const current =
     images.length > 0
       ? images[index]
-      : "https://placehold.co/120x120?text=No+Image";
+      : "https://placehold.co/108x135?text=No+Image";
 
-  // 이미지 삭제
   const deleteImage = async () => {
     const updated = images.filter((_, i) => i !== index);
 
@@ -29,7 +46,6 @@ export default function ImageSection({ images, articleId, onUpdate }: Props) {
     onUpdate();
   };
 
-  // 다운로드
   const downloadImage = (url: string) => {
     const link = document.createElement("a");
     link.href = url;
@@ -37,11 +53,26 @@ export default function ImageSection({ images, articleId, onUpdate }: Props) {
     link.click();
   };
 
-  // 이미지 업로드
   const uploadNew = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files?.[0]) return;
+    const file = e.target.files[0];
 
-    const url = await uploadImage(e.target.files[0]);
+    try {
+      const { width, height } = await readImageSize(file);
+      if (width !== REQUIRED_WIDTH || height !== REQUIRED_HEIGHT) {
+        alert(
+          `이미지 크기를 ${REQUIRED_WIDTH}x${REQUIRED_HEIGHT} 픽셀로 맞춰 주세요. 현재 크기: ${width}x${height}`
+        );
+        e.target.value = "";
+        return;
+      }
+    } catch (err) {
+      alert("이미지 정보를 읽어오지 못했습니다.");
+      e.target.value = "";
+      return;
+    }
+
+    const url = await uploadImage(file);
     const updated = [...images, url];
 
     await supabase
@@ -54,32 +85,33 @@ export default function ImageSection({ images, articleId, onUpdate }: Props) {
 
   return (
     <div className="w-full flex flex-col items-center gap-4">
-
-      {/* ★ 이미지 단독 팝업 */}
       {previewImage && (
         <div
-          className="fixed inset-0 bg-black/70 z-9999 flex justify-center items-center"
-          onClick={() => setPreviewImage(null)}   // 배경 클릭 → 닫기
+          className="fixed inset-0 bg-black/70 z-50 flex justify-center items-center"
+          onClick={() => setPreviewImage(null)}
         >
-          <img
-            src={previewImage}
-            className="max-w-[90vw] max-h-[90vh] rounded-lg shadow-xl"
-          />
+          <div
+            className="rounded-lg shadow-xl overflow-hidden"
+            style={{ width: "min(540px, 90vw)", aspectRatio: "4 / 5" }}
+          >
+            <img src={previewImage} className="w-full h-full object-cover" />
+          </div>
         </div>
       )}
 
-      {/* 큰 이미지 */}
-      <img
-        src={current}
-        className="w-64 h-64 object-cover border rounded cursor-pointer"
-        onClick={() => setPreviewImage(current)}   // ★ 클릭 → 이미지 팝업 열기
-      />
+      <div
+        className="border rounded cursor-pointer overflow-hidden w-[270px]"
+        style={{ aspectRatio: "4 / 5" }}
+        onClick={() => setPreviewImage(current)}
+      >
+        <img src={current} className="w-full h-full object-cover" />
+      </div>
 
-      {/* 좌우 버튼 */}
       <div className="flex gap-6">
         <button
           className="px-4 py-2 bg-gray-700 text-white rounded"
           onClick={() => setIndex((i) => (i - 1 + images.length) % images.length)}
+          disabled={!images.length}
         >
           &lt;
         </button>
@@ -87,16 +119,17 @@ export default function ImageSection({ images, articleId, onUpdate }: Props) {
         <button
           className="px-4 py-2 bg-gray-700 text-white rounded"
           onClick={() => setIndex((i) => (i + 1) % images.length)}
+          disabled={!images.length}
         >
           &gt;
         </button>
       </div>
 
-      {/* 다운로드 & 삭제 */}
       <div className="flex gap-4">
         <button
           className="px-4 py-2 bg-blue-600 text-white rounded"
-          onClick={() => downloadImage(current)}   // ★ 원래 기능
+          onClick={() => downloadImage(current)}
+          disabled={!images.length}
         >
           다운로드
         </button>
@@ -104,27 +137,31 @@ export default function ImageSection({ images, articleId, onUpdate }: Props) {
         <button
           onClick={deleteImage}
           className="px-4 py-2 bg-red-600 text-white rounded"
+          disabled={!images.length}
         >
           삭제
         </button>
       </div>
 
-      {/* 썸네일 */}
       <div className="flex gap-2 flex-wrap justify-center">
         {images.map((img, i) => (
-          <img
+          <div
             key={i}
-            src={img}
-            className={`w-12 h-12 border rounded cursor-pointer ${
+            className={`w-12 border rounded cursor-pointer overflow-hidden ${
               i === index ? "ring-2 ring-blue-500" : ""
             }`}
+            style={{ aspectRatio: "4 / 5" }}
             onClick={() => setIndex(i)}
-          />
+          >
+            <img src={img} className="w-full h-full object-cover" />
+          </div>
         ))}
       </div>
 
-      {/* 업로드 */}
       <input type="file" accept="image/*" onChange={uploadNew} />
+      <p className="text-xs text-gray-500">
+        권장 이미지 크기: {REQUIRED_WIDTH} x {REQUIRED_HEIGHT} 픽셀
+      </p>
     </div>
   );
 }
