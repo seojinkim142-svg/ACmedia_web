@@ -27,7 +27,7 @@ export default function UploadPage() {
   const [openItem, setOpenItem] = useState<UploadArticle | null>(null);
   const [memoItem, setMemoItem] = useState<UploadArticle | null>(null);
   const [imageMenu, setImageMenu] = useState<{ x: number; y: number; images: string[]; id: number } | null>(null);
-  const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [previewState, setPreviewState] = useState<{ images: string[]; index: number } | null>(null);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [exporting, setExporting] = useState(false);
   const navigate = useNavigate();
@@ -173,9 +173,77 @@ export default function UploadPage() {
           {exporting ? "내보내는 중..." : "선택 데이터 Excel 내보내기"}
         </button>
       </div>
-      {previewImage && (
-        <div className="fixed inset-0 bg-black/70 flex justify-center items-center z-50" onClick={() => setPreviewImage(null)}>
-          <img src={previewImage} className="max-w-[90vw] max-h-[90vh] rounded" />
+      {previewState && (
+        <div
+          className="fixed inset-0 bg-black/70 flex justify-center items-center z-50"
+          onClick={() => setPreviewState(null)}
+        >
+          <div
+            className="relative flex flex-col items-center gap-3"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="relative flex items-center gap-4">
+              <button
+                className="p-2 bg-white/80 rounded-full disabled:opacity-40"
+                onClick={() =>
+                  setPreviewState((prev) => {
+                    if (!prev || prev.images.length <= 1) return prev;
+                    return {
+                      ...prev,
+                      index: (prev.index - 1 + prev.images.length) % prev.images.length,
+                    };
+                  })
+                }
+                disabled={!previewState.images.length || previewState.images.length === 1}
+              >
+                &lt;
+              </button>
+              <img
+                src={
+                  previewState.images[previewState.index] ||
+                  "https://placehold.co/108x135?text=No+Image"
+                }
+                className="max-w-[80vw] max-h-[80vh] rounded shadow-lg object-contain"
+              />
+              <button
+                className="p-2 bg-white/80 rounded-full disabled:opacity-40"
+                onClick={() =>
+                  setPreviewState((prev) => {
+                    if (!prev || prev.images.length <= 1) return prev;
+                    return { ...prev, index: (prev.index + 1) % prev.images.length };
+                  })
+                }
+                disabled={!previewState.images.length || previewState.images.length === 1}
+              >
+                &gt;
+              </button>
+            </div>
+            <div className="text-white text-sm">
+              {previewState.images.length > 0
+                ? `${previewState.index + 1} / ${previewState.images.length}`
+                : "�̹����� �����ϴ�"}
+            </div>
+            <button
+              className="px-4 py-2 bg-white rounded shadow disabled:opacity-50"
+              onClick={() => {
+                const current = previewState.images[previewState.index];
+                if (!current) return;
+                const link = document.createElement("a");
+                link.href = current;
+                link.download = `image-${Date.now()}.png`;
+                link.click();
+              }}
+              disabled={!previewState.images.length}
+            >
+              ���� �̹��� �ٿ�ε�
+            </button>
+            <button
+              className="absolute top-0 right-0 px-3 py-1 text-sm bg-black/60 text-white rounded"
+              onClick={() => setPreviewState(null)}
+            >
+              �ݱ�
+            </button>
+          </div>
         </div>
       )}
 
@@ -202,16 +270,16 @@ export default function UploadPage() {
       <ImageMenu
         menu={imageMenu}
         onPreview={(images, startIndex = 0) => {
-          const target = images[startIndex];
-          if (!target) {
-            alert("이미지가 없습니다.");
+          if (!images.length) {
+            alert("�̹����� �����ϴ�.");
             return;
           }
-          setPreviewImage(target);
+          const safeIndex = Math.max(0, Math.min(startIndex, images.length - 1));
+          setPreviewState({ images, index: safeIndex });
         }}
         onDownload={async (url) => {
           if (!url) {
-            alert("다운로드할 이미지가 없습니다.");
+            alert("�ٿ�ε��� �̹����� �����ϴ�.");
             return;
           }
           try {
@@ -226,7 +294,7 @@ export default function UploadPage() {
             URL.revokeObjectURL(objectUrl);
           } catch (error) {
             console.error(error);
-            alert("이미지 다운로드에 실패했습니다.");
+            alert("�̹��� �ٿ�ε忡 �����߽��ϴ�.");
           }
         }}
         onUpload={uploadNewImage}
