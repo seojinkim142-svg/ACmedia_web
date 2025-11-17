@@ -25,6 +25,7 @@ export default function TrackerPage() {
   const [articles, setArticles] = useState<Article[]>([]);
   const [openItem, setOpenItem] = useState<Article | null>(null);
   const [memoItem, setMemoItem] = useState<Article | null>(null);
+  const [exporting, setExporting] = useState(false);
 
   const [imageMenu, setImageMenu] = useState<{
     x: number;
@@ -97,11 +98,89 @@ export default function TrackerPage() {
     loadArticles();
   };
 
+  const exportArticles = async () => {
+    try {
+      setExporting(true);
+      const { data, error } = await supabase
+        .from("articles")
+        .select(
+          "id,title,summary,body,source,status,editor,content_source,bgm,created_at"
+        )
+        .order("id", { ascending: true });
+
+      if (error) throw error;
+
+      const headers = [
+        "ID",
+        "제목",
+        "요약",
+        "본문",
+        "출처",
+        "상태",
+        "편집자",
+        "콘텐츠 출처",
+        "BGM",
+        "작성일",
+      ];
+
+      const rows = (data ?? []).map((row) => {
+        return [
+          row.id ?? "",
+          row.title ?? "",
+          row.summary ?? "",
+          row.body ?? "",
+          row.source ?? "",
+          row.status ?? "",
+          row.editor ?? "",
+          row.content_source ?? "",
+          row.bgm ?? "",
+          row.created_at ?? "",
+        ]
+          .map((value) => {
+            const str = String(value).replace(/"/g, '""');
+            return `"${str}"`;
+          })
+          .join(",");
+      });
+
+      const csv = [headers.join(","), ...rows].join("\r\n");
+      const blob = new Blob([csv], {
+        type: "text/csv;charset=utf-8;",
+      });
+
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      const today = new Date().toISOString().split("T")[0];
+      link.href = url;
+      link.download = `articles-${today}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      alert("데이터 내보내기 실패: " + (err as Error).message);
+    } finally {
+      setExporting(false);
+    }
+  };
+
   return (
     <div
       className="w-full mt-6 px-6"
       onClick={() => setImageMenu(null)}
     >
+      <div className="w-full flex justify-end mb-4">
+        <button
+          className="px-4 py-2 bg-green-600 text-white rounded disabled:opacity-60"
+          onClick={(e) => {
+            e.stopPropagation();
+            exportArticles();
+          }}
+          disabled={exporting}
+        >
+          {exporting ? "내보내는 중..." : "데이터 Excel 내보내기"}
+        </button>
+      </div>
       {/* 이미지 크게 미리보기 */}
       {previewImage && (
         <div
