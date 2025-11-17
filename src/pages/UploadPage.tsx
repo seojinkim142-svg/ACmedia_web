@@ -26,7 +26,7 @@ export default function UploadPage() {
   const [articles, setArticles] = useState<UploadArticle[]>([]);
   const [openItem, setOpenItem] = useState<UploadArticle | null>(null);
   const [memoItem, setMemoItem] = useState<UploadArticle | null>(null);
-  const [imageMenu, setImageMenu] = useState<{ x: number; y: number; url: string; id: number } | null>(null);
+  const [imageMenu, setImageMenu] = useState<{ x: number; y: number; images: string[]; id: number } | null>(null);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [exporting, setExporting] = useState(false);
@@ -191,7 +191,7 @@ export default function UploadPage() {
           setImageMenu({
             x: e.clientX,
             y: e.clientY,
-            url: item.images?.[0] || "",
+            images: item.images ?? [],
             id: item.id,
           })
         }
@@ -201,12 +201,33 @@ export default function UploadPage() {
 
       <ImageMenu
         menu={imageMenu}
-        onPreview={(url) => setPreviewImage(url)}
-        onDownload={(url) => {
-          const link = document.createElement("a");
-          link.href = url;
-          link.download = `image-${Date.now()}.png`;
-          link.click();
+        onPreview={(images, startIndex = 0) => {
+          const target = images[startIndex];
+          if (!target) {
+            alert("이미지가 없습니다.");
+            return;
+          }
+          setPreviewImage(target);
+        }}
+        onDownload={async (url) => {
+          if (!url) {
+            alert("다운로드할 이미지가 없습니다.");
+            return;
+          }
+          try {
+            const response = await fetch(url);
+            if (!response.ok) throw new Error("Failed to download");
+            const blob = await response.blob();
+            const objectUrl = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = objectUrl;
+            link.download = `image-${Date.now()}.png`;
+            link.click();
+            URL.revokeObjectURL(objectUrl);
+          } catch (error) {
+            console.error(error);
+            alert("이미지 다운로드에 실패했습니다.");
+          }
         }}
         onUpload={uploadNewImage}
         onClose={() => setImageMenu(null)}

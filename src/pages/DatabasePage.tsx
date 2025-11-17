@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
-import { supabase } from "../supabaseClient";
-import CommentsModal from "../components/tracker/CommentsModal";
 import { useNavigate } from "react-router-dom";
+import CommentsModal from "../components/tracker/CommentsModal";
+import { supabase } from "../supabaseClient";
 
 interface DatabaseRow {
   id: number;
@@ -13,6 +13,9 @@ interface DatabaseRow {
   created_at?: string;
   comments_count: number;
 }
+
+const EMPTY_TITLE = "(제목 없음)";
+const EMPTY_DATE = "(날짜 없음)";
 
 export default function DatabasePage() {
   const [rows, setRows] = useState<DatabaseRow[]>([]);
@@ -26,7 +29,9 @@ export default function DatabasePage() {
     setLoading(true);
     const { data, error } = await supabase
       .from("articles")
-      .select("id,title,status,editor,source,content_source,created_at,comments(count)")
+      .select(
+        "id,title,status,editor,source,content_source,created_at,comments(count)",
+      )
       .order("created_at", { ascending: false });
 
     if (error || !data) {
@@ -35,7 +40,7 @@ export default function DatabasePage() {
       return;
     }
 
-    const formatted: DatabaseRow[] = data.map((item: any) => ({
+    const formatted: DatabaseRow[] = data.map((item) => ({
       id: item.id,
       title: item.title ?? "",
       status: item.status ?? "",
@@ -57,7 +62,7 @@ export default function DatabasePage() {
   const titleGroups = useMemo(() => {
     const map = new Map<string, DatabaseRow[]>();
     rows.forEach((row) => {
-      const key = row.title || "(제목 없음)";
+      const key = row.title || EMPTY_TITLE;
       if (!map.has(key)) map.set(key, []);
       map.get(key)!.push(row);
     });
@@ -67,7 +72,7 @@ export default function DatabasePage() {
   const dateGroups = useMemo(() => {
     const map = new Map<string, DatabaseRow[]>();
     rows.forEach((row) => {
-      const key = row.created_at?.slice(0, 10) || "(날짜 없음)";
+      const key = row.created_at?.slice(0, 10) || EMPTY_DATE;
       if (!map.has(key)) map.set(key, []);
       map.get(key)!.push(row);
     });
@@ -75,7 +80,7 @@ export default function DatabasePage() {
   }, [rows]);
 
   const goToArticlePage = (row: DatabaseRow) => {
-    const target = row.status === "업로드" ? "/upload" : "/tracker";
+    const target = row.status === "업로드 대기" ? "/upload" : "/tracker";
     navigate(target, { state: { focusId: row.id } });
   };
 
@@ -88,8 +93,9 @@ export default function DatabasePage() {
         </button>
       </div>
 
-      <p className="text-sm text-gray-500">
-        트래커와 업로드 페이지의 모든 기사를 한 번에 모아 보는 공간입니다. 제목이나 날짜를 기준으로 펼쳐서 원하는 기사를 찾고, 해당 페이지로 바로 이동할 수 있습니다.
+      <p className="text-sm text-gray-500 leading-relaxed">
+        트래커와 업로드 페이지에 있는 모든 기사 정보를 한 번에 확인할 수 있습니다. 제목별·날짜별로 묶인
+        기사 목록을 클릭하면 해당 그룹의 기사들이 펼쳐지며, 필요한 기사 페이지로 바로 이동할 수 있습니다.
       </p>
 
       {loading ? (
@@ -106,20 +112,28 @@ export default function DatabasePage() {
                     setExpandedTitles((prev) => ({ ...prev, [title]: !prev[title] }))
                   }
                 >
-                  <span>{title}</span>
+                  <span className="font-semibold truncate max-w-[320px]">{title}</span>
                   <span className="text-sm text-gray-500">{items.length}건</span>
                 </button>
                 {expandedTitles[title] && (
-                  <div className="divide-y">
+                  <div className="divide-y bg-gray-50/60">
                     {items.map((row) => (
-                      <div key={row.id} className="px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                      <div
+                        key={row.id}
+                        className="px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
+                      >
                         <div>
-                          <p className="font-semibold">{row.status}</p>
-                          <p className="text-sm text-gray-600">
-                            에디터: {row.editor || "-"} / 작성일: {row.created_at?.slice(0, 10) || "-"}
+                          <p className="font-semibold text-gray-900 truncate max-w-[360px]">
+                            {row.title || EMPTY_TITLE}
                           </p>
-                          <p className="text-sm text-gray-500">
-                            콘텐츠 출처: {row.content_source || "-"} / 댓글 {row.comments_count}개
+                          <p className="text-sm text-gray-600">
+                            상태: {row.status || "-"} / 편집자: {row.editor || "-"}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            작성일: {row.created_at?.slice(0, 10) || "-"} / 댓글 {row.comments_count}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            출처: {row.content_source || row.source || "-"}
                           </p>
                         </div>
                         <div className="flex gap-2">
@@ -133,7 +147,7 @@ export default function DatabasePage() {
                             className="px-3 py-1 text-sm bg-gray-200 rounded"
                             onClick={() => setMemoItem({ id: row.id, title: row.title })}
                           >
-                            댓글
+                            메모
                           </button>
                         </div>
                       </div>
@@ -154,20 +168,23 @@ export default function DatabasePage() {
                     setExpandedDates((prev) => ({ ...prev, [date]: !prev[date] }))
                   }
                 >
-                  <span>{date}</span>
+                  <span className="font-semibold">{date}</span>
                   <span className="text-sm text-gray-500">{items.length}건</span>
                 </button>
                 {expandedDates[date] && (
-                  <div className="divide-y">
+                  <div className="divide-y bg-gray-50/60">
                     {items.map((row) => (
-                      <div key={row.id} className="px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                      <div
+                        key={row.id}
+                        className="px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
+                      >
                         <div>
-                          <p className="font-semibold truncate max-w-[360px]">{row.title}</p>
+                          <p className="font-semibold truncate max-w-[360px]">{row.title || EMPTY_TITLE}</p>
                           <p className="text-sm text-gray-600">
-                            상태: {row.status} / 에디터: {row.editor || "-"}
+                            상태: {row.status || "-"} / 편집자: {row.editor || "-"}
                           </p>
-                          <p className="text-sm text-gray-500">
-                            콘텐츠 출처: {row.content_source || "-"} / 댓글 {row.comments_count}개
+                          <p className="text-xs text-gray-500">
+                            출처: {row.content_source || row.source || "-"} / 댓글 {row.comments_count}
                           </p>
                         </div>
                         <div className="flex gap-2">
@@ -181,7 +198,7 @@ export default function DatabasePage() {
                             className="px-3 py-1 text-sm bg-gray-200 rounded"
                             onClick={() => setMemoItem({ id: row.id, title: row.title })}
                           >
-                            댓글
+                            메모
                           </button>
                         </div>
                       </div>
@@ -195,11 +212,7 @@ export default function DatabasePage() {
       )}
 
       {memoItem && (
-        <CommentsModal
-          item={memoItem}
-          onClose={() => setMemoItem(null)}
-          onUpdated={loadData}
-        />
+        <CommentsModal item={memoItem} onClose={() => setMemoItem(null)} onUpdated={loadData} />
       )}
     </div>
   );
