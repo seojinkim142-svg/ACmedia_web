@@ -1,4 +1,4 @@
-interface ImageMenuProps {
+﻿interface ImageMenuProps {
   menu: {
     x: number;
     y: number;
@@ -38,7 +38,9 @@ export default function ImageMenu({
 
       <button
         className="block w-full px-4 py-2 text-left hover:bg-gray-100"
-        onClick={() => {
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
           onDownload(menu.url);
           onClose();
         }}
