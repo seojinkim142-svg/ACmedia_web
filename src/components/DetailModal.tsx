@@ -8,7 +8,7 @@ interface DetailModalProps {
   isOpen: boolean;
   onClose: () => void;
   item: any | null;
-  onUpdated?: (updated: any) => void;  // ★ TrackerPage에게 변경 전달
+  onUpdated?: (updated: any) => void;
 }
 
 export default function DetailModal({ isOpen, onClose, item, onUpdated }: DetailModalProps) {
@@ -18,12 +18,7 @@ export default function DetailModal({ isOpen, onClose, item, onUpdated }: Detail
   const loadArticleInfo = async () => {
     if (!item?.id) return;
 
-    const { data } = await supabase
-      .from("articles")
-      .select("*")
-      .eq("id", item.id)
-      .single();
-
+    const { data } = await supabase.from("articles").select("*").eq("id", item.id).single();
     if (data) setArticle(data);
   };
 
@@ -47,8 +42,7 @@ export default function DetailModal({ isOpen, onClose, item, onUpdated }: Detail
     }
   }, [item]);
 
-  if (!isOpen) return null;
-  if (!article) return null;
+  if (!isOpen || !article) return null;
 
   const handleSave = async () => {
     const { data, error } = await supabase
@@ -70,120 +64,105 @@ export default function DetailModal({ isOpen, onClose, item, onUpdated }: Detail
       .single();
 
     if (error) {
-      alert("저장 실패: " + error.message);
+      alert("저장에 실패했습니다: " + error.message);
       return;
     }
 
-    // 최신 article 데이터로 갱신
     if (data) setArticle(data);
-
-    // TrackerPage에게 반영
-    if (onUpdated) onUpdated(data);
-
-    alert("저장되었습니다.");
+    onUpdated?.(data);
+    alert("변경 사항이 저장되었습니다.");
   };
 
   return (
-    <div className="fixed inset-0 bg-black/40 z-9000 flex justify-center items-start overflow-auto">
-      <div className="bg-white w-full max-w-2xl rounded-lg shadow-xl mt-10 max-h-[90vh] overflow-hidden flex flex-col">
-
-        {/* 상단 헤더 (고정) */}
-        <div className="border-b px-4 py-3 flex items-center bg-white sticky top-0 z-50">
-          <h2 className="text-xl font-bold pr-32">{article.title}</h2>
-
-          {/* 상단 우측 고정 저장 버튼 */}
-          <button
-            onClick={handleSave}
-            className="absolute right-14 top-3 bg-green-600 text-white px-4 py-2 rounded shadow"
-          >
-            저장
-          </button>
-
-          <button
-            onClick={onClose}
-            className="absolute right-4 top-3 text-2xl text-gray-600"
-          >
-            ×
-          </button>
+    <div className="fixed inset-0 z-9000 bg-black/50 backdrop-blur-sm px-4 py-6 flex items-center justify-center">
+      <div className="w-full max-w-5xl bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
+        <div className="relative px-6 py-4 border-b bg-linear-to-r from-blue-600 to-indigo-600 text-white">
+          <div className="flex flex-col gap-1 pr-36">
+            <p className="text-xs uppercase tracking-widest opacity-80">기사 상세</p>
+            <h2 className="text-2xl font-semibold truncate">{article.title || "제목 없음"}</h2>
+          </div>
+          <div className="absolute inset-y-0 right-4 flex items-center gap-3">
+            <button
+              onClick={handleSave}
+              className="px-5 py-2 rounded-full bg-white/20 hover:bg-white/30 text-sm font-semibold transition"
+            >
+              저장
+            </button>
+            <button
+              onClick={onClose}
+              className="w-9 h-9 rounded-full bg-black/30 hover:bg-black/50 flex items-center justify-center text-lg"
+            >
+              ×
+            </button>
+          </div>
         </div>
 
-        {/* 본문 영역 */}
-        <div className="p-4 space-y-6 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto bg-gray-50 p-6 space-y-6">
+          <section className="bg-white rounded-xl shadow-sm p-5 space-y-4">
+            <div>
+              <label className="font-semibold text-sm text-gray-600">제목</label>
+              <input
+                className="mt-1 border border-gray-200 rounded-lg p-3 w-full focus:outline-none focus:ring-2 focus:ring-blue-400"
+                value={article.title || ""}
+                onChange={(e) => setArticle((prev: any) => ({ ...prev, title: e.target.value }))}
+              />
+            </div>
 
-          {/* 제목 */}
-          <div>
-            <label className="font-semibold">제목</label>
-            <input
-              className="border rounded p-2 w-full"
-              value={article.title || ""}
-              onChange={(e) =>
-                setArticle((prev: any) => ({ ...prev, title: e.target.value }))
-              }
-            />
-          </div>
+            <div>
+              <label className="font-semibold text-sm text-gray-600">요약</label>
+              <textarea
+                rows={3}
+                className="mt-1 border border-gray-200 rounded-lg p-3 w-full resize-none focus:outline-none focus:ring-2 focus:ring-blue-400"
+                value={article.summary || ""}
+                onChange={(e) => setArticle((prev: any) => ({ ...prev, summary: e.target.value }))}
+              />
+            </div>
 
-          {/* 요약 */}
-          <div>
-            <label className="font-semibold">요약</label>
-            <textarea
-              rows={3}
-              className="border rounded p-2 w-full"
-              value={article.summary || ""}
-              onChange={(e) =>
-                setArticle((prev: any) => ({ ...prev, summary: e.target.value }))
-              }
-            />
-          </div>
+            <div>
+              <label className="font-semibold text-sm text-gray-600">본문</label>
+              <textarea
+                rows={6}
+                className="mt-1 border border-gray-200 rounded-lg p-3 w-full focus:outline-none focus:ring-2 focus:ring-blue-400"
+                value={article.body || ""}
+                onChange={(e) => setArticle((prev: any) => ({ ...prev, body: e.target.value }))}
+              />
+            </div>
+          </section>
 
-          {/* 본문 */}
-          <div>
-            <label className="font-semibold">본문</label>
-            <textarea
-              rows={6}
-              className="border rounded p-2 w-full"
-              value={article.body || ""}
-              onChange={(e) =>
-                setArticle((prev: any) => ({ ...prev, body: e.target.value }))
-              }
-            />
-          </div>
+          <section className="bg-white rounded-xl shadow-sm p-5">
+            <ImageSection images={article.images || []} articleId={article.id} onUpdate={loadArticleInfo} />
+          </section>
 
-          {/* 이미지 */}
-          <ImageSection
-            images={article.images || []}
-            articleId={article.id}
-            onUpdate={loadArticleInfo}
-          />
+          <section className="bg-white rounded-xl shadow-sm p-5 space-y-4">
+            <InfoSection article={article} onUpdate={loadArticleInfo} />
+            <div>
+              <label className="font-semibold text-sm text-gray-600">BGM</label>
+              <input
+                className="mt-1 border border-gray-200 rounded-lg p-3 w-full focus:outline-none focus:ring-2 focus:ring-blue-400"
+                value={article.bgm || ""}
+                onChange={(e) => setArticle((prev: any) => ({ ...prev, bgm: e.target.value }))}
+              />
+            </div>
+          </section>
 
-          {/* 출처 / 상태 / 콘텐츠출처 / 에디터 */}
-          <InfoSection article={article} onUpdate={loadArticleInfo} />
+          <section className="bg-white rounded-xl shadow-sm p-5">
+            <CommentsSection comments={comments} postId={article.id} onUpdate={loadComments} />
+          </section>
+        </div>
 
-          {/* BGM 입력 */}
-          <div>
-            <label className="font-semibold">BGM</label>
-            <input
-              className="border rounded p-2 w-full"
-              value={article.bgm || ""}
-              onChange={(e) =>
-                setArticle((prev: any) => ({ ...prev, bgm: e.target.value }))
-              }
-            />
-          </div>
-
-          {/* 하단 저장 버튼 */}
+        <div className="px-6 py-4 border-t bg-white flex justify-end gap-3">
+          <button
+            onClick={onClose}
+            className="px-5 py-2 rounded-full border border-gray-300 text-gray-600 hover:bg-gray-100 transition"
+          >
+            닫기
+          </button>
           <button
             onClick={handleSave}
-            className="w-full bg-green-600 text-white py-3 rounded-lg font-semibold shadow"
+            className="px-5 py-2 rounded-full bg-blue-600 text-white font-semibold shadow hover:bg-blue-700 transition"
           >
-            저장
+            변경 사항 저장
           </button>
-
-          {/* 댓글 */}
-          <CommentsSection
-            comments={comments}
-            postId={article.id}
-            onUpdate={loadComments}
-          />
         </div>
       </div>
     </div>
