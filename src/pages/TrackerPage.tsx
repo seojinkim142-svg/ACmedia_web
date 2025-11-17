@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import DetailModal from "../components/DetailModal";
 import { supabase } from "../supabaseClient";
 import { uploadImage } from "../lib/uploadImages";
@@ -18,7 +18,7 @@ interface Article {
   images: string[] | null;
   created_at?: string;
   bgm?: string;
-  latest_comment?: string; // ★ 추가됨
+  latest_comment?: string; // ??異붽???
 }
 
 export default function TrackerPage() {
@@ -36,12 +36,11 @@ export default function TrackerPage() {
 
   const [previewImage, setPreviewImage] = useState<string | null>(null);
 
-  // ★★★★★
-  // 완전 안정 버전 loadArticles
-  // Supabase 조인 없이 각각 최신 댓글 불러오기
-  // ★★★★★
+  // ?끸쁾?끸쁾??
+  // ?꾩쟾 ?덉젙 踰꾩쟾 loadArticles
+  // Supabase 議곗씤 ?놁씠 媛곴컖 理쒖떊 ?볤? 遺덈윭?ㅺ린
+  // ?끸쁾?끸쁾??
   const loadArticles = async () => {
-    // 1) articles 먼저 불러오기
     const { data: art, error } = await supabase
       .from("articles")
       .select("*")
@@ -52,24 +51,29 @@ export default function TrackerPage() {
       return;
     }
 
-    // 2) 각 article에 대해 최신 댓글 1개씩 불러오기
-    const result: Article[] = [];
+    const ids = art.map((a) => a.id);
+    const latestMap: Record<number, string> = {};
 
-    for (const a of art) {
-      const { data: cs } = await supabase
+    if (ids.length > 0) {
+      const { data: latest } = await supabase
         .from("comments")
-        .select("content, created_at")
-        .eq("post_id", a.id)
-        .order("created_at", { ascending: false })
-        .limit(1);
+        .select("post_id, content, created_at")
+        .in("post_id", ids)
+        .order("created_at", { ascending: false });
 
-      result.push({
-        ...a,
-        latest_comment: cs?.[0]?.content || "",
+      latest?.forEach((row: { post_id: number; content: string }) => {
+        if (latestMap[row.post_id] === undefined) {
+          latestMap[row.post_id] = row.content ?? "";
+        }
       });
     }
 
-    setArticles(result);
+    setArticles(
+      art.map((a) => ({
+        ...a,
+        latest_comment: latestMap[a.id] ?? "",
+      }))
+    );
   };
 
   useEffect(() => {
@@ -112,15 +116,15 @@ export default function TrackerPage() {
 
       const headers = [
         "ID",
-        "제목",
-        "요약",
-        "본문",
-        "출처",
-        "상태",
-        "편집자",
-        "콘텐츠 출처",
+        "?쒕ぉ",
+        "?붿빟",
+        "蹂몃Ц",
+        "異쒖쿂",
+        "?곹깭",
+        "?몄쭛??,
+        "肄섑뀗痢?異쒖쿂",
         "BGM",
-        "작성일",
+        "?묒꽦??,
       ];
 
       const rows = (data ?? []).map((row) => {
@@ -159,7 +163,7 @@ export default function TrackerPage() {
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
     } catch (err) {
-      alert("데이터 내보내기 실패: " + (err as Error).message);
+      alert("?곗씠???대낫?닿린 ?ㅽ뙣: " + (err as Error).message);
     } finally {
       setExporting(false);
     }
@@ -179,10 +183,10 @@ export default function TrackerPage() {
           }}
           disabled={exporting}
         >
-          {exporting ? "내보내는 중..." : "데이터 Excel 내보내기"}
+          {exporting ? "?대낫?대뒗 以?.." : "?곗씠??Excel ?대낫?닿린"}
         </button>
       </div>
-      {/* 이미지 크게 미리보기 */}
+      {/* ?대?吏 ?ш쾶 誘몃━蹂닿린 */}
       {previewImage && (
         <div
           className="fixed inset-0 bg-black/70 flex justify-center items-center z-50"
@@ -213,7 +217,7 @@ export default function TrackerPage() {
             id: item.id,
           })
         }
-        onMemoClick={(item) => setMemoItem(item)} // ★ 메모 클릭 핸들러
+        onMemoClick={(item) => setMemoItem(item)} // ??硫붾え ?대┃ ?몃뱾??
       />
 
       <ImageMenu
@@ -229,7 +233,7 @@ export default function TrackerPage() {
         onClose={() => setImageMenu(null)}
       />
 
-      {/* 상세 편집 모달 */}
+      {/* ?곸꽭 ?몄쭛 紐⑤떖 */}
       <DetailModal
         isOpen={openItem !== null}
         onClose={() => { setOpenItem(null); loadArticles(); }}
@@ -237,7 +241,7 @@ export default function TrackerPage() {
         onUpdated={handleUpdated}
       />
 
-      {/* ★ 메모 / 댓글 모달 */}
+      {/* ??硫붾え / ?볤? 紐⑤떖 */}
       {memoItem && (
         <CommentsModal
           item={memoItem}
@@ -248,3 +252,4 @@ export default function TrackerPage() {
     </div>
   );
 }
+
