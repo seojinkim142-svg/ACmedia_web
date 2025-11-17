@@ -1,24 +1,34 @@
-import { useEffect, useState } from "react";
+ï»¿import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../supabaseClient";
 
 export default function MagicLinkPage() {
-  const [message, setMessage] = useState("ÀÎÁõ ÁßÀÔ´Ï´Ù...");
+  const [message, setMessage] = useState("ì¸ì¦ ì¤‘ì…ë‹ˆë‹¤...");
   const navigate = useNavigate();
 
   useEffect(() => {
     const completeLogin = async () => {
       if (!window.location.hash.includes("access_token")) {
-        setMessage("À¯È¿ÇÏÁö ¾ÊÀº ·Î±×ÀÎ ¸µÅ©ÀÔ´Ï´Ù.");
+        setMessage("ìœ íš¨í•˜ì§€ ì•Šì€ ë¡œê·¸ì¸ ë§í¬ì…ë‹ˆë‹¤.");
         return;
       }
 
-      const { error } = await supabase.auth.getSessionFromUrl({
-        storeSession: true,
+      const search = new URLSearchParams(window.location.hash.replace("#", ""));
+      const access_token = search.get("access_token");
+      const refresh_token = search.get("refresh_token");
+
+      if (!access_token || !refresh_token) {
+        setMessage("ë§í¬ í† í°ì„ ì°¾ì„ ìˆ˜ ì—†ìŠµë‹ˆë‹¤.");
+        return;
+      }
+
+      const { error } = await supabase.auth.setSession({
+        access_token,
+        refresh_token,
       });
 
       if (error) {
-        setMessage("ÀÎÁõ ½ÇÆĞ: " + error.message);
+        setMessage("ì¸ì¦ ì‹¤íŒ¨: " + error.message);
         return;
       }
 
@@ -28,7 +38,7 @@ export default function MagicLinkPage() {
         window.location.pathname + window.location.search
       );
 
-      setMessage("·Î±×ÀÎÀÌ ¿Ï·áµÇ¾ú½À´Ï´Ù. Àá½Ã ÈÄ ÀÌµ¿ÇÕ´Ï´Ù...");
+      setMessage("ë¡œê·¸ì¸ì´ ì™„ë£Œë˜ì—ˆìŠµë‹ˆë‹¤. ì ì‹œ í›„ ì´ë™í•©ë‹ˆë‹¤...");
       setTimeout(() => navigate("/tracker", { replace: true }), 1500);
     };
 
