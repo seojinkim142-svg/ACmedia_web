@@ -10,50 +10,56 @@ interface ProtectedRouteProps {
 export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   const location = useLocation();
 
-  // 로그인 없이 접근 가능한 공개 라우트 목록
-  const publicRoutes = [
-    "/signin",
-    "/auth/callback",
-    "/password-recovery",    // 🔥 중요: 비밀번호 재설정 링크
-  ];
+  // 로그인 없이 접근 가능한 공개 라우트
+  const publicRoutes = ["/signin", "/auth/callback", "/password-recovery"];
 
+  // 세션/로딩/권한 상태
   const [session, setSession] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [profileChecked, setProfileChecked] = useState(false);
+  const [sessionLoading, setSessionLoading] = useState(true);
   const [authorized, setAuthorized] = useState(false);
+  const [profileChecked, setProfileChecked] = useState(false);
 
+  // 1) 세션 상태 감시 (Supabase 공식 패턴)
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session);
-      setLoading(false);
+      setSessionLoading(false);
     });
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, nextSession) => {
-      setSession(nextSession);
-    });
+    const { data: listener } = supabase.auth.onAuthStateChange(
+      (_event, newSession) => {
+        setSession(newSession);
+      }
+    );
 
-    return () => subscription.unsubscribe();
+    return () => {
+      listener.subscription.unsubscribe();
+    };
   }, []);
 
+  // 2) 권한(프로필) 확인
   useEffect(() => {
     let cancelled = false;
 
-    const verifyProfile = async () => {
-      // 🔥 공개 페이지는 프로필 검사 필요 없음
+    const checkProfile = async () => {
+      // 세션 로딩 중이면 검사를 하지 않음
+      if (sessionLoading) return;
+
+      // 공개 라우트는 권한 체크 필요 없음
       if (publicRoutes.includes(location.pathname)) {
         setAuthorized(true);
         setProfileChecked(true);
         return;
       }
 
+      // 로그인 상태가 아니면 접근 불가
       if (!session) {
         setAuthorized(false);
         setProfileChecked(true);
         return;
       }
 
+      // 로그인 후: 프로필 존재 여부 확인
       const { data, error } = await supabase
         .from("profiles")
         .select("id")
@@ -63,8 +69,9 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
       if (cancelled) return;
 
       if (error || !data) {
-        setAuthorized(false);
+        // 프로필 없으면 로그아웃 + 접근 불가
         await supabase.auth.signOut();
+        setAuthorized(false);
       } else {
         setAuthorized(true);
       }
@@ -72,25 +79,27 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
       setProfileChecked(true);
     };
 
-    verifyProfile();
+    checkProfile();
 
     return () => {
       cancelled = true;
     };
-  }, [session, location.pathname]);
+  }, [session, sessionLoading, location.pathname]);
 
-  if (loading || !profileChecked) return <p>Loading...</p>;
+  // 3) 로딩 표시
+  if (sessionLoading || !profileChecked) {
+    return <p>Loading...</p>;
+  }
 
-  // 🔥 공개 라우트는 리다이렉트 금지
+  // 4) 공개 라우트는 그대로 렌더링
   if (publicRoutes.includes(location.pathname)) {
     return <>{children}</>;
   }
 
-  // 보호된 라우트는 세션 + 권한 필요
+  // 5) 보호 라우트 접근권한 체크
   if (!session || !authorized) {
     return <Navigate to="/signin" replace />;
   }
 
   return <>{children}</>;
 }
-
