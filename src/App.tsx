@@ -10,6 +10,7 @@ import AdminUsersPage from "./pages/AdminUsersPage";
 import LoginPage from "./pages/LoginPage";
 import MagicLinkPage from "./pages/MagicLinkPage";
 import ResetPassword from "./pages/ResetPassword";
+import PasswordRecoveryPage from "./pages/PasswordRecoveryPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 export default function App() {
@@ -20,6 +21,7 @@ export default function App() {
       <Routes>
         <Route path="/signin" element={<LoginPage />} />
         <Route path="/auth/callback" element={<MagicLinkPage />} />
+        <Route path="/auth/recovery" element={<PasswordRecoveryPage />} />
 
         <Route
           path="/"
