@@ -10,9 +10,8 @@ export default function LoginPage() {
   const [resetting, setResetting] = useState(false);
   const navigate = useNavigate();
 
-  const normalizedEmail = email.trim().toLowerCase();
-
   const signIn = async () => {
+    const normalizedEmail = email.trim().toLowerCase();
     if (!normalizedEmail || !password) {
       alert("이메일과 비밀번호를 모두 입력하세요.");
       return;
@@ -22,25 +21,31 @@ export default function LoginPage() {
     setStatus("");
 
     try {
-      const { data, error } = await supabase
+      const { data: sessionData, error: signInError } =
+        await supabase.auth.signInWithPassword({
+          email: normalizedEmail,
+          password,
+        });
+
+      if (signInError || !sessionData.session) throw signInError;
+
+      const userId = sessionData.session.user.id;
+
+      const { data: profile, error: profileError } = await supabase
         .from("profiles")
         .select("id")
-        .eq("email", normalizedEmail)
+        .eq("id", userId)
         .maybeSingle();
 
-      if (error) throw error;
-
-      if (!data) {
-        setStatus("관리자가 등록한 이메일만 로그인할 수 있습니다.");
-        return;
+      if (profileError) {
+        throw profileError;
       }
 
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email: normalizedEmail,
-        password,
-      });
-
-      if (signInError) throw signInError;
+      if (!profile) {
+        setStatus("관리자가 등록한 이메일만 로그인할 수 있습니다.");
+        await supabase.auth.signOut();
+        return;
+      }
 
       navigate("/tracker");
     } catch (err) {
@@ -51,6 +56,7 @@ export default function LoginPage() {
   };
 
   const sendResetEmail = async () => {
+    const normalizedEmail = email.trim().toLowerCase();
     if (!normalizedEmail) {
       alert("재설정 메일을 보낼 회사 이메일을 입력하세요.");
       return;
@@ -61,7 +67,7 @@ export default function LoginPage() {
 
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(
-        normalizedEmail,
+        email: normalizedEmail,
         {
           redirectTo: `${window.location.origin}/auth/recovery`,
         }
