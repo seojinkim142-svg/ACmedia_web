@@ -46,11 +46,24 @@ export default function ImageSection({ images, articleId, onUpdate }: Props) {
     onUpdate();
   };
 
-  const downloadImage = (url: string) => {
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `image-${Date.now()}.png`;
-    link.click();
+  const downloadImage = async (url: string) => {
+    try {
+      const response = await fetch(url);
+      if (!response.ok) throw new Error("Failed to download image");
+
+      const blob = await response.blob();
+      const objectUrl = URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+      link.href = objectUrl;
+      link.download = `image-${Date.now()}.png`;
+      link.click();
+
+      URL.revokeObjectURL(objectUrl);
+    } catch (err) {
+      console.error(err);
+      alert("�̹��� �ٿ�ε��� �����Ͽ����ϴ�.");
+    }
   };
 
   const uploadNew = async (e: React.ChangeEvent<HTMLInputElement>) => {
