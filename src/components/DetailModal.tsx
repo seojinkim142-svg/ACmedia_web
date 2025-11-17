@@ -74,23 +74,25 @@ export default function DetailModal({ isOpen, onClose, item, onUpdated }: Detail
   };
 
   return (
-    <div className="fixed inset-0 z-9000 bg-black/50 backdrop-blur-sm px-4 py-6 flex items-center justify-center">
+    <div className="fixed inset-0 z-9000 bg-black/40 backdrop-blur-sm px-4 py-6 flex items-center justify-center">
       <div className="w-full max-w-5xl bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
-        <div className="relative px-6 py-4 border-b bg-linear-to-r from-blue-600 to-indigo-600 text-white">
+        <div className="relative px-6 py-4 border-b bg-white">
           <div className="flex flex-col gap-1 pr-36">
-            <p className="text-xs uppercase tracking-widest opacity-80">기사 상세</p>
-            <h2 className="text-2xl font-semibold truncate">{article.title || "제목 없음"}</h2>
+            <p className="text-xs uppercase tracking-widest text-gray-400">기사 상세</p>
+            <h2 className="text-2xl font-semibold truncate text-gray-900">
+              {article.title || "제목 없음"}
+            </h2>
           </div>
           <div className="absolute inset-y-0 right-4 flex items-center gap-3">
             <button
               onClick={handleSave}
-              className="px-5 py-2 rounded-full bg-white/20 hover:bg-white/30 text-sm font-semibold transition"
+              className="px-5 py-2 rounded-full border border-blue-200 text-blue-600 hover:bg-blue-50 text-sm font-semibold transition"
             >
               저장
             </button>
             <button
               onClick={onClose}
-              className="w-9 h-9 rounded-full bg-black/30 hover:bg-black/50 flex items-center justify-center text-lg"
+              className="w-9 h-9 rounded-full border border-gray-300 text-gray-500 hover:bg-gray-100 flex items-center justify-center text-lg"
             >
               ×
             </button>
@@ -159,7 +161,7 @@ export default function DetailModal({ isOpen, onClose, item, onUpdated }: Detail
           </button>
           <button
             onClick={handleSave}
-            className="px-5 py-2 rounded-full bg-blue-600 text-white font-semibold shadow hover:bg-blue-700 transition"
+            className="px-5 py-2 rounded-full bg-blue-500 text-white font-semibold shadow hover:bg-blue-600 transition"
           >
             변경 사항 저장
           </button>
