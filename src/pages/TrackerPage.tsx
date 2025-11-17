@@ -143,7 +143,8 @@ export default function TrackerPage() {
           .join(",");
       });
 
-      const csv = [headers.join(","), ...rows].join("\r\n");
+      const csvBody = [headers.join(","), ...rows].join("\r\n");
+      const csv = "\uFEFF" + csvBody;
       const blob = new Blob([csv], {
         type: "text/csv;charset=utf-8;",
       });
