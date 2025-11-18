@@ -1,4 +1,4 @@
-﻿import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { MouseEvent } from "react";
 import TrackerRow from "./TrackerRow";
 
@@ -75,6 +75,7 @@ export default function TrackerTable({
   const [bulkDate, setBulkDate] = useState("");
   const [bulkEditor, setBulkEditor] = useState("");
   const [bulkStatus, setBulkStatus] = useState("");
+
   const filtersEnabled =
     onFilterTitleChange ||
     onFilterStatusChange ||
@@ -96,7 +97,7 @@ export default function TrackerTable({
     setSelectedCell((prev) => {
       if (!prev) {
         return { rowIndex: 0, field: "created_at" };
-        }
+      }
       const clampedIndex = Math.min(prev.rowIndex, articles.length - 1);
       return { rowIndex: clampedIndex, field: prev.field };
     });
@@ -112,7 +113,14 @@ export default function TrackerTable({
 
   const handleUpdate = async (id: number, field: string, value: string) => {
     const rowIndex = articles.findIndex((a) => a.id === id);
-    const prevValue = rowIndex >= 0 ? String((articles[rowIndex] as any)[field] ?? "") : "";
+    const prevValue =
+      rowIndex >= 0
+        ? String(
+            (
+              articles[rowIndex] as unknown as Record<string, string | number | null | undefined>
+            )[field] ?? ""
+          )
+        : "";
     const normalized = value ?? "";
     if (!applyingHistory.current && prevValue !== normalized) {
       undoStack.current.push({ id, field, previous: prevValue, next: normalized });
@@ -137,7 +145,9 @@ export default function TrackerTable({
     if (rowIndex === 0) return;
     const above = articles[rowIndex - 1];
     const current = articles[rowIndex];
-    const value = (above as any)?.[field];
+    const value = (above as unknown as Record<string, string | number | null | undefined> | undefined)?.[
+      field
+    ];
     if (value === undefined || current === undefined) return;
     handleUpdate(current.id, field, String(value ?? ""));
   };
@@ -167,30 +177,30 @@ export default function TrackerTable({
   };
 
   useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
+    const handler = (event: KeyboardEvent) => {
       if (!selectedCell) return;
       const active = document.activeElement as HTMLElement | null;
       if (active && ["INPUT", "SELECT", "TEXTAREA"].includes(active.tagName)) {
         return;
       }
 
-      if (e.key === "ArrowDown") {
-        e.preventDefault();
+      if (event.key === "ArrowDown") {
+        event.preventDefault();
         moveSelection(1);
-      } else if (e.key === "ArrowUp") {
-        e.preventDefault();
+      } else if (event.key === "ArrowUp") {
+        event.preventDefault();
         moveSelection(-1);
-      } else if (e.ctrlKey && (e.key === "d" || e.key === "D")) {
-        e.preventDefault();
+      } else if (event.ctrlKey && (event.key === "d" || event.key === "D")) {
+        event.preventDefault();
         copyFromAbove();
-      } else if (e.ctrlKey && (e.key === "z" || e.key === "Z")) {
-        e.preventDefault();
+      } else if (event.ctrlKey && (event.key === "z" || event.key === "Z")) {
+        event.preventDefault();
         performUndo();
       } else if (
-        e.ctrlKey &&
-        (e.key === "y" || e.key === "Y" || e.key === "t" || e.key === "T")
+        event.ctrlKey &&
+        (event.key === "y" || event.key === "Y" || event.key === "t" || event.key === "T")
       ) {
-        e.preventDefault();
+        event.preventDefault();
         performRedo();
       }
     };
@@ -260,17 +270,18 @@ export default function TrackerTable({
           value={bulkEditor}
           onChange={(e) => setBulkEditor(e.target.value)}
         >
-          <option value="">에디터 선택</option>
+          <option value="">편집자 선택</option>
           <option value="지민">지민</option>
           <option value="지안">지안</option>
           <option value="아라">아라</option>
+          <option value="서진">서진</option>
         </select>
         <button
           className="px-3 py-1 bg-blue-600 text-white rounded disabled:opacity-60"
           onClick={() => applyBulk("editor", bulkEditor)}
           disabled={!bulkEditor}
         >
-          에디터 적용
+          편집자 적용
         </button>
 
         <select
@@ -322,12 +333,12 @@ export default function TrackerTable({
               />
             </th>
             <th className="py-2 px-1 w-10 text-sm">#</th>
-            <th className="py-2 px-1 w-16 text-sm">����</th>
-            <th className="py-2 px-1 w-28 text-sm">��¥</th>
-            <th className="py-2 px-1 w-20 text-sm">������</th>
-            <th className="py-2 px-2 w-[320px] text-sm">����</th>
-            <th className="py-2 px-1 w-20 text-sm">����</th>
-            <th className="py-2 px-2 w-[220px] text-sm">�޸�</th>
+            <th className="py-2 px-1 w-16 text-sm">썸네일</th>
+            <th className="py-2 px-1 w-28 text-sm">날짜</th>
+            <th className="py-2 px-1 w-20 text-sm">편집자</th>
+            <th className="py-2 px-2 w-[320px] text-sm">제목</th>
+            <th className="py-2 px-1 w-20 text-sm">상태</th>
+            <th className="py-2 px-2 w-[220px] text-sm">메모</th>
           </tr>
           {filtersEnabled && (
             <tr className="border-b bg-white text-xs text-gray-600">
@@ -339,7 +350,7 @@ export default function TrackerTable({
                     onResetFilters?.();
                   }}
                 >
-                  �ʱ�ȭ
+                  초기화
                 </button>
               </th>
               <th />
@@ -358,7 +369,7 @@ export default function TrackerTable({
                   value={filterEditorValue}
                   onChange={(e) => onFilterEditorChange?.(e.target.value)}
                 >
-                  <option value="">��ü</option>
+                  <option value="">전체</option>
                   {editorOptions.map((editor) => (
                     <option key={editor} value={editor}>
                       {editor}
@@ -369,7 +380,7 @@ export default function TrackerTable({
               <th className="py-1 px-1">
                 <input
                   className="border rounded px-1 py-0.5 text-xs w-full"
-                  placeholder="����"
+                  placeholder="제목"
                   value={filterTitleValue}
                   onChange={(e) => onFilterTitleChange?.(e.target.value)}
                 />
@@ -380,7 +391,7 @@ export default function TrackerTable({
                   value={filterStatusValue}
                   onChange={(e) => onFilterStatusChange?.(e.target.value)}
                 >
-                  <option value="">��ü</option>
+                  <option value="">전체</option>
                   {statusOptions.map((status) => (
                     <option key={status} value={status}>
                       {status}
