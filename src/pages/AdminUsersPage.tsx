@@ -5,6 +5,7 @@ interface UserRow {
   id: string;
   email: string;
   role: string;
+  displayName: string;
 }
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
@@ -13,6 +14,8 @@ const FUNCTION_BASE = SUPABASE_URL.replace(
   ".supabase.co",
   ".functions.supabase.co"
 );
+
+const DISPLAY_NAMES = ["지민", "지안", "아라", "서진"];
 
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<UserRow[]>([]);
@@ -33,10 +36,11 @@ export default function AdminUsersPage() {
       if (error) throw error;
 
       setUsers(
-        (data ?? []).map((row) => ({
+        (data ?? []).map((row, index) => ({
           id: row.id,
           email: row.email ?? "",
           role: row.role ?? "viewer",
+          displayName: DISPLAY_NAMES[index % DISPLAY_NAMES.length],
         }))
       );
     } catch (err) {
@@ -213,8 +217,8 @@ export default function AdminUsersPage() {
         <table className="w-full border-collapse text-left">
           <thead>
             <tr className="border-b bg-gray-100">
-              <th className="py-2 px-3">ID</th>
               <th className="py-2 px-3">이메일</th>
+              <th className="py-2 px-3">이름</th>
               <th className="py-2 px-3">권한</th>
               <th className="py-2 px-3">비밀번호 초기화</th>
               <th className="py-2 px-3">삭제</th>
@@ -223,8 +227,8 @@ export default function AdminUsersPage() {
           <tbody>
             {users.map((u) => (
               <tr key={u.id} className="border-b">
-                <td className="py-2 px-3">{u.id}</td>
                 <td className="py-2 px-3">{u.email}</td>
+                <td className="py-2 px-3">{u.displayName}</td>
                 <td className="py-2 px-3">
                   <select
                     className="border rounded p-1"
