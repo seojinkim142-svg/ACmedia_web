@@ -5,7 +5,12 @@ export default function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const isActive = (path: string) => location.pathname === path;
+  const isActive = (path: string) => {
+    if (path === "/tracker" && (location.pathname === "/" || location.pathname === "")) {
+      return true;
+    }
+    return location.pathname === path;
+  };
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
