@@ -97,9 +97,8 @@ export default function InlineCell({
         e.stopPropagation();
         if (!selected) {
           onSelect?.();
-        } else {
-          setEditing(true);
         }
+        setEditing(true);
       }}
       onFocus={() => onSelect?.()}
       onKeyDown={(e) => {
