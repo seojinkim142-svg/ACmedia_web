@@ -23,17 +23,17 @@ interface TrackerTableProps {
   onImageClick: (e: MouseEvent, item: Article) => void;
   onMemoClick: (item: Article) => void;
   onSelectedChange?: (ids: number[]) => void;
-  filterTitle: string;
-  filterStatus: string;
-  filterEditor: string;
-  filterDate: string;
-  onFilterTitleChange: (value: string) => void;
-  onFilterStatusChange: (value: string) => void;
-  onFilterEditorChange: (value: string) => void;
-  onFilterDateChange: (value: string) => void;
-  onResetFilters: () => void;
-  statusOptions: string[];
-  editorOptions: string[];
+  filterTitle?: string;
+  filterStatus?: string;
+  filterEditor?: string;
+  filterDate?: string;
+  onFilterTitleChange?: (value: string) => void;
+  onFilterStatusChange?: (value: string) => void;
+  onFilterEditorChange?: (value: string) => void;
+  onFilterDateChange?: (value: string) => void;
+  onResetFilters?: () => void;
+  statusOptions?: string[];
+  editorOptions?: string[];
 }
 
 interface SelectedCell {
@@ -64,8 +64,8 @@ export default function TrackerTable({
   onFilterEditorChange,
   onFilterDateChange,
   onResetFilters,
-  statusOptions,
-  editorOptions,
+  statusOptions = [],
+  editorOptions = [],
 }: TrackerTableProps) {
   const [selectedCell, setSelectedCell] = useState<SelectedCell | null>(null);
   const undoStack = useRef<HistoryEntry[]>([]);
@@ -75,6 +75,16 @@ export default function TrackerTable({
   const [bulkDate, setBulkDate] = useState("");
   const [bulkEditor, setBulkEditor] = useState("");
   const [bulkStatus, setBulkStatus] = useState("");
+  const filtersEnabled =
+    onFilterTitleChange ||
+    onFilterStatusChange ||
+    onFilterEditorChange ||
+    onFilterDateChange ||
+    onResetFilters;
+  const filterTitleValue = filterTitle ?? "";
+  const filterStatusValue = filterStatus ?? "";
+  const filterEditorValue = filterEditor ?? "";
+  const filterDateValue = filterDate ?? "";
 
   useEffect(() => {
     if (articles.length === 0) {
@@ -312,73 +322,75 @@ export default function TrackerTable({
               />
             </th>
             <th className="py-2 px-1 w-10 text-sm">#</th>
-            <th className="py-2 px-1 w-16 text-sm">사진</th>
-            <th className="py-2 px-1 w-28 text-sm">날짜</th>
-            <th className="py-2 px-1 w-20 text-sm">편집자</th>
-            <th className="py-2 px-2 w-[320px] text-sm">제목</th>
-            <th className="py-2 px-1 w-20 text-sm">상태</th>
-            <th className="py-2 px-2 w-[220px] text-sm">메모</th>
+            <th className="py-2 px-1 w-16 text-sm">����</th>
+            <th className="py-2 px-1 w-28 text-sm">��¥</th>
+            <th className="py-2 px-1 w-20 text-sm">������</th>
+            <th className="py-2 px-2 w-[320px] text-sm">����</th>
+            <th className="py-2 px-1 w-20 text-sm">����</th>
+            <th className="py-2 px-2 w-[220px] text-sm">�޸�</th>
           </tr>
-          <tr className="border-b bg-white text-xs text-gray-600">
-            <th className="py-1 px-1">
-              <button
-                className="text-blue-600 underline text-[11px]"
-                onClick={(e) => {
-                  e.preventDefault();
-                  onResetFilters();
-                }}
-              >
-                초기화
-              </button>
-            </th>
-            <th />
-            <th />
-            <th className="py-1 px-1">
-              <input
-                type="date"
-                className="border rounded px-1 py-0.5 text-xs w-full"
-                value={filterDate}
-                onChange={(e) => onFilterDateChange(e.target.value)}
-              />
-            </th>
-            <th className="py-1 px-1">
-              <select
-                className="border rounded px-1 py-0.5 text-xs w-full"
-                value={filterEditor}
-                onChange={(e) => onFilterEditorChange(e.target.value)}
-              >
-                <option value="">전체</option>
-                {editorOptions.map((editor) => (
-                  <option key={editor} value={editor}>
-                    {editor}
-                  </option>
-                ))}
-              </select>
-            </th>
-            <th className="py-1 px-1">
-              <input
-                className="border rounded px-1 py-0.5 text-xs w-full"
-                placeholder="제목"
-                value={filterTitle}
-                onChange={(e) => onFilterTitleChange(e.target.value)}
-              />
-            </th>
-            <th className="py-1 px-1">
-              <select
-                className="border rounded px-1 py-0.5 text-xs w-full"
-                value={filterStatus}
-                onChange={(e) => onFilterStatusChange(e.target.value)}
-              >
-                <option value="">전체</option>
-                {statusOptions.map((status) => (
-                  <option key={status} value={status}>
-                    {status}
-                  </option>
-                ))}
-              </select>
-            </th>
-            <th />
-          </tr>
+          {filtersEnabled && (
+            <tr className="border-b bg-white text-xs text-gray-600">
+              <th className="py-1 px-1">
+                <button
+                  className="text-blue-600 underline text-[11px]"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    onResetFilters?.();
+                  }}
+                >
+                  �ʱ�ȭ
+                </button>
+              </th>
+              <th />
+              <th />
+              <th className="py-1 px-1">
+                <input
+                  type="date"
+                  className="border rounded px-1 py-0.5 text-xs w-full"
+                  value={filterDateValue}
+                  onChange={(e) => onFilterDateChange?.(e.target.value)}
+                />
+              </th>
+              <th className="py-1 px-1">
+                <select
+                  className="border rounded px-1 py-0.5 text-xs w-full"
+                  value={filterEditorValue}
+                  onChange={(e) => onFilterEditorChange?.(e.target.value)}
+                >
+                  <option value="">��ü</option>
+                  {editorOptions.map((editor) => (
+                    <option key={editor} value={editor}>
+                      {editor}
+                    </option>
+                  ))}
+                </select>
+              </th>
+              <th className="py-1 px-1">
+                <input
+                  className="border rounded px-1 py-0.5 text-xs w-full"
+                  placeholder="����"
+                  value={filterTitleValue}
+                  onChange={(e) => onFilterTitleChange?.(e.target.value)}
+                />
+              </th>
+              <th className="py-1 px-1">
+                <select
+                  className="border rounded px-1 py-0.5 text-xs w-full"
+                  value={filterStatusValue}
+                  onChange={(e) => onFilterStatusChange?.(e.target.value)}
+                >
+                  <option value="">��ü</option>
+                  {statusOptions.map((status) => (
+                    <option key={status} value={status}>
+                      {status}
+                    </option>
+                  ))}
+                </select>
+              </th>
+              <th />
+            </tr>
+          )}
         </thead>
 
         <tbody>
