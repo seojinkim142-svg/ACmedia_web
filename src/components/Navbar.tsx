@@ -1,4 +1,4 @@
-ï»¿import { Link, useLocation, useNavigate } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "../supabaseClient";
 
 export default function Navbar() {
@@ -17,39 +17,39 @@ export default function Navbar() {
     navigate("/signin");
   };
 
-  const linkClass = (path: string) =>
+  const NavLinkClass = (path: string) =>
     `px-3 py-1 rounded ${
       isActive(path) ? "bg-white text-black font-semibold" : "hover:text-gray-300"
     }`;
 
   return (
     <nav className="w-full bg-gray-900 text-white px-6 py-4 flex gap-4 items-center flex-wrap">
-      <Link to="/tracker" className={linkClass("/tracker")}>
-        íŠ¸ë˜ì»¤
-      </Link>
-      <Link to="/feed" className={linkClass("/feed")}>
-        í”¼ë“œ
-      </Link>
-      <Link to="/upload" className={linkClass("/upload")}>
-        ì—…ë¡œë“œ
-      </Link>
-      <Link to="/database" className={linkClass("/database")}>
-        ë°ì´í„°ë² ì´ìŠ¤
-      </Link>
-      <Link to="/write" className={linkClass("/write")}>
-        ì‘ì„±ê¸°
-      </Link>
-      <Link to="/admin/users" className={linkClass("/admin/users")}>
-        ê´€ë¦¬ì
-      </Link>
-      <Link to="/settings/password" className={linkClass("/settings/password")}>
-        ë¹„ë°€ë²ˆí˜¸ ë³€ê²½
-      </Link>
+      <NavLink to="/tracker" className={NavLinkClass("/tracker")}>
+        Æ®·¡Ä¿
+      </NavLink>
+      <NavLink to="/feed" className={NavLinkClass("/feed")}>
+        ÇÇµå
+      </NavLink>
+      <NavLink to="/upload" className={NavLinkClass("/upload")}>
+        ¾÷·Îµå
+      </NavLink>
+      <NavLink to="/database" className={NavLinkClass("/database")}>
+        µ¥ÀÌÅÍº£ÀÌ½º
+      </NavLink>
+      <NavLink to="/write" className={NavLinkClass("/write")}>
+        ÀÛ¼º±â
+      </NavLink>
+      <NavLink to="/admin/users" className={NavLinkClass("/admin/users")}>
+        °ü¸®ÀÚ
+      </NavLink>
+      <NavLink to="/settings/password" className={NavLinkClass("/settings/password")}>
+        ºñ¹Ğ¹øÈ£ º¯°æ
+      </NavLink>
       <button
         className="ml-auto px-4 py-1.5 bg-indigo-500 hover:bg-indigo-600 rounded text-sm font-semibold"
         onClick={handleLogout}
       >
-        ë¡œê·¸ì•„ì›ƒ
+        ·Î±×¾Æ¿ô
       </button>
     </nav>
   );
