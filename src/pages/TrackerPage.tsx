@@ -21,6 +21,8 @@ interface Article {
   latest_comment?: string;
 }
 
+const EDITOR_OPTIONS = ["지민", "지안", "아라", "서진"];
+
 const formatDate = (value?: string | null) => {
   if (!value) return "";
   if (value.includes("T")) return value.split("T")[0];
@@ -37,6 +39,11 @@ export default function TrackerPage() {
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [imageMenu, setImageMenu] = useState<{ x: number; y: number; images: string[]; id: number } | null>(null);
   const [previewState, setPreviewState] = useState<{ images: string[]; index: number } | null>(null);
+  const [filterTitle, setFilterTitle] = useState("");
+  const [filterEditor, setFilterEditor] = useState("");
+  const [filterStatus, setFilterStatus] = useState("");
+  const [filterStartDate, setFilterStartDate] = useState("");
+  const [filterEndDate, setFilterEndDate] = useState("");
 
   const loadArticles = async () => {
     const { data: art, error } = await supabase
@@ -167,6 +174,44 @@ export default function TrackerPage() {
       ? "https://placehold.co/108x135?text=No+Image"
       : null;
 
+  const statusOptions = Array.from(new Set(articles.map((a) => a.status).filter(Boolean))).sort();
+
+  const filteredArticles = articles.filter((article) => {
+    if (filterTitle.trim()) {
+      const keyword = filterTitle.trim().toLowerCase();
+      const titleText = (article.title ?? "").toLowerCase();
+      if (!titleText.includes(keyword)) return false;
+    }
+    if (filterEditor && article.editor !== filterEditor) {
+      return false;
+    }
+    if (filterStatus && article.status !== filterStatus) {
+      return false;
+    }
+    if (filterStartDate || filterEndDate) {
+      const createdDate = article.created_at ? new Date(article.created_at) : null;
+      if (filterStartDate) {
+        const start = new Date(filterStartDate);
+        start.setHours(0, 0, 0, 0);
+        if (!createdDate || createdDate < start) return false;
+      }
+      if (filterEndDate) {
+        const end = new Date(filterEndDate);
+        end.setHours(23, 59, 59, 999);
+        if (!createdDate || createdDate > end) return false;
+      }
+    }
+    return true;
+  });
+
+  const resetFilters = () => {
+    setFilterTitle("");
+    setFilterEditor("");
+    setFilterStatus("");
+    setFilterStartDate("");
+    setFilterEndDate("");
+  };
+
   const movePreviewIndex = (delta: number) => {
     setPreviewState((prev) => {
       if (!prev || prev.images.length === 0) return prev;
@@ -188,6 +233,73 @@ export default function TrackerPage() {
         >
           {exporting ? "내보내는 중..." : "데이터 Excel 내보내기"}
         </button>
+      </div>
+
+      <div className="w-full border rounded-lg bg-white/80 p-4 mb-6" onClick={(e) => e.stopPropagation()}>
+        <div className="flex flex-wrap gap-4">
+          <div className="flex flex-col flex-1 min-w-[180px]">
+            <label className="text-sm text-gray-600 mb-1">제목 검색</label>
+            <input
+              className="border rounded px-3 py-2"
+              placeholder="제목을 입력하세요"
+              value={filterTitle}
+              onChange={(e) => setFilterTitle(e.target.value)}
+            />
+          </div>
+          <div className="flex flex-col flex-1 min-w-[180px]">
+            <label className="text-sm text-gray-600 mb-1">상태</label>
+            <select
+              className="border rounded px-3 py-2"
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+            >
+              <option value="">전체</option>
+              {statusOptions.map((status) => (
+                <option key={status} value={status}>
+                  {status}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="flex flex-col flex-1 min-w-[180px]">
+            <label className="text-sm text-gray-600 mb-1">편집자</label>
+            <select
+              className="border rounded px-3 py-2"
+              value={filterEditor}
+              onChange={(e) => setFilterEditor(e.target.value)}
+            >
+              <option value="">전체</option>
+              {EDITOR_OPTIONS.map((editor) => (
+                <option key={editor} value={editor}>
+                  {editor}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="flex flex-col min-w-[160px]">
+            <label className="text-sm text-gray-600 mb-1">시작 날짜</label>
+            <input
+              type="date"
+              className="border rounded px-3 py-2"
+              value={filterStartDate}
+              onChange={(e) => setFilterStartDate(e.target.value)}
+            />
+          </div>
+          <div className="flex flex-col min-w-[160px]">
+            <label className="text-sm text-gray-600 mb-1">종료 날짜</label>
+            <input
+              type="date"
+              className="border rounded px-3 py-2"
+              value={filterEndDate}
+              onChange={(e) => setFilterEndDate(e.target.value)}
+            />
+          </div>
+        </div>
+        <div className="mt-4 flex justify-end">
+          <button className="px-4 py-2 rounded border" onClick={resetFilters}>
+            초기화
+          </button>
+        </div>
       </div>
 
       {previewState && (
@@ -248,7 +360,7 @@ export default function TrackerPage() {
       )}
 
       <TrackerTable
-        articles={articles}
+        articles={filteredArticles}
         onDoubleClick={setOpenItem}
         onInlineUpdate={async (id, field, value) => {
           await supabase
