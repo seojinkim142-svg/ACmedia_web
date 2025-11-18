@@ -21,6 +21,14 @@ interface Article {
   latest_comment?: string;
 }
 
+const formatDate = (value?: string | null) => {
+  if (!value) return "";
+  if (value.includes("T")) return value.split("T")[0];
+  if (value.length >= 10) return value.slice(0, 10);
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? value : parsed.toISOString().split("T")[0];
+};
+
 export default function TrackerPage() {
   const [articles, setArticles] = useState<Article[]>([]);
   const [openItem, setOpenItem] = useState<Article | null>(null);
@@ -124,7 +132,7 @@ export default function TrackerPage() {
           row.editor ?? "",
           row.content_source ?? "",
           row.bgm ?? "",
-          row.created_at ?? "",
+          formatDate(row.created_at),
         ]
           .map((value) => {
             const str = String(value).replace(/"/g, '""');

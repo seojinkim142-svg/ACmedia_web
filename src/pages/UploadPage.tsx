@@ -22,6 +22,14 @@ interface UploadArticle {
   bgm?: string;
 }
 
+const formatDate = (value?: string | null) => {
+  if (!value) return "";
+  if (value.includes("T")) return value.split("T")[0];
+  if (value.length >= 10) return value.slice(0, 10);
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? value : parsed.toISOString().split("T")[0];
+};
+
 export default function UploadPage() {
   const [articles, setArticles] = useState<UploadArticle[]>([]);
   const [openItem, setOpenItem] = useState<UploadArticle | null>(null);
@@ -131,7 +139,7 @@ export default function UploadPage() {
           row.editor ?? "",
           row.content_source ?? "",
           row.bgm ?? "",
-          row.created_at ?? "",
+          formatDate(row.created_at),
         ]
           .map((value) => {
             const str = String(value).replace(/"/g, '""');
