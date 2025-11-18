@@ -42,8 +42,7 @@ export default function TrackerPage() {
   const [filterTitle, setFilterTitle] = useState("");
   const [filterEditor, setFilterEditor] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
-  const [filterStartDate, setFilterStartDate] = useState("");
-  const [filterEndDate, setFilterEndDate] = useState("");
+  const [filterDate, setFilterDate] = useState("");
 
   const loadArticles = async () => {
     const { data: art, error } = await supabase
@@ -188,17 +187,15 @@ export default function TrackerPage() {
     if (filterStatus && article.status !== filterStatus) {
       return false;
     }
-    if (filterStartDate || filterEndDate) {
+    if (filterDate) {
       const createdDate = article.created_at ? new Date(article.created_at) : null;
-      if (filterStartDate) {
-        const start = new Date(filterStartDate);
-        start.setHours(0, 0, 0, 0);
-        if (!createdDate || createdDate < start) return false;
-      }
-      if (filterEndDate) {
-        const end = new Date(filterEndDate);
-        end.setHours(23, 59, 59, 999);
-        if (!createdDate || createdDate > end) return false;
+      const target = new Date(filterDate);
+      target.setHours(0, 0, 0, 0);
+      if (!createdDate) return false;
+      const createdDay = new Date(createdDate);
+      createdDay.setHours(0, 0, 0, 0);
+      if (createdDay.getTime() !== target.getTime()) {
+        return false;
       }
     }
     return true;
@@ -208,8 +205,7 @@ export default function TrackerPage() {
     setFilterTitle("");
     setFilterEditor("");
     setFilterStatus("");
-    setFilterStartDate("");
-    setFilterEndDate("");
+    setFilterDate("");
   };
 
   const movePreviewIndex = (delta: number) => {
@@ -315,13 +311,11 @@ export default function TrackerPage() {
         filterTitle={filterTitle}
         filterStatus={filterStatus}
         filterEditor={filterEditor}
-        filterStartDate={filterStartDate}
-        filterEndDate={filterEndDate}
+        filterDate={filterDate}
         onFilterTitleChange={setFilterTitle}
         onFilterStatusChange={setFilterStatus}
         onFilterEditorChange={setFilterEditor}
-        onFilterStartDateChange={setFilterStartDate}
-        onFilterEndDateChange={setFilterEndDate}
+        onFilterDateChange={setFilterDate}
         onResetFilters={resetFilters}
         statusOptions={statusOptions}
         editorOptions={EDITOR_OPTIONS}

@@ -26,13 +26,11 @@ interface TrackerTableProps {
   filterTitle: string;
   filterStatus: string;
   filterEditor: string;
-  filterStartDate: string;
-  filterEndDate: string;
+  filterDate: string;
   onFilterTitleChange: (value: string) => void;
   onFilterStatusChange: (value: string) => void;
   onFilterEditorChange: (value: string) => void;
-  onFilterStartDateChange: (value: string) => void;
-  onFilterEndDateChange: (value: string) => void;
+  onFilterDateChange: (value: string) => void;
   onResetFilters: () => void;
   statusOptions: string[];
   editorOptions: string[];
@@ -60,13 +58,11 @@ export default function TrackerTable({
   filterTitle,
   filterStatus,
   filterEditor,
-  filterStartDate,
-  filterEndDate,
+  filterDate,
   onFilterTitleChange,
   onFilterStatusChange,
   onFilterEditorChange,
-  onFilterStartDateChange,
-  onFilterEndDateChange,
+  onFilterDateChange,
   onResetFilters,
   statusOptions,
   editorOptions,
@@ -338,20 +334,12 @@ export default function TrackerTable({
             <th />
             <th />
             <th className="py-1 px-1">
-              <div className="flex flex-col gap-1">
-                <input
-                  type="date"
-                  className="border rounded px-1 py-0.5 text-xs"
-                  value={filterStartDate}
-                  onChange={(e) => onFilterStartDateChange(e.target.value)}
-                />
-                <input
-                  type="date"
-                  className="border rounded px-1 py-0.5 text-xs"
-                  value={filterEndDate}
-                  onChange={(e) => onFilterEndDateChange(e.target.value)}
-                />
-              </div>
+              <input
+                type="date"
+                className="border rounded px-1 py-0.5 text-xs w-full"
+                value={filterDate}
+                onChange={(e) => onFilterDateChange(e.target.value)}
+              />
             </th>
             <th className="py-1 px-1">
               <select
