@@ -50,7 +50,7 @@ export default function InlineCell({
       return (
         <td className="py-2 px-1">
           <select
-            className="border rounded px-1"
+            className="border rounded px-1 w-full"
             value={value || ""}
             onChange={(e) => {
               onUpdate(e.target.value);

@@ -15,7 +15,7 @@ const FUNCTION_BASE = SUPABASE_URL.replace(
   ".functions.supabase.co"
 );
 
-const DISPLAY_NAMES = ["지민", "지안", "아라", "서진"];
+const DISPLAY_NAMES = ["지민", "서진", "아라", "지안"];
 
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<UserRow[]>([]);

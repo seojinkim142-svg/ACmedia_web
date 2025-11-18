@@ -266,7 +266,17 @@ export default function TrackerTable({
         </button>
       </div>
 
-      <table className="w-full text-left border-collapse">
+      <table className="w-full text-left border-collapse table-fixed">
+        <colgroup>
+          <col style={{ width: "2rem" }} />
+          <col style={{ width: "2.5rem" }} />
+          <col style={{ width: "4rem" }} />
+          <col style={{ width: "7rem" }} />
+          <col style={{ width: "5rem" }} />
+          <col style={{ width: "320px" }} />
+          <col style={{ width: "5rem" }} />
+          <col style={{ width: "220px" }} />
+        </colgroup>
         <thead>
           <tr className="border-b bg-gray-100">
             <th className="py-2 px-1 w-8 text-sm text-center">
