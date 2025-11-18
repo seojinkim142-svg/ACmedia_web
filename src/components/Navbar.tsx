@@ -17,39 +17,39 @@ export default function Navbar() {
     navigate("/signin");
   };
 
-  const NavLinkClass = (path: string) =>
+  const navLinkClass = (path: string) =>
     `px-3 py-1 rounded ${
       isActive(path) ? "bg-white text-black font-semibold" : "hover:text-gray-300"
     }`;
 
   return (
     <nav className="w-full bg-gray-900 text-white px-6 py-4 flex gap-4 items-center flex-wrap">
-      <NavLink to="/tracker" className={NavLinkClass("/tracker")}>
-        Æ®·¡Ä¿
+      <NavLink to="/tracker" className={navLinkClass("/tracker")}>
+        íŠ¸ë˜ì»¤
       </NavLink>
-      <NavLink to="/feed" className={NavLinkClass("/feed")}>
-        ÇÇµå
+      <NavLink to="/feed" className={navLinkClass("/feed")}>
+        í”¼ë“œ
       </NavLink>
-      <NavLink to="/upload" className={NavLinkClass("/upload")}>
-        ¾÷·Îµå
+      <NavLink to="/upload" className={navLinkClass("/upload")}>
+        ì—…ë¡œë“œ
       </NavLink>
-      <NavLink to="/database" className={NavLinkClass("/database")}>
-        µ¥ÀÌÅÍº£ÀÌ½º
+      <NavLink to="/database" className={navLinkClass("/database")}>
+        ë°ì´í„°ë² ì´ìŠ¤
       </NavLink>
-      <NavLink to="/write" className={NavLinkClass("/write")}>
-        ÀÛ¼º±â
+      <NavLink to="/write" className={navLinkClass("/write")}>
+        ì‘ì„±í•˜ê¸°
       </NavLink>
-      <NavLink to="/admin/users" className={NavLinkClass("/admin/users")}>
-        °ü¸®ÀÚ
+      <NavLink to="/admin/users" className={navLinkClass("/admin/users")}>
+        ê´€ë¦¬ì
       </NavLink>
-      <NavLink to="/settings/password" className={NavLinkClass("/settings/password")}>
-        ºñ¹Ğ¹øÈ£ º¯°æ
+      <NavLink to="/settings/password" className={navLinkClass("/settings/password")}>
+        ë¹„ë°€ë²ˆí˜¸ ë³€ê²½
       </NavLink>
       <button
         className="ml-auto px-4 py-1.5 bg-indigo-500 hover:bg-indigo-600 rounded text-sm font-semibold"
         onClick={handleLogout}
       >
-        ·Î±×¾Æ¿ô
+        ë¡œê·¸ì•„ì›ƒ
       </button>
     </nav>
   );
