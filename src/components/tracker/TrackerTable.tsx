@@ -268,11 +268,11 @@ export default function TrackerTable({
 
       <table className="w-full text-left border-collapse table-fixed">
         <colgroup>
-          <col style={{ width: "2rem" }} />
-          <col style={{ width: "2.5rem" }} />
-          <col style={{ width: "4rem" }} />
-          <col style={{ width: "7rem" }} />
-          <col style={{ width: "5rem" }} />
+          <col style={{ width: "3.75rem" }} />
+          <col style={{ width: "1.75rem" }} />
+          <col style={{ width: "3.5rem" }} />
+          <col style={{ width: "6rem" }} />
+          <col style={{ width: "4.5rem" }} />
           <col style={{ width: "320px" }} />
           <col style={{ width: "5rem" }} />
           <col style={{ width: "220px" }} />

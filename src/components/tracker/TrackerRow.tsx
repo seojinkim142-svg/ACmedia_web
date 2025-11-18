@@ -52,6 +52,7 @@ export default function TrackerRow({
       <td className="py-2 px-1 text-center">
         <input
           type="checkbox"
+          className="w-6 h-6"
           checked={rowSelected}
           onChange={(e) => {
             e.stopPropagation();
@@ -63,7 +64,7 @@ export default function TrackerRow({
 
       <td className="py-2 px-1 cursor-pointer">
         <div
-          className="w-14 rounded overflow-hidden"
+          className="w-12 rounded overflow-hidden"
           style={{ aspectRatio: "4 / 5" }}
           onClick={(e) => {
             e.stopPropagation();
