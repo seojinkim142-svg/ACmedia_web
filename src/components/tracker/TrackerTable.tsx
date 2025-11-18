@@ -23,6 +23,19 @@ interface TrackerTableProps {
   onImageClick: (e: MouseEvent, item: Article) => void;
   onMemoClick: (item: Article) => void;
   onSelectedChange?: (ids: number[]) => void;
+  filterTitle: string;
+  filterStatus: string;
+  filterEditor: string;
+  filterStartDate: string;
+  filterEndDate: string;
+  onFilterTitleChange: (value: string) => void;
+  onFilterStatusChange: (value: string) => void;
+  onFilterEditorChange: (value: string) => void;
+  onFilterStartDateChange: (value: string) => void;
+  onFilterEndDateChange: (value: string) => void;
+  onResetFilters: () => void;
+  statusOptions: string[];
+  editorOptions: string[];
 }
 
 interface SelectedCell {
@@ -44,6 +57,19 @@ export default function TrackerTable({
   onImageClick,
   onMemoClick,
   onSelectedChange,
+  filterTitle,
+  filterStatus,
+  filterEditor,
+  filterStartDate,
+  filterEndDate,
+  onFilterTitleChange,
+  onFilterStatusChange,
+  onFilterEditorChange,
+  onFilterStartDateChange,
+  onFilterEndDateChange,
+  onResetFilters,
+  statusOptions,
+  editorOptions,
 }: TrackerTableProps) {
   const [selectedCell, setSelectedCell] = useState<SelectedCell | null>(null);
   const undoStack = useRef<HistoryEntry[]>([]);
@@ -296,6 +322,74 @@ export default function TrackerTable({
             <th className="py-2 px-2 w-[320px] text-sm">제목</th>
             <th className="py-2 px-1 w-20 text-sm">상태</th>
             <th className="py-2 px-2 w-[220px] text-sm">메모</th>
+          </tr>
+          <tr className="border-b bg-white text-xs text-gray-600">
+            <th className="py-1 px-1">
+              <button
+                className="text-blue-600 underline text-[11px]"
+                onClick={(e) => {
+                  e.preventDefault();
+                  onResetFilters();
+                }}
+              >
+                초기화
+              </button>
+            </th>
+            <th />
+            <th />
+            <th className="py-1 px-1">
+              <div className="flex flex-col gap-1">
+                <input
+                  type="date"
+                  className="border rounded px-1 py-0.5 text-xs"
+                  value={filterStartDate}
+                  onChange={(e) => onFilterStartDateChange(e.target.value)}
+                />
+                <input
+                  type="date"
+                  className="border rounded px-1 py-0.5 text-xs"
+                  value={filterEndDate}
+                  onChange={(e) => onFilterEndDateChange(e.target.value)}
+                />
+              </div>
+            </th>
+            <th className="py-1 px-1">
+              <select
+                className="border rounded px-1 py-0.5 text-xs w-full"
+                value={filterEditor}
+                onChange={(e) => onFilterEditorChange(e.target.value)}
+              >
+                <option value="">전체</option>
+                {editorOptions.map((editor) => (
+                  <option key={editor} value={editor}>
+                    {editor}
+                  </option>
+                ))}
+              </select>
+            </th>
+            <th className="py-1 px-1">
+              <input
+                className="border rounded px-1 py-0.5 text-xs w-full"
+                placeholder="제목"
+                value={filterTitle}
+                onChange={(e) => onFilterTitleChange(e.target.value)}
+              />
+            </th>
+            <th className="py-1 px-1">
+              <select
+                className="border rounded px-1 py-0.5 text-xs w-full"
+                value={filterStatus}
+                onChange={(e) => onFilterStatusChange(e.target.value)}
+              >
+                <option value="">전체</option>
+                {statusOptions.map((status) => (
+                  <option key={status} value={status}>
+                    {status}
+                  </option>
+                ))}
+              </select>
+            </th>
+            <th />
           </tr>
         </thead>
 

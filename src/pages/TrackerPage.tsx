@@ -235,73 +235,6 @@ export default function TrackerPage() {
         </button>
       </div>
 
-      <div className="w-full border rounded-lg bg-white/80 p-4 mb-6" onClick={(e) => e.stopPropagation()}>
-        <div className="flex flex-wrap gap-4">
-          <div className="flex flex-col flex-1 min-w-[180px]">
-            <label className="text-sm text-gray-600 mb-1">제목 검색</label>
-            <input
-              className="border rounded px-3 py-2"
-              placeholder="제목을 입력하세요"
-              value={filterTitle}
-              onChange={(e) => setFilterTitle(e.target.value)}
-            />
-          </div>
-          <div className="flex flex-col flex-1 min-w-[180px]">
-            <label className="text-sm text-gray-600 mb-1">상태</label>
-            <select
-              className="border rounded px-3 py-2"
-              value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
-            >
-              <option value="">전체</option>
-              {statusOptions.map((status) => (
-                <option key={status} value={status}>
-                  {status}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="flex flex-col flex-1 min-w-[180px]">
-            <label className="text-sm text-gray-600 mb-1">편집자</label>
-            <select
-              className="border rounded px-3 py-2"
-              value={filterEditor}
-              onChange={(e) => setFilterEditor(e.target.value)}
-            >
-              <option value="">전체</option>
-              {EDITOR_OPTIONS.map((editor) => (
-                <option key={editor} value={editor}>
-                  {editor}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="flex flex-col min-w-[160px]">
-            <label className="text-sm text-gray-600 mb-1">시작 날짜</label>
-            <input
-              type="date"
-              className="border rounded px-3 py-2"
-              value={filterStartDate}
-              onChange={(e) => setFilterStartDate(e.target.value)}
-            />
-          </div>
-          <div className="flex flex-col min-w-[160px]">
-            <label className="text-sm text-gray-600 mb-1">종료 날짜</label>
-            <input
-              type="date"
-              className="border rounded px-3 py-2"
-              value={filterEndDate}
-              onChange={(e) => setFilterEndDate(e.target.value)}
-            />
-          </div>
-        </div>
-        <div className="mt-4 flex justify-end">
-          <button className="px-4 py-2 rounded border" onClick={resetFilters}>
-            초기화
-          </button>
-        </div>
-      </div>
-
       {previewState && (
         <div
           className="fixed inset-0 bg-black/70 flex justify-center items-center z-50"
@@ -379,6 +312,19 @@ export default function TrackerPage() {
         }
         onMemoClick={(item) => setMemoItem(item)}
         onSelectedChange={setSelectedIds}
+        filterTitle={filterTitle}
+        filterStatus={filterStatus}
+        filterEditor={filterEditor}
+        filterStartDate={filterStartDate}
+        filterEndDate={filterEndDate}
+        onFilterTitleChange={setFilterTitle}
+        onFilterStatusChange={setFilterStatus}
+        onFilterEditorChange={setFilterEditor}
+        onFilterStartDateChange={setFilterStartDate}
+        onFilterEndDateChange={setFilterEndDate}
+        onResetFilters={resetFilters}
+        statusOptions={statusOptions}
+        editorOptions={EDITOR_OPTIONS}
       />
 
       <ImageMenu
