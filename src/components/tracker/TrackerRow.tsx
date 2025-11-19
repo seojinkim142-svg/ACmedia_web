@@ -1,4 +1,4 @@
-﻿import InlineCell from "./InlineCell";
+import InlineCell from "./InlineCell";
 
 interface Article {
   id: number;

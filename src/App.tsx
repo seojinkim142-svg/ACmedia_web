@@ -1,4 +1,4 @@
-﻿import { Routes, Route, useLocation, Navigate } from "react-router-dom";
+import { Routes, Route, useLocation, Navigate } from "react-router-dom";
 import Navbar from "./components/Navbar";
 
 import TrackerPage from "./pages/TrackerPage";

@@ -1,4 +1,4 @@
-﻿export default function ImagePreviewModal({ images, index, onClose, onSelect }: any) {
+export default function ImagePreviewModal({ images, index, onClose, onSelect }: any) {
   if (index === null) return null;
 
   const next = () => onSelect((index + 1) % images.length);

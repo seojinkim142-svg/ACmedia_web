@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import TrackerTable from "../components/tracker/TrackerTable";
 import ImageMenu from "../components/tracker/ImageMenu";
