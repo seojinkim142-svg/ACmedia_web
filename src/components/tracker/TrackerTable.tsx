@@ -18,7 +18,7 @@ interface Article {
 
 interface TrackerTableProps {
   articles: Article[];
-  onDoubleClick: (item: Article) => void;
+  onTitleClick: (item: Article) => void;
   onInlineUpdate: (id: number, field: string, value: string) => Promise<unknown> | void;
   onImageClick: (e: MouseEvent, item: Article) => void;
   onMemoClick: (item: Article) => void;
@@ -50,7 +50,7 @@ interface HistoryEntry {
 
 export default function TrackerTable({
   articles,
-  onDoubleClick,
+  onTitleClick,
   onInlineUpdate,
   onImageClick,
   onMemoClick,
@@ -411,7 +411,7 @@ export default function TrackerTable({
               key={item.id}
               index={index}
               item={item}
-              onDoubleClick={onDoubleClick}
+              onTitleClick={onTitleClick}
               onInlineUpdate={handleUpdate}
               onImageClick={onImageClick}
               onMemoClick={onMemoClick}

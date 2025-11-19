@@ -264,7 +264,7 @@ export default function UploadPage() {
 
       <TrackerTable
         articles={articles}
-        onDoubleClick={setOpenItem}
+        onTitleClick={setOpenItem}
         onInlineUpdate={async (id, field, value) => {
           await supabase.from("articles").update({ [field]: value }).eq("id", id);
           notifyStatusChange(field, value);

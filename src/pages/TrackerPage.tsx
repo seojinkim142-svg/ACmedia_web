@@ -293,7 +293,7 @@ export default function TrackerPage() {
 
       <TrackerTable
         articles={filteredArticles}
-        onDoubleClick={setOpenItem}
+        onTitleClick={setOpenItem}
         onInlineUpdate={async (id, field, value) => {
           await supabase
             .from("articles")

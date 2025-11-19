@@ -17,7 +17,7 @@ interface Article {
 interface TrackerRowProps {
   index: number;
   item: Article;
-  onDoubleClick: (item: Article) => void;
+  onTitleClick: (item: Article) => void;
   onInlineUpdate: (id: number, field: string, value: string) => void;
   onImageClick: (e: React.MouseEvent, item: Article) => void;
   onMemoClick: (item: Article) => void;
@@ -30,7 +30,7 @@ interface TrackerRowProps {
 export default function TrackerRow({
   index,
   item,
-  onDoubleClick,
+  onTitleClick,
   onInlineUpdate,
   onImageClick,
   onMemoClick,
@@ -48,7 +48,7 @@ export default function TrackerRow({
     selectedCell?.rowIndex === index && selectedCell?.field === field;
 
   return (
-    <tr className="border-b hover:bg-gray-50" onDoubleClick={() => onDoubleClick(item)}>
+    <tr className="border-b hover:bg-gray-50">
       <td className="py-2 px-1 text-center">
         <input
           type="checkbox"
@@ -103,7 +103,7 @@ export default function TrackerRow({
               : "text-[10px]"
           }
         `}
-        onClick={() => onDoubleClick(item)}
+        onClick={() => onTitleClick(item)}
       >
         {item.title}
       </td>
