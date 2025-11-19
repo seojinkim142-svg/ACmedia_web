@@ -72,25 +72,27 @@ export default function CommentsModal({ item, onClose, onUpdated }: CommentsModa
 
   return (
     <div
-      className="fixed inset-0 bg-black/50 flex items-center justify-center z-10000"
-      onClick={onClose}
+      className="fixed inset-0 bg-black/50 flex items-center justify-center z-9999"
+      onClick={onClose}   // 팝업 밖 클릭 시 닫힘
     >
+      {/* X 버튼을 화면 우측 상단에 완전 고정 */}
+      <button
+        className="fixed top-6 right-6 text-white text-3xl z-10000 hover:text-gray-300"
+        onClick={onClose}
+        aria-label="닫기"
+      >
+        ×
+      </button>
+
+      {/* 모달 본체 */}
       <div
         className="bg-white w-[520px] max-h-[640px] rounded-lg p-4 overflow-y-auto shadow-lg relative"
-        onClick={(e) => e.stopPropagation()}
+        onClick={(e) => e.stopPropagation()}  // 내부 클릭 시 닫힘 방지
       >
-        <button
-          className="absolute top-3 right-3 text-gray-600 hover:text-black text-xl"
-          onClick={onClose}
-          aria-label="닫기"
-        >
-          ×
-        </button>
-
-        <div className="pr-10 mb-4">
+        <div className="pr-8 mb-4">
           <h2 className="text-xl font-semibold">메모 / 댓글 히스토리</h2>
           {item.title && (
-            <p className="text-sm text-gray-500 wrap-break-word">{item.title}</p>
+            <p className="text-sm text-gray-500 wrap-break-words">{item.title}</p>
           )}
         </div>
 
@@ -129,4 +131,3 @@ export default function CommentsModal({ item, onClose, onUpdated }: CommentsModa
     </div>
   );
 }
-
