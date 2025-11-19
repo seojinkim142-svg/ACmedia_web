@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "../../supabaseClient";
 
 interface CommentItem {
@@ -26,7 +26,7 @@ export default function CommentsModal({ item, onClose, onUpdated }: CommentsModa
       .order("created_at", { ascending: false });
 
     if (error) {
-      alert("댓글을 불러오지 못했습니다: " + error.message);
+      alert("����� �ҷ����� ���߽��ϴ�: " + error.message);
       return;
     }
 
@@ -35,7 +35,7 @@ export default function CommentsModal({ item, onClose, onUpdated }: CommentsModa
 
   const addComment = async () => {
     if (!newComment.trim()) {
-      alert("댓글 내용을 입력하세요.");
+      alert("��� ������ �Է��ϼ���.");
       return;
     }
 
@@ -52,7 +52,7 @@ export default function CommentsModal({ item, onClose, onUpdated }: CommentsModa
       await loadComments();
       onUpdated?.();
     } catch (err) {
-      alert("댓글 등록 실패: " + (err as Error).message);
+      alert("��� ��� ����: " + (err as Error).message);
     } finally {
       setSubmitting(false);
     }
@@ -63,24 +63,32 @@ export default function CommentsModal({ item, onClose, onUpdated }: CommentsModa
   }, [item.id]);
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white w-[520px] max-h-[640px] rounded-lg p-4 overflow-y-auto shadow-lg">
-        <div className="flex justify-between items-center mb-4">
-          <div>
-            <h2 className="text-xl font-semibold">메모 / 댓글 히스토리</h2>
-            {item.title && <p className="text-sm text-gray-500">{item.title}</p>}
-          </div>
-          <button
-            className="text-gray-600 hover:text-black text-xl"
-            onClick={onClose}
-          >
-            ✕
-          </button>
+    <div
+      className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white w-[520px] max-h-[640px] rounded-lg p-4 overflow-y-auto shadow-lg relative"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          className="absolute top-3 right-3 text-gray-600 hover:text-black text-xl"
+          onClick={onClose}
+          aria-label="���"
+        >
+          X
+        </button>
+
+        <div className="pr-10 mb-4">
+          <h2 className="text-xl font-semibold">�޸� / ��� �����丮</h2>
+          {item.title && (
+            <p className="text-sm text-gray-500 break-words">{item.title}</p>
+          )}
         </div>
 
         <div className="space-y-3">
           {comments.length === 0 && (
-            <p className="text-gray-500">등록된 메모가 없습니다.</p>
+            <p className="text-gray-500">��ϵ� �޸� �����ϴ�.</p>
           )}
 
           {comments.map((c) => (
@@ -97,7 +105,7 @@ export default function CommentsModal({ item, onClose, onUpdated }: CommentsModa
           <textarea
             className="w-full border rounded p-2 text-sm"
             rows={3}
-            placeholder="메모 또는 댓글을 입력하세요"
+            placeholder="�޸� �Ǵ� ����� �Է��ϼ���"
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}
           />
@@ -106,7 +114,7 @@ export default function CommentsModal({ item, onClose, onUpdated }: CommentsModa
             onClick={addComment}
             disabled={submitting}
           >
-            {submitting ? "등록 중..." : "메모 추가"}
+            {submitting ? "��� ��..." : "�޸� �߰�"}
           </button>
         </div>
       </div>
