@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "../../supabaseClient";
 
 interface CommentItem {
@@ -62,9 +62,17 @@ export default function CommentsModal({ item, onClose, onUpdated }: CommentsModa
     loadComments();
   }, [item.id]);
 
+  useEffect(() => {
+    const handleEsc = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", handleEsc);
+    return () => document.removeEventListener("keydown", handleEsc);
+  }, [onClose]);
+
   return (
     <div
-      className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+      className="fixed inset-0 bg-black/50 flex items-center justify-center z-10000"
       onClick={onClose}
     >
       <div
@@ -76,7 +84,7 @@ export default function CommentsModal({ item, onClose, onUpdated }: CommentsModa
           onClick={onClose}
           aria-label="닫기"
         >
-          X
+          ×
         </button>
 
         <div className="pr-10 mb-4">
@@ -121,3 +129,4 @@ export default function CommentsModal({ item, onClose, onUpdated }: CommentsModa
     </div>
   );
 }
+
