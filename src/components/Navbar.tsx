@@ -1,18 +1,18 @@
-﻿import { NavLink, useLocation, useNavigate } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "../supabaseClient";
 
 export default function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // "/" 로 들어오면 자동으로 "/tracker" 활성 표시되도록 강제 처리
+  // "/" 경로에서도 트래커 탭이 활성화되도록 보정
   const effectivePath = location.pathname === "/" ? "/tracker" : location.pathname;
 
   const handleLogout = async () => {
     try {
       await supabase.auth.signOut();
     } catch (err) {
-      console.error("로그아웃 오류:", err);
+      console.error("로그아웃 실패:", err);
     }
     navigate("/signin");
   };
@@ -41,7 +41,7 @@ export default function Navbar() {
         to="/upload"
         className={effectivePath === "/upload" ? `${baseClass} ${activeClass}` : `${baseClass} ${normalClass}`}
       >
-        업로드
+        보관함
       </NavLink>
 
       <NavLink

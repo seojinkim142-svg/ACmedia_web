@@ -6,6 +6,7 @@ import DetailModal from "../components/DetailModal";
 import CommentsModal from "../components/tracker/CommentsModal";
 import { supabase } from "../supabaseClient";
 import { uploadImage } from "../lib/uploadImages";
+import { isStorageStatus, STORAGE_STATUSES } from "../constants/statuses";
 
 interface UploadArticle {
   id: number;
@@ -49,7 +50,7 @@ export default function UploadPage() {
     const { data, error } = await supabase
       .from("articles")
       .select("*")
-      .eq("status", "업로드")
+      .in("status", STORAGE_STATUSES as string[])
       .order("id", { ascending: true });
 
     if (error || !data) {
@@ -91,7 +92,7 @@ export default function UploadPage() {
   };
 
   const notifyStatusChange = (field: string, value: string) => {
-    if (field === "status" && value !== "업로드") {
+    if (field === "status" && !isStorageStatus(value)) {
       navigate("/tracker");
     }
   };
@@ -111,7 +112,7 @@ export default function UploadPage() {
       let query = supabase
         .from("articles")
         .select("id,title,summary,body,source,status,editor,content_source,bgm,created_at")
-        .eq("status", "업로드")
+        .in("status", STORAGE_STATUSES as string[])
         .order("id", { ascending: true });
 
       if (selectedIds.length > 0) {

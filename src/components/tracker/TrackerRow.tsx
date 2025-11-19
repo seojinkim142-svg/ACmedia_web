@@ -121,6 +121,7 @@ export default function TrackerRow({
           "이미지 완료",
           "업로드 대기",
           "업로드",
+          "중복",
         ]}
         onUpdate={(val) => onInlineUpdate(item.id, "status", val)}
         selected={isSelected("status")}

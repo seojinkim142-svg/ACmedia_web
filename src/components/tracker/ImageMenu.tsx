@@ -1,3 +1,5 @@
+import { useEffect, useRef } from "react";
+
 interface ImageMenuProps {
   menu: {
     x: number;
@@ -21,12 +23,32 @@ export default function ImageMenu({
   if (!menu) return null;
 
   const hasImages = menu.images.length > 0;
+  const menuRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!menu) return;
+
+    const handleOutsideClick = (event: MouseEvent | TouchEvent) => {
+      if (!menuRef.current) return;
+      if (!menuRef.current.contains(event.target as Node)) {
+        onClose();
+      }
+    };
+
+    document.addEventListener("mousedown", handleOutsideClick);
+    document.addEventListener("touchstart", handleOutsideClick);
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+      document.removeEventListener("touchstart", handleOutsideClick);
+    };
+  }, [menu, onClose]);
 
   return (
     <div
       className="fixed bg-white border shadow-lg rounded z-50"
       style={{ top: menu.y, left: menu.x }}
       onClick={(e) => e.stopPropagation()}
+      ref={menuRef}
     >
       <button
         className="block w-full px-4 py-2 text-left hover:bg-gray-100"

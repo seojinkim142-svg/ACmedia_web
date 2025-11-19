@@ -62,7 +62,7 @@ export default function ImageSection({ images, articleId, onUpdate }: Props) {
       URL.revokeObjectURL(objectUrl);
     } catch (err) {
       console.error(err);
-      alert("�̹��� �ٿ�ε��� �����Ͽ����ϴ�.");
+      alert("이미지를 다운로드하지 못했습니다.");
     }
   };
 
@@ -80,7 +80,7 @@ export default function ImageSection({ images, articleId, onUpdate }: Props) {
         return;
       }
     } catch (err) {
-      alert("이미지 정보를 읽어오지 못했습니다.");
+      alert("이미지 정보를 불러오지 못했습니다.");
       e.target.value = "";
       return;
     }
@@ -178,4 +178,3 @@ export default function ImageSection({ images, articleId, onUpdate }: Props) {
     </div>
   );
 }
-

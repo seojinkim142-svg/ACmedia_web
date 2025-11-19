@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { supabase } from "../../supabaseClient";
 
 interface CommentItem {
@@ -26,7 +26,7 @@ export default function CommentsModal({ item, onClose, onUpdated }: CommentsModa
       .order("created_at", { ascending: false });
 
     if (error) {
-      alert("����� �ҷ����� ���߽��ϴ�: " + error.message);
+      alert("댓글을 불러오지 못했습니다: " + error.message);
       return;
     }
 
@@ -35,7 +35,7 @@ export default function CommentsModal({ item, onClose, onUpdated }: CommentsModa
 
   const addComment = async () => {
     if (!newComment.trim()) {
-      alert("��� ������ �Է��ϼ���.");
+      alert("댓글 내용을 입력하세요.");
       return;
     }
 
@@ -52,7 +52,7 @@ export default function CommentsModal({ item, onClose, onUpdated }: CommentsModa
       await loadComments();
       onUpdated?.();
     } catch (err) {
-      alert("��� ��� ����: " + (err as Error).message);
+      alert("댓글 저장 오류: " + (err as Error).message);
     } finally {
       setSubmitting(false);
     }
@@ -74,21 +74,21 @@ export default function CommentsModal({ item, onClose, onUpdated }: CommentsModa
         <button
           className="absolute top-3 right-3 text-gray-600 hover:text-black text-xl"
           onClick={onClose}
-          aria-label="���"
+          aria-label="닫기"
         >
           X
         </button>
 
         <div className="pr-10 mb-4">
-          <h2 className="text-xl font-semibold">�޸� / ��� �����丮</h2>
+          <h2 className="text-xl font-semibold">메모 / 댓글 히스토리</h2>
           {item.title && (
-            <p className="text-sm text-gray-500 break-words">{item.title}</p>
+            <p className="text-sm text-gray-500 wrap-break-word">{item.title}</p>
           )}
         </div>
 
         <div className="space-y-3">
           {comments.length === 0 && (
-            <p className="text-gray-500">��ϵ� �޸� �����ϴ�.</p>
+            <p className="text-gray-500">등록된 메모가 없습니다.</p>
           )}
 
           {comments.map((c) => (
@@ -105,7 +105,7 @@ export default function CommentsModal({ item, onClose, onUpdated }: CommentsModa
           <textarea
             className="w-full border rounded p-2 text-sm"
             rows={3}
-            placeholder="�޸� �Ǵ� ����� �Է��ϼ���"
+            placeholder="메모 또는 댓글을 입력하세요"
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}
           />
@@ -114,11 +114,10 @@ export default function CommentsModal({ item, onClose, onUpdated }: CommentsModa
             onClick={addComment}
             disabled={submitting}
           >
-            {submitting ? "��� ��..." : "�޸� �߰�"}
+            {submitting ? "등록 중..." : "등록"}
           </button>
         </div>
       </div>
     </div>
   );
 }
-

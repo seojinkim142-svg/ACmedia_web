@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import CommentsModal from "../components/tracker/CommentsModal";
 import { supabase } from "../supabaseClient";
+import { isStorageStatus } from "../constants/statuses";
 
 interface DatabaseRow {
   id: number;
@@ -144,7 +145,7 @@ export default function DatabasePage() {
   );
 
   const goToArticlePage = (row: DatabaseRow) => {
-    const target = row.status === "업로드 대기" ? "/upload" : "/tracker";
+    const target = isStorageStatus(row.status) ? "/upload" : "/tracker";
     navigate(target, { state: { focusId: row.id } });
   };
 
@@ -277,7 +278,7 @@ export default function DatabasePage() {
         <div>
           <h1 className="text-2xl font-bold">데이터베이스</h1>
           <p className="text-sm text-gray-500 mt-1">
-            트래커/업로드 페이지의 기사 정보를 분류 기준에 따라 빠르게 찾아보세요.
+            트래커/보관함 페이지의 기사 정보를 분류 기준에 따라 빠르게 찾아보세요.
           </p>
         </div>
         <button className="px-4 py-2 bg-blue-600 text-white rounded" onClick={loadData}>

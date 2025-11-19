@@ -299,6 +299,7 @@ export default function TrackerTable({
           <option value="이미지 완료">이미지 완료</option>
           <option value="업로드 대기">업로드 대기</option>
           <option value="업로드">업로드</option>
+          <option value="중복">중복</option>
         </select>
         <button
           className="px-3 py-1 bg-blue-600 text-white rounded disabled:opacity-60"

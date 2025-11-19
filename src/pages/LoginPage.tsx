@@ -20,7 +20,7 @@ export default function LoginPage() {
     setStatus("");
 
     try {
-      // 1) 먼저 인증 시도
+      // 1) 기본 로그인 시도
       const { data: signInData, error: signInError } =
         await supabase.auth.signInWithPassword({
           email: normalizedEmail,
@@ -31,7 +31,7 @@ export default function LoginPage() {
 
       const user = signInData.user;
 
-      // 2) 로그인 성공 후, user.id 로 profiles 조회 (RLS 허용됨)
+      // 2) 로그인 후 해당 프로필이 존재하는지 확인 (권한 검증)
       const { data: profile, error: profileError } = await supabase
         .from("profiles")
         .select("role")
@@ -41,11 +41,11 @@ export default function LoginPage() {
       if (profileError) throw profileError;
 
       if (!profile) {
-        setStatus("관리자가 등록한 이메일만 로그인할 수 있습니다.");
+        setStatus("승인된 계정만 로그인할 수 있습니다.");
         return;
       }
 
-      // 3) 정상 로그인 후 이동
+      // 3) 정상 로그인 후 트래커로 이동
       navigate("/tracker");
     } catch (err) {
       setStatus(`로그인 실패: ${(err as Error).message}`);
@@ -57,9 +57,9 @@ export default function LoginPage() {
   return (
     <div className="w-full h-screen flex items-center justify-center bg-gray-100">
       <div className="border rounded p-8 w-96 shadow-md flex flex-col gap-4 bg-white">
-        <h1 className="text-xl font-bold">직원 로그인</h1>
+        <h1 className="text-xl font-bold">팀 계정 로그인</h1>
         <p className="text-sm text-gray-500">
-          관리자가 발급한 이메일과 비밀번호로만 접근할 수 있습니다.
+          관리자에게 발급받은 이메일과 비밀번호로 로그인하세요.
         </p>
 
         <input
@@ -90,4 +90,3 @@ export default function LoginPage() {
     </div>
   );
 }
-

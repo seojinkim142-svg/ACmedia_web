@@ -117,6 +117,7 @@ export default function InfoSection({ article, onUpdate }: InfoSectionProps) {
           <option>이미지 완료</option>
           <option>업로드 대기</option>
           <option>업로드</option>
+          <option>중복</option>
         </select>
       </div>
     </div>

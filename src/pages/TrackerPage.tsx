@@ -5,6 +5,7 @@ import { uploadImage } from "../lib/uploadImages";
 import TrackerTable from "../components/tracker/TrackerTable";
 import ImageMenu from "../components/tracker/ImageMenu";
 import CommentsModal from "../components/tracker/CommentsModal";
+import { STORAGE_STATUSES } from "../constants/statuses";
 
 interface Article {
   id: number;
@@ -22,6 +23,8 @@ interface Article {
 }
 
 const EDITOR_OPTIONS = ["지민", "지안", "아라", "서진"];
+
+const STORAGE_STATUS_FILTER = `(${STORAGE_STATUSES.map((status) => `"${status}"`).join(",")})`;
 
 const formatDate = (value?: string | null) => {
   if (!value) return "";
@@ -48,7 +51,7 @@ export default function TrackerPage() {
     const { data: art, error } = await supabase
       .from("articles")
       .select("*")
-      .neq("status", "업로드")
+      .not("status", "in", STORAGE_STATUS_FILTER)
       .order("id", { ascending: true });
 
     if (error || !art) {

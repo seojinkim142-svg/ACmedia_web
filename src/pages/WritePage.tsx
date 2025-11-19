@@ -13,6 +13,7 @@ const statusList = [
   "이미지 완료",
   "업로드 대기",
   "업로드",
+  "중복",
 ];
 
 export default function WritePage() {
