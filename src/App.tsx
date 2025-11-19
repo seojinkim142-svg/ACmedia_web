@@ -16,7 +16,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 export default function App() {
   const location = useLocation();
 
-  // Navbarë¥¼ ë³´ì—¬ì£¼ì§€ ì•Šì„ ê²½ë¡œ ëª©ë¡
+  // Navbar¸¦ ¼û°Ü¾ß ÇÏ´Â °æ·Î ¸ñ·Ï
   const hideNavbarRoutes = [
     "/signin",
     "/auth/callback",
@@ -27,81 +27,25 @@ export default function App() {
 
   return (
     <div className="w-full min-h-screen">
-
       {showNavbar && <Navbar />}
 
       <Routes>
         <Route path="/signin" element={<LoginPage />} />
         <Route path="/auth/callback" element={<MagicLinkPage />} />
-
-        {/* ğŸ”¥ PW ì¬ì„¤ì • ì´ë©”ì¼ìš© ë¼ìš°íŠ¸ (ë¡œê·¸ì¸ í•„ìš” ì—†ìŒ) */}
+        {/* ºñ·Î±×ÀÎ »óÅÂ¿¡¼­ Á¢±Ù °¡´ÉÇÑ PW Àç¼³Á¤¿ë ÆäÀÌÁö */}
         <Route path="/password-recovery" element={<PasswordRecoveryPage />} />
 
-        <Route
-          path="/tracker"
-          element={
-            <ProtectedRoute>
-              <TrackerPage />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route path="/" element={<Navigate to="/tracker" replace />} />
-
-        <Route
-          path="/feed"
-          element={
-            <ProtectedRoute>
-              <FeedPage />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/upload"
-          element={
-            <ProtectedRoute>
-              <UploadPage />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/database"
-          element={
-            <ProtectedRoute>
-              <DatabasePage />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/write"
-          element={
-            <ProtectedRoute>
-              <WritePage />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/admin/users"
-          element={
-            <ProtectedRoute>
-              <AdminUsersPage />
-            </ProtectedRoute>
-          }
-        />
-
-        {/* ë¡œê·¸ì¸ëœ ìœ ì €ìš© ë¹„ë°€ë²ˆí˜¸ ë³€ê²½ í˜ì´ì§€ */}
-        <Route
-          path="/settings/password"
-          element={
-            <ProtectedRoute>
-              <ResetPassword />
-            </ProtectedRoute>
-          }
-        />
+        <Route element={<ProtectedRoute />}>
+          <Route path="/" element={<Navigate to="/tracker" replace />} />
+          <Route path="/tracker" element={<TrackerPage />} />
+          <Route path="/feed" element={<FeedPage />} />
+          <Route path="/upload" element={<UploadPage />} />
+          <Route path="/database" element={<DatabasePage />} />
+          <Route path="/write" element={<WritePage />} />
+          <Route path="/admin/users" element={<AdminUsersPage />} />
+          {/* ·Î±×ÀÎµÈ »ç¿ëÀÚ ºñ¹Ğ¹øÈ£ º¯°æ ÆäÀÌÁö */}
+          <Route path="/settings/password" element={<ResetPassword />} />
+        </Route>
       </Routes>
     </div>
   );
