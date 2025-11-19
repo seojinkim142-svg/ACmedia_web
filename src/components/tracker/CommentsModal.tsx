@@ -90,7 +90,7 @@ export default function CommentsModal({ item, onClose, onUpdated }: CommentsModa
         onClick={(e) => e.stopPropagation()}  // 내부 클릭 시 닫힘 방지
       >
         <div className="pr-8 mb-4">
-          <h2 className="text-xl font-semibold">메모 / 댓글 히스토리</h2>
+          <h2 className="text-xl font-semibold">댓글 히스토리</h2>
           {item.title && (
             <p className="text-sm text-gray-500 wrap-break-words">{item.title}</p>
           )}
@@ -98,7 +98,7 @@ export default function CommentsModal({ item, onClose, onUpdated }: CommentsModa
 
         <div className="space-y-3">
           {comments.length === 0 && (
-            <p className="text-gray-500">등록된 메모가 없습니다.</p>
+            <p className="text-gray-500">등록된 댓글이 없습니다.</p>
           )}
 
           {comments.map((c) => (
@@ -115,7 +115,7 @@ export default function CommentsModal({ item, onClose, onUpdated }: CommentsModa
           <textarea
             className="w-full border rounded p-2 text-sm"
             rows={3}
-            placeholder="메모 또는 댓글을 입력하세요"
+            placeholder="댓글을 입력하세요"
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}
           />

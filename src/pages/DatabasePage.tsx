@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+﻿import type { ReactNode } from "react";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import CommentsModal from "../components/tracker/CommentsModal";
@@ -33,13 +33,13 @@ const EMPTY_SOURCE = "(출처 없음)";
 const EMPTY_STATUS = "(상태 없음)";
 
 const VIEW_MENU: { id: ViewMode; label: string; description: string }[] = [
-  { id: "title", label: "제목별 보기", description: "동일 제목의 기사 묶음" },
-  { id: "date", label: "날짜별 보기", description: "작성일 기준 최신순" },
+  { id: "title", label: "제목별 보기", description: "동일한 제목의 기사 묶음" },
+  { id: "date", label: "날짜별 보기", description: "작성 날짜 기준 최신순" },
   { id: "editor", label: "편집자별 보기", description: "담당 편집자별 정리" },
-  { id: "source", label: "출처별 보기", description: "콘텐츠 출처/원문별 분류" },
-  { id: "status", label: "상태별 보기", description: "진행 상태별 기사" },
-  { id: "comments", label: "댓글 많은 순", description: "댓글 수 기준 내림차순" },
-  { id: "bgm", label: "BGM 설정된 글", description: "BGM 필드가 있는 게시물" },
+  { id: "source", label: "출처별 보기", description: "콘텐츠 출처/원문 기준 분류" },
+  { id: "status", label: "상태별 보기", description: "진행 상태에 따른 데이터" },
+  { id: "comments", label: "댓글 많은 글", description: "댓글 수 상위 목록" },
+  { id: "bgm", label: "BGM 지정 글", description: "BGM 정보가 입력된 게시글" },
 ];
 
 export default function DatabasePage() {
@@ -134,7 +134,6 @@ export default function DatabasePage() {
     () => buildGroups((row) => row.status || EMPTY_STATUS, "asc"),
     [rows],
   );
-
   const commentsSorted = useMemo(
     () => [...rows].sort((a, b) => b.comments_count - a.comments_count),
     [rows],
@@ -184,7 +183,7 @@ export default function DatabasePage() {
           className="px-3 py-1 text-sm bg-gray-200 rounded"
           onClick={() => setMemoItem({ id: row.id, title: row.title })}
         >
-          메모
+          댓글
         </button>
       </div>
     </div>
@@ -245,7 +244,7 @@ export default function DatabasePage() {
               renderRowCard(
                 row,
                 <p className="text-xs text-gray-500 mt-1">
-                  순위 {index + 1} · 댓글 {row.comments_count}건
+                  순위 {index + 1} · 댓글 {row.comments_count}개
                 </p>,
               ),
             )}
@@ -254,7 +253,7 @@ export default function DatabasePage() {
       }
       case "bgm": {
         if (!bgmRows.length) {
-          return <p className="text-sm text-gray-500">BGM이 설정된 글이 없습니다.</p>;
+          return <p className="text-sm text-gray-500">BGM 정보가 없습니다.</p>;
         }
         return (
           <div className="space-y-3">
@@ -278,7 +277,7 @@ export default function DatabasePage() {
         <div>
           <h1 className="text-2xl font-bold">데이터베이스</h1>
           <p className="text-sm text-gray-500 mt-1">
-            트래커/보관함 페이지의 기사 정보를 분류 기준에 따라 빠르게 찾아보세요.
+            트래커와 보관 데이터를 한 곳에서 분류 기준으로 빠르게 찾아보세요.
           </p>
         </div>
         <button className="px-4 py-2 bg-blue-600 text-white rounded" onClick={loadData}>

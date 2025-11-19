@@ -339,7 +339,7 @@ export default function TrackerTable({
             <th className="py-2 px-1 w-20 text-sm">편집자</th>
             <th className="py-2 px-2 w-[320px] text-sm">제목</th>
             <th className="py-2 px-1 w-20 text-sm">상태</th>
-            <th className="py-2 px-2 w-[220px] text-sm">메모</th>
+            <th className="py-2 px-2 w-[220px] text-sm">댓글</th>
           </tr>
           {filtersEnabled && (
             <tr className="border-b bg-white text-xs text-gray-600">

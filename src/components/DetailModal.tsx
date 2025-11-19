@@ -52,7 +52,7 @@ export default function DetailModal({ isOpen, onClose, item, onUpdated }: Detail
       .from("comments")
       .select("*")
       .eq("post_id", item.id)
-      .order("created_at", { ascending: true });
+      .order("created_at", { ascending: false });
 
     if (data) setComments(data);
   };
@@ -121,20 +121,20 @@ export default function DetailModal({ isOpen, onClose, item, onUpdated }: Detail
   };
 
   return (
-    <div className="fixed inset-0 z-9000 bg-black/40 backdrop-blur-sm px-4 py-6 flex items-center justify-center">
-      <div className="w-full max-w-6xl bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[94vh]">
-        <div className="px-6 py-4 border-b bg-white flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+    <div
+      className="fixed inset-0 z-9000 bg-black/40 backdrop-blur-sm px-4 py-6 flex items-center justify-center"
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-6xl bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[94vh]"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <header className="px-6 py-4 border-b bg-white flex flex-wrap items-center justify-between gap-3">
           <div>
             <p className="text-xs uppercase tracking-widest text-gray-400">메인 팝업</p>
             <h2 className="text-2xl font-semibold text-gray-900">{article.title || "제목 없음"}</h2>
           </div>
-          <div className="flex gap-2">
-            <button
-              onClick={onClose}
-              className="px-4 py-2 rounded-full border border-gray-300 text-gray-600 hover:bg-gray-100 transition text-sm font-medium"
-            >
-              닫기
-            </button>
+          <div className="flex items-center gap-2">
             <button
               onClick={handleSave}
               disabled={saving}
@@ -142,15 +142,22 @@ export default function DetailModal({ isOpen, onClose, item, onUpdated }: Detail
             >
               {saving ? "저장 중..." : "저장"}
             </button>
+            <button
+              onClick={onClose}
+              aria-label="닫기"
+              className="w-10 h-10 rounded-full border border-gray-300 text-lg font-semibold text-gray-500 hover:bg-gray-100 flex items-center justify-center"
+            >
+              ×
+            </button>
           </div>
-        </div>
+        </header>
 
         <div className="flex-1 overflow-y-auto bg-gray-50 p-6 space-y-6">
-          <section className="bg-white border rounded-xl p-5">
-            <div className="grid grid-cols-[110px,minmax(0,1fr),230px] gap-4 text-sm items-center">
-              <div className="font-semibold text-gray-700">상태</div>
+          <section className="bg-white rounded-2xl shadow-sm p-6 space-y-6">
+            <div>
+              <label className="block text-sm font-semibold text-gray-800 mb-1">상태</label>
               <select
-                className="border rounded px-3 py-2 w-full"
+                className="border rounded px-4 py-2.5 w-full"
                 value={article.status || ""}
                 onChange={(e) => handleFieldChange("status", e.target.value)}
               >
@@ -160,58 +167,70 @@ export default function DetailModal({ isOpen, onClose, item, onUpdated }: Detail
                   </option>
                 ))}
               </select>
-              <p className="text-xs text-gray-500">드롭다운(리스트 입력) · 작성 시 선택</p>
+              <p className="text-xs text-gray-500 mt-1">드롭다운(디폴트 '리뷰') · 작성할 때 선택</p>
+            </div>
 
-              <div className="font-semibold text-gray-700">날짜</div>
-              <input
-                type="date"
-                className="border rounded px-3 py-2 w-full"
-                value={formatDateForInput(article.created_at)}
-                onChange={(e) => handleDateChange(e.target.value)}
-              />
-              <p className="text-xs text-gray-500">달력 선택 · 작성 당일 기준</p>
-
-              <div className="font-semibold text-gray-700">관련자</div>
-              <select
-                className="border rounded px-3 py-2 w-full"
-                value={article.editor || ""}
-                onChange={(e) => handleFieldChange("editor", e.target.value)}
-              >
-                {CONTRIBUTOR_OPTIONS.map((name) => (
-                  <option key={name} value={name}>
-                    {name}
-                  </option>
-                ))}
-              </select>
-              <p className="text-xs text-gray-500">드롭다운 유지 · 담당자 선택</p>
-
-              <div className="font-semibold text-gray-700">참고 콘텐츠</div>
-              <select
-                className="border rounded px-3 py-2 w-full"
-                value={article.source || ""}
-                onChange={(e) => handleFieldChange("source", e.target.value)}
-              >
-                {CONTENT_TYPES.map((type) => (
-                  <option key={type} value={type}>
-                    {type}
-                  </option>
-                ))}
-              </select>
-              <p className="text-xs text-gray-500">예: 인스타, 기사, AI, 창작 등</p>
-
-              <div className="font-semibold text-gray-700">참조</div>
-              <input
-                className="border rounded px-3 py-2 w-full"
-                value={article.content_source || ""}
-                onChange={(e) => handleFieldChange("content_source", e.target.value)}
-                placeholder="예: 웹소스, 인스타 아이디 등"
-              />
-              <p className="text-xs text-gray-500">필요 시 출처 메모</p>
-
-              <div className="font-semibold text-gray-700">URL</div>
-              <div className="flex items-center gap-2">
+            <div className="grid gap-6 md:grid-cols-2">
+              <div>
+                <label className="block text-sm font-semibold text-gray-800 mb-1">날짜</label>
                 <input
-                  className="border rounded px-3 py-2 w-full"
+                  type="date"
+                  className="border rounded px-4 py-2.5 w-full"
+                  value={formatDateForInput(article.created_at)}
+                  onChange={(e) => handleDateChange(e.target.value)}
+                />
+                <p className="text-xs text-gray-500 mt-1">발행(디폴트, 작성 당일) · 작성할 때</p>
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-800 mb-1">참고 콘텐츠</label>
+                <select
+                  className="border rounded px-4 py-2.5 w-full"
+                  value={article.source || ""}
+                  onChange={(e) => handleFieldChange("source", e.target.value)}
+                >
+                  {CONTENT_TYPES.map((type) => (
+                    <option key={type} value={type}>
+                      {type}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-xs text-gray-500 mt-1">예: 인스타, 기사, AI, 창작, 직접입력 등</p>
+              </div>
+            </div>
+
+            <div className="grid gap-6 md:grid-cols-2">
+              <div>
+                <label className="block text-sm font-semibold text-gray-800 mb-1">편집자</label>
+                <select
+                  className="border rounded px-4 py-2.5 w-full"
+                  value={article.editor || ""}
+                  onChange={(e) => handleFieldChange("editor", e.target.value)}
+                >
+                  {CONTRIBUTOR_OPTIONS.map((name) => (
+                    <option key={name} value={name}>
+                      {name}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-xs text-gray-500 mt-1">드롭다운(디폴트, 담당자) · 작성할 때</p>
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-800 mb-1">출처</label>
+                <input
+                  className="border rounded px-4 py-2.5 w-full"
+                  value={article.content_source || ""}
+                  onChange={(e) => handleFieldChange("content_source", e.target.value)}
+                  placeholder="예: 웹소설, 또는 인스타 아이디 등"
+                />
+                <p className="text-xs text-gray-500 mt-1">비고(웹소설, 계정 이름 등)</p>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-800 mb-1">URL (클릭하면 이동)</label>
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <input
+                  className="border rounded px-4 py-2.5 flex-1"
                   value={article.url || ""}
                   onChange={(e) => handleFieldChange("url", e.target.value)}
                   placeholder="www.example.com"
@@ -220,72 +239,78 @@ export default function DetailModal({ isOpen, onClose, item, onUpdated }: Detail
                   type="button"
                   disabled={!article.url}
                   onClick={() => window.open(normalizedUrl, "_blank", "noopener")}
-                  className="px-3 py-2 text-sm border border-gray-300 rounded hover:bg-gray-100 disabled:opacity-50"
+                  className="px-5 py-2.5 border border-gray-300 rounded text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
                 >
-                  열기
+                  이동
                 </button>
               </div>
-              <p className="text-xs text-gray-500">클릭하면 새 창으로 확인</p>
+              <p className="text-xs text-gray-500 mt-1">클릭하면 새 탭에서 바로 열기</p>
+            </div>
 
-              <div className="font-semibold text-gray-700">BGM</div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-800 mb-1">BGM</label>
               <input
-                className="border rounded px-3 py-2 w-full"
+                className="border rounded px-4 py-2.5 w-full"
                 value={article.bgm || ""}
                 onChange={(e) => handleFieldChange("bgm", e.target.value)}
-                placeholder="선택 사항"
+                placeholder="필요 시에만 입력"
               />
-              <p className="text-xs text-gray-500">필요 시만 입력</p>
+              <p className="text-xs text-gray-500 mt-1">필요한 경우에만 자유 입력</p>
             </div>
           </section>
 
-          <section className="bg-white border rounded-xl p-5 space-y-4">
+          <section className="bg-white rounded-2xl shadow-sm p-6 space-y-5">
             <div>
-              <label className="font-semibold text-sm text-gray-700">제목</label>
+              <label className="block text-sm font-semibold text-gray-800 mb-1">제목 (기사 제목)</label>
               <input
-                className="mt-1 border rounded px-3 py-3 w-full focus:outline-none focus:ring-2 focus:ring-blue-400"
+                className="border rounded px-4 py-3 w-full focus:outline-none focus:ring-2 focus:ring-blue-400"
                 value={article.title || ""}
                 onChange={(e) => handleFieldChange("title", e.target.value)}
               />
             </div>
 
             <div>
-              <label className="font-semibold text-sm text-gray-700">요약</label>
+              <label className="block text-sm font-semibold text-gray-800 mb-1">요약</label>
               <textarea
                 rows={3}
-                className="mt-1 border rounded px-3 py-3 w-full resize-none focus:outline-none focus:ring-2 focus:ring-blue-400"
+                className="border rounded px-4 py-3 w-full resize-none focus:outline-none focus:ring-2 focus:ring-blue-400"
                 value={article.summary || ""}
                 onChange={(e) => handleFieldChange("summary", e.target.value)}
               />
             </div>
 
             <div>
-              <label className="font-semibold text-sm text-gray-700">본문</label>
+              <label className="block text-sm font-semibold text-gray-800 mb-1">본문</label>
               <textarea
                 rows={10}
-                className="mt-1 border rounded px-3 py-3 w-full focus:outline-none focus:ring-2 focus:ring-blue-400"
+                className="border rounded px-4 py-3 w-full focus:outline-none focus:ring-2 focus:ring-blue-400"
                 value={article.body || ""}
                 onChange={(e) => handleFieldChange("body", e.target.value)}
               />
             </div>
           </section>
 
-          <section className="bg-white border rounded-xl p-5 space-y-4">
-            <div className="flex items-center justify-between">
+          <section className="bg-white rounded-2xl shadow-sm p-6 space-y-4">
+            <div className="flex items-center justify-between flex-wrap gap-3">
               <div>
-                <h3 className="text-lg font-semibold text-gray-800">이미지</h3>
+                <h3 className="text-lg font-semibold text-gray-900">이미지</h3>
                 <p className="text-xs text-gray-500">너무 크지 않게 · 1/5 비율로 캡처 권장</p>
               </div>
             </div>
             <ImageSection images={article.images || []} articleId={article.id} onUpdate={loadArticleInfo} />
           </section>
 
-          <section className="bg-white border rounded-xl p-5">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">댓글</h3>
+          <section className="bg-white rounded-2xl shadow-sm p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="flex-1 border-t border-dashed border-gray-300" />
+              <span className="text-sm font-semibold text-gray-700">댓글 영역</span>
+              <div className="flex-1 border-t border-dashed border-gray-300" />
+            </div>
             <CommentsSection comments={comments} postId={article.id} onUpdate={loadComments} />
           </section>
         </div>
       </div>
     </div>
   );
-}
 
+}
