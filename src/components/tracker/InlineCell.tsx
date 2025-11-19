@@ -45,10 +45,12 @@ export default function InlineCell({
     };
   }, [editing]);
 
+  const tdStyle = { width: 0 };
+
   if (editing) {
     if (type === "select") {
       return (
-        <td className="py-2 px-1">
+        <td className="py-2 px-1" style={tdStyle}>
           <select
             className="border rounded px-1 w-full"
             value={value || ""}
@@ -58,6 +60,7 @@ export default function InlineCell({
             }}
             onBlur={() => setEditing(false)}
             autoFocus
+            style={{ minWidth: 0 }}
             ref={(el) => {
               controlRef.current = el;
             }}
@@ -71,7 +74,7 @@ export default function InlineCell({
     }
 
     return (
-      <td className="py-2 px-1">
+      <td className="py-2 px-1" style={tdStyle}>
         <input
           type={type}
           className="border rounded px-1 w-full"
@@ -79,6 +82,7 @@ export default function InlineCell({
           onChange={(e) => onUpdate(e.target.value)}
           onBlur={() => setEditing(false)}
           autoFocus
+          style={{ minWidth: 0 }}
           ref={(el) => {
             controlRef.current = el;
           }}
@@ -93,6 +97,7 @@ export default function InlineCell({
       className={`py-2 px-1 cursor-pointer ${
         highlight ? "underline text-blue-600" : ""
       } ${selected ? "ring-2 ring-blue-400 rounded" : ""}`}
+      style={tdStyle}
       onClick={(e) => {
         e.stopPropagation();
         if (!selected) {
@@ -108,7 +113,7 @@ export default function InlineCell({
         }
       }}
     >
-      {value ?? ""}
+      <div className="w-full truncate">{value ?? ""}</div>
     </td>
   );
 }

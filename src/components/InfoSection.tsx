@@ -122,3 +122,4 @@ export default function InfoSection({ article, onUpdate }: InfoSectionProps) {
     </div>
   );
 }
+

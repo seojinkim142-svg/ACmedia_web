@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+﻿import { useEffect, useRef, useState } from "react";
 import type { MouseEvent } from "react";
 import TrackerRow from "./TrackerRow";
 

@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { supabase } from "../supabaseClient";
 import { useNavigate } from "react-router-dom";
 
@@ -10,7 +10,7 @@ export default function SignUpPage() {
 
   const signUp = async () => {
     if (!email || !pw) {
-      alert("이메일과 비밀번호를 입력하세요.");
+      alert("?대찓?쇨낵 鍮꾨?踰덊샇瑜??낅젰?섏꽭??");
       return;
     }
 
@@ -22,12 +22,12 @@ export default function SignUpPage() {
     });
 
     if (error) {
-      alert("회원가입 실패: " + error.message);
+      alert("?뚯썝媛???ㅽ뙣: " + error.message);
       setLoading(false);
       return;
     }
 
-    // profiles에도 추가
+    // profiles?먮룄 異붽?
     await supabase.from("profiles").insert({
       id: data.user?.id,
       email,
@@ -35,18 +35,18 @@ export default function SignUpPage() {
     });
 
     setLoading(false);
-    alert("회원가입 완료! 이제 로그인하세요.");
+    alert("?뚯썝媛???꾨즺! ?댁젣 濡쒓렇?명븯?몄슂.");
     navigate("/signin");
   };
 
   return (
     <div className="w-full h-screen flex items-center justify-center">
       <div className="border rounded p-8 w-80 shadow-md flex flex-col gap-3">
-        <h1 className="text-xl font-bold mb-3">회원가입</h1>
+        <h1 className="text-xl font-bold mb-3">?뚯썝媛??/h1>
 
         <input
           className="border rounded p-2"
-          placeholder="이메일"
+          placeholder="?대찓??
           value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
@@ -54,7 +54,7 @@ export default function SignUpPage() {
         <input
           type="password"
           className="border rounded p-2"
-          placeholder="비밀번호"
+          placeholder="鍮꾨?踰덊샇"
           value={pw}
           onChange={(e) => setPw(e.target.value)}
         />
@@ -64,16 +64,17 @@ export default function SignUpPage() {
           onClick={signUp}
           disabled={loading}
         >
-          {loading ? "처리 중..." : "회원가입"}
+          {loading ? "泥섎━ 以?.." : "?뚯썝媛??}
         </button>
 
         <button
           className="text-sm underline text-gray-600"
           onClick={() => navigate("/signin")}
         >
-          로그인으로 돌아가기
+          濡쒓렇?몄쑝濡??뚯븘媛湲?
         </button>
       </div>
     </div>
   );
 }
+

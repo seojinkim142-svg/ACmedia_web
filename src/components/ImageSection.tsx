@@ -178,3 +178,4 @@ export default function ImageSection({ images, articleId, onUpdate }: Props) {
     </div>
   );
 }
+
