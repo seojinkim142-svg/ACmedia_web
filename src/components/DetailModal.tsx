@@ -1,6 +1,5 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import ImageSection from "./ImageSection";
-import InfoSection from "./InfoSection";
 import CommentsSection from "./CommentsSection";
 import { supabase } from "../supabaseClient";
 
@@ -11,9 +10,33 @@ interface DetailModalProps {
   onUpdated?: (updated: any) => void;
 }
 
+const STATUS_OPTIONS = [
+  "초안",
+  "검토",
+  "발행",
+  "문장 작성",
+  "문장 완료",
+  "이미지 작성",
+  "이미지 완료",
+  "업로드 대기",
+  "업로드",
+  "중복",
+];
+
+const CONTENT_TYPES = ["인스타", "기사", "AI", "창작", "직접 입력"];
+const CONTRIBUTOR_OPTIONS = ["미정", "도란", "현민", "아둥", "상혁"];
+
+const formatDateForInput = (value?: string | null) => {
+  if (!value) return "";
+  if (value.includes("T")) return value.slice(0, 10);
+  if (value.length >= 10) return value.slice(0, 10);
+  return "";
+};
+
 export default function DetailModal({ isOpen, onClose, item, onUpdated }: DetailModalProps) {
   const [article, setArticle] = useState<any>(item);
   const [comments, setComments] = useState<any[]>([]);
+  const [saving, setSaving] = useState(false);
 
   const loadArticleInfo = async () => {
     if (!item?.id) return;
@@ -42,9 +65,29 @@ export default function DetailModal({ isOpen, onClose, item, onUpdated }: Detail
     }
   }, [item]);
 
+  const handleFieldChange = (field: string, value: unknown) => {
+    setArticle((prev: any) => ({ ...prev, [field]: value }));
+  };
+
+  const handleDateChange = (value: string) => {
+    if (!value) {
+      handleFieldChange("created_at", null);
+      return;
+    }
+    const iso = new Date(`${value}T00:00:00`).toISOString();
+    handleFieldChange("created_at", iso);
+  };
+
+  const normalizedUrl = useMemo(() => {
+    if (!article?.url) return "";
+    if (article.url.startsWith("http")) return article.url;
+    return `https://${article.url}`;
+  }, [article?.url]);
+
   if (!isOpen || !article) return null;
 
   const handleSave = async () => {
+    setSaving(true);
     const { data, error } = await supabase
       .from("articles")
       .update({
@@ -56,6 +99,8 @@ export default function DetailModal({ isOpen, onClose, item, onUpdated }: Detail
         content_source: article.content_source,
         editor: article.editor,
         bgm: article.bgm || "",
+        url: article.url || "",
+        created_at: article.created_at,
         images: article.images,
         updated_at: new Date().toISOString(),
       })
@@ -63,106 +108,181 @@ export default function DetailModal({ isOpen, onClose, item, onUpdated }: Detail
       .select()
       .single();
 
+    setSaving(false);
+
     if (error) {
-      alert("??μ뿉 ?ㅽ뙣?덉뒿?덈떎: " + error.message);
+      alert("저장에 실패했습니다: " + error.message);
       return;
     }
 
     if (data) setArticle(data);
     onUpdated?.(data);
-    alert("蹂寃??ы빆????λ릺?덉뒿?덈떎.");
+    alert("변경 사항이 저장되었습니다.");
   };
 
   return (
     <div className="fixed inset-0 z-9000 bg-black/40 backdrop-blur-sm px-4 py-6 flex items-center justify-center">
-      <div className="w-full max-w-5xl bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
-        <div className="relative px-6 py-4 border-b bg-white">
-          <div className="flex flex-col gap-1 pr-36">
-            <p className="text-xs uppercase tracking-widest text-gray-400">湲곗궗 ?곸꽭</p>
-            <h2 className="text-2xl font-semibold truncate text-gray-900">
-              {article.title || "?쒕ぉ ?놁쓬"}
-            </h2>
+      <div className="w-full max-w-6xl bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[94vh]">
+        <div className="px-6 py-4 border-b bg-white flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+          <div>
+            <p className="text-xs uppercase tracking-widest text-gray-400">메인 팝업</p>
+            <h2 className="text-2xl font-semibold text-gray-900">{article.title || "제목 없음"}</h2>
           </div>
-          <div className="absolute inset-y-0 right-4 flex items-center gap-3">
-            <button
-              onClick={handleSave}
-              className="px-5 py-2 rounded-full border border-blue-200 text-blue-600 hover:bg-blue-50 text-sm font-semibold transition"
-            >
-              ???            </button>
+          <div className="flex gap-2">
             <button
               onClick={onClose}
-              className="w-9 h-9 rounded-full border border-gray-300 text-gray-500 hover:bg-gray-100 flex items-center justify-center text-lg"
+              className="px-4 py-2 rounded-full border border-gray-300 text-gray-600 hover:bg-gray-100 transition text-sm font-medium"
             >
-              횞
+              닫기
+            </button>
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="px-5 py-2 rounded-full bg-blue-600 text-white font-semibold shadow hover:bg-blue-700 transition disabled:opacity-60"
+            >
+              {saving ? "저장 중..." : "저장"}
             </button>
           </div>
         </div>
 
         <div className="flex-1 overflow-y-auto bg-gray-50 p-6 space-y-6">
-          <section className="bg-white rounded-xl shadow-sm p-5 space-y-4">
-            <div>
-              <label className="font-semibold text-sm text-gray-600">?쒕ぉ</label>
+          <section className="bg-white border rounded-xl p-5">
+            <div className="grid grid-cols-[110px,minmax(0,1fr),230px] gap-4 text-sm items-center">
+              <div className="font-semibold text-gray-700">상태</div>
+              <select
+                className="border rounded px-3 py-2 w-full"
+                value={article.status || ""}
+                onChange={(e) => handleFieldChange("status", e.target.value)}
+              >
+                {STATUS_OPTIONS.map((status) => (
+                  <option key={status} value={status}>
+                    {status}
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-gray-500">드롭다운(리스트 입력) · 작성 시 선택</p>
+
+              <div className="font-semibold text-gray-700">날짜</div>
               <input
-                className="mt-1 border border-gray-200 rounded-lg p-3 w-full focus:outline-none focus:ring-2 focus:ring-blue-400"
+                type="date"
+                className="border rounded px-3 py-2 w-full"
+                value={formatDateForInput(article.created_at)}
+                onChange={(e) => handleDateChange(e.target.value)}
+              />
+              <p className="text-xs text-gray-500">달력 선택 · 작성 당일 기준</p>
+
+              <div className="font-semibold text-gray-700">관련자</div>
+              <select
+                className="border rounded px-3 py-2 w-full"
+                value={article.editor || ""}
+                onChange={(e) => handleFieldChange("editor", e.target.value)}
+              >
+                {CONTRIBUTOR_OPTIONS.map((name) => (
+                  <option key={name} value={name}>
+                    {name}
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-gray-500">드롭다운 유지 · 담당자 선택</p>
+
+              <div className="font-semibold text-gray-700">참고 콘텐츠</div>
+              <select
+                className="border rounded px-3 py-2 w-full"
+                value={article.source || ""}
+                onChange={(e) => handleFieldChange("source", e.target.value)}
+              >
+                {CONTENT_TYPES.map((type) => (
+                  <option key={type} value={type}>
+                    {type}
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-gray-500">예: 인스타, 기사, AI, 창작 등</p>
+
+              <div className="font-semibold text-gray-700">참조</div>
+              <input
+                className="border rounded px-3 py-2 w-full"
+                value={article.content_source || ""}
+                onChange={(e) => handleFieldChange("content_source", e.target.value)}
+                placeholder="예: 웹소스, 인스타 아이디 등"
+              />
+              <p className="text-xs text-gray-500">필요 시 출처 메모</p>
+
+              <div className="font-semibold text-gray-700">URL</div>
+              <div className="flex items-center gap-2">
+                <input
+                  className="border rounded px-3 py-2 w-full"
+                  value={article.url || ""}
+                  onChange={(e) => handleFieldChange("url", e.target.value)}
+                  placeholder="www.example.com"
+                />
+                <button
+                  type="button"
+                  disabled={!article.url}
+                  onClick={() => window.open(normalizedUrl, "_blank", "noopener")}
+                  className="px-3 py-2 text-sm border border-gray-300 rounded hover:bg-gray-100 disabled:opacity-50"
+                >
+                  열기
+                </button>
+              </div>
+              <p className="text-xs text-gray-500">클릭하면 새 창으로 확인</p>
+
+              <div className="font-semibold text-gray-700">BGM</div>
+              <input
+                className="border rounded px-3 py-2 w-full"
+                value={article.bgm || ""}
+                onChange={(e) => handleFieldChange("bgm", e.target.value)}
+                placeholder="선택 사항"
+              />
+              <p className="text-xs text-gray-500">필요 시만 입력</p>
+            </div>
+          </section>
+
+          <section className="bg-white border rounded-xl p-5 space-y-4">
+            <div>
+              <label className="font-semibold text-sm text-gray-700">제목</label>
+              <input
+                className="mt-1 border rounded px-3 py-3 w-full focus:outline-none focus:ring-2 focus:ring-blue-400"
                 value={article.title || ""}
-                onChange={(e) => setArticle((prev: any) => ({ ...prev, title: e.target.value }))}
+                onChange={(e) => handleFieldChange("title", e.target.value)}
               />
             </div>
 
             <div>
-              <label className="font-semibold text-sm text-gray-600">?붿빟</label>
+              <label className="font-semibold text-sm text-gray-700">요약</label>
               <textarea
                 rows={3}
-                className="mt-1 border border-gray-200 rounded-lg p-3 w-full resize-none focus:outline-none focus:ring-2 focus:ring-blue-400"
+                className="mt-1 border rounded px-3 py-3 w-full resize-none focus:outline-none focus:ring-2 focus:ring-blue-400"
                 value={article.summary || ""}
-                onChange={(e) => setArticle((prev: any) => ({ ...prev, summary: e.target.value }))}
+                onChange={(e) => handleFieldChange("summary", e.target.value)}
               />
             </div>
 
             <div>
-              <label className="font-semibold text-sm text-gray-600">蹂몃Ц</label>
+              <label className="font-semibold text-sm text-gray-700">본문</label>
               <textarea
-                rows={6}
-                className="mt-1 border border-gray-200 rounded-lg p-3 w-full focus:outline-none focus:ring-2 focus:ring-blue-400"
+                rows={10}
+                className="mt-1 border rounded px-3 py-3 w-full focus:outline-none focus:ring-2 focus:ring-blue-400"
                 value={article.body || ""}
-                onChange={(e) => setArticle((prev: any) => ({ ...prev, body: e.target.value }))}
+                onChange={(e) => handleFieldChange("body", e.target.value)}
               />
             </div>
           </section>
 
-          <section className="bg-white rounded-xl shadow-sm p-5">
+          <section className="bg-white border rounded-xl p-5 space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-800">이미지</h3>
+                <p className="text-xs text-gray-500">너무 크지 않게 · 1/5 비율로 캡처 권장</p>
+              </div>
+            </div>
             <ImageSection images={article.images || []} articleId={article.id} onUpdate={loadArticleInfo} />
           </section>
 
-          <section className="bg-white rounded-xl shadow-sm p-5 space-y-4">
-            <InfoSection article={article} onUpdate={loadArticleInfo} />
-            <div>
-              <label className="font-semibold text-sm text-gray-600">BGM</label>
-              <input
-                className="mt-1 border border-gray-200 rounded-lg p-3 w-full focus:outline-none focus:ring-2 focus:ring-blue-400"
-                value={article.bgm || ""}
-                onChange={(e) => setArticle((prev: any) => ({ ...prev, bgm: e.target.value }))}
-              />
-            </div>
-          </section>
-
-          <section className="bg-white rounded-xl shadow-sm p-5">
+          <section className="bg-white border rounded-xl p-5">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">댓글</h3>
             <CommentsSection comments={comments} postId={article.id} onUpdate={loadComments} />
           </section>
-        </div>
-
-        <div className="px-6 py-4 border-t bg-white flex justify-end gap-3">
-          <button
-            onClick={onClose}
-            className="px-5 py-2 rounded-full border border-gray-300 text-gray-600 hover:bg-gray-100 transition"
-          >
-            ?リ린
-          </button>
-          <button
-            onClick={handleSave}
-            className="px-5 py-2 rounded-full bg-blue-500 text-white font-semibold shadow hover:bg-blue-600 transition"
-          >
-            蹂寃??ы빆 ???          </button>
         </div>
       </div>
     </div>
