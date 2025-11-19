@@ -1,4 +1,4 @@
-import { Routes, Route, useLocation } from "react-router-dom";
+import { Routes, Route, useLocation, Navigate } from "react-router-dom";
 import Navbar from "./components/Navbar";
 
 import TrackerPage from "./pages/TrackerPage";
@@ -38,15 +38,6 @@ export default function App() {
         <Route path="/password-recovery" element={<PasswordRecoveryPage />} />
 
         <Route
-          path="/"
-          element={
-            <ProtectedRoute>
-              <TrackerPage />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
           path="/tracker"
           element={
             <ProtectedRoute>
@@ -54,6 +45,8 @@ export default function App() {
             </ProtectedRoute>
           }
         />
+
+        <Route path="/" element={<Navigate to="/tracker" replace />} />
 
         <Route
           path="/feed"
