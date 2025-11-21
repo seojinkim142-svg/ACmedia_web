@@ -1,6 +1,7 @@
 import { Routes, Route, useLocation, Navigate } from "react-router-dom";
 import Navbar from "./components/Navbar";
 
+import HomePage from "./pages/HomePage";
 import TrackerPage from "./pages/TrackerPage";
 import FeedPage from "./pages/FeedPage";
 import UploadPage from "./pages/UploadPage";
@@ -23,13 +24,13 @@ export default function App() {
     <div className="w-full min-h-screen">
       {showNavbar && <Navbar />}
 
-      <Routes location={location} key={location.pathname}>
+      <Routes>
         <Route path="/signin" element={<LoginPage />} />
         <Route path="/auth/callback" element={<MagicLinkPage />} />
         <Route path="/password-recovery" element={<PasswordRecoveryPage />} />
 
         <Route path="/" element={<ProtectedRoute />}>
-          <Route index element={<Navigate to="/tracker" replace />} />
+          <Route index element={<HomePage />} />
           <Route path="tracker" element={<TrackerPage />} />
           <Route path="feed" element={<FeedPage />} />
           <Route path="upload" element={<UploadPage />} />
