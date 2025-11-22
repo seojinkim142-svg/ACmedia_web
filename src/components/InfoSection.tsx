@@ -6,6 +6,23 @@ interface InfoSectionProps {
   onUpdate: () => void;
 }
 
+const STATUS_OPTIONS = [
+  "리뷰",
+  "추천",
+  "보류",
+  "본문 작성",
+  "본문 완료",
+  "썸네일 작성",
+  "썸네일 완료",
+  "업로드 예정",
+  "업로드 완료",
+  "중복",
+];
+
+const SOURCE_OPTIONS = ["기사", "뉴스", "AI", "창의"];
+
+const EDITOR_OPTIONS = ["지민", "지안", "아라"];
+
 export default function InfoSection({ article, onUpdate }: InfoSectionProps) {
   const [editor, setEditor] = useState(article.editor || "");
   const [source, setSource] = useState(article.source || "기사");
@@ -50,10 +67,12 @@ export default function InfoSection({ article, onUpdate }: InfoSectionProps) {
           }}
           disabled={saving}
         >
-          <option value="">선택하세요</option>
-          <option value="지민">지민</option>
-          <option value="지안">지안</option>
-          <option value="아라">아라</option>
+          <option value="">선택해주세요</option>
+          {EDITOR_OPTIONS.map((name) => (
+            <option key={name} value={name}>
+              {name}
+            </option>
+          ))}
         </select>
       </div>
 
@@ -68,10 +87,11 @@ export default function InfoSection({ article, onUpdate }: InfoSectionProps) {
           }}
           disabled={saving}
         >
-          <option>기사</option>
-          <option>뉴스룸</option>
-          <option>AI</option>
-          <option>창의</option>
+          {SOURCE_OPTIONS.map((entry) => (
+            <option key={entry} value={entry}>
+              {entry}
+            </option>
+          ))}
         </select>
       </div>
 
@@ -108,19 +128,13 @@ export default function InfoSection({ article, onUpdate }: InfoSectionProps) {
           }}
           disabled={saving}
         >
-          <option>리뷰</option>
-          <option>추천</option>
-          <option>보류</option>
-          <option>본문 작성</option>
-          <option>본문 완료</option>
-          <option>이미지 작성</option>
-          <option>이미지 완료</option>
-          <option>업로드 대기</option>
-          <option>업로드</option>
-          <option>중복</option>
+          {STATUS_OPTIONS.map((option) => (
+            <option key={option} value={option}>
+              {option}
+            </option>
+          ))}
         </select>
       </div>
     </div>
   );
 }
-

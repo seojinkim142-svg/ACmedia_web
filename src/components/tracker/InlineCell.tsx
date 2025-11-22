@@ -31,6 +31,15 @@ export default function InlineCell({
       (event.currentTarget as HTMLInputElement | HTMLSelectElement).blur();
     }
   };
+  const handleCellKeyDown = (event: KeyboardEvent<HTMLTableCellElement>) => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      if (!selected) {
+        onSelect?.();
+      }
+      setEditing(true);
+    }
+  };
 
   useEffect(() => {
     if (!selected && editing) {
@@ -104,10 +113,10 @@ export default function InlineCell({
   }
 
   return (
-    <td
-      tabIndex={0}
-      className={`py-2 px-1 cursor-pointer ${highlight ? "underline text-blue-600" : ""} ${
-        selected ? "ring-2 ring-blue-400 rounded" : ""
+      <td
+        tabIndex={0}
+        className={`py-2 px-1 cursor-pointer ${highlight ? "underline text-blue-600" : ""} ${
+          selected ? "ring-2 ring-blue-400 rounded" : ""
       } ${className}`}
       style={tdStyle}
       onClick={(e) => {
@@ -118,12 +127,7 @@ export default function InlineCell({
         setEditing(true);
       }}
       onFocus={() => onSelect?.()}
-      onKeyDown={(e) => {
-        if ((e.key === "Enter" || e.key === "F2") && selected) {
-          e.preventDefault();
-          setEditing(true);
-        }
-      }}
+      onKeyDown={handleCellKeyDown}
     >
       <div className="w-full truncate">{value ?? ""}</div>
     </td>

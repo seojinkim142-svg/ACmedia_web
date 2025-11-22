@@ -78,6 +78,7 @@ export default function TrackerTable({
   const [bulkEditor, setBulkEditor] = useState("");
   const [bulkStatus, setBulkStatus] = useState("");
   const [activeRowIndex, setActiveRowIndex] = useState<number | null>(null);
+  const [anchorRowIndex, setAnchorRowIndex] = useState<number | null>(null);
 
   const filtersEnabled =
     onFilterTitleChange ||
@@ -182,28 +183,48 @@ export default function TrackerTable({
         return;
       }
 
-      if (event.key === "ArrowDown") {
-        event.preventDefault();
-        moveSelection(1);
-        if (event.shiftKey && selectedCell) {
-          const nextIndex = Math.min(selectedCell.rowIndex + 1, articles.length - 1);
-          const nextId = articles[nextIndex]?.id;
-          if (nextId) {
-            setActiveRowIndex(nextIndex);
-            setSelectedIds((prev) => (prev.includes(nextId) ? prev : [...prev, nextId]));
+        if (event.key === "ArrowDown") {
+          event.preventDefault();
+          moveSelection(1);
+          if (event.shiftKey && selectedCell) {
+            const nextIndex = Math.min(selectedCell.rowIndex + 1, articles.length - 1);
+            const nextId = articles[nextIndex]?.id;
+            if (nextId) {
+              setActiveRowIndex(nextIndex);
+              setAnchorRowIndex(anchorRowIndex ?? selectedCell.rowIndex);
+              const nextIds = new Set(selectedIds);
+              const start = anchorRowIndex ?? selectedCell.rowIndex;
+              const end = nextIndex;
+              for (let idx = Math.min(start, end); idx <= Math.max(start, end); idx += 1) {
+                nextIds.add(articles[idx].id);
+              }
+              setSelectedIds(Array.from(nextIds));
+            }
           }
-        }
-      } else if (event.key === "ArrowUp") {
-        event.preventDefault();
-        moveSelection(-1);
-        if (event.shiftKey && selectedCell) {
-          const nextIndex = Math.max(selectedCell.rowIndex - 1, 0);
-          const nextId = articles[nextIndex]?.id;
-          if (nextId) {
-            setActiveRowIndex(nextIndex);
-            setSelectedIds((prev) => (prev.includes(nextId) ? prev : [...prev, nextId]));
+          if (!event.shiftKey) {
+            setAnchorRowIndex(selectedCell?.rowIndex ?? null);
           }
-        }
+        } else if (event.key === "ArrowUp") {
+          event.preventDefault();
+          moveSelection(-1);
+          if (event.shiftKey && selectedCell) {
+            const nextIndex = Math.max(selectedCell.rowIndex - 1, 0);
+            const nextId = articles[nextIndex]?.id;
+            if (nextId) {
+              setActiveRowIndex(nextIndex);
+              setAnchorRowIndex(anchorRowIndex ?? selectedCell.rowIndex);
+              const nextIds = new Set(selectedIds);
+              const start = anchorRowIndex ?? selectedCell.rowIndex;
+              const end = nextIndex;
+              for (let idx = Math.min(start, end); idx <= Math.max(start, end); idx += 1) {
+                nextIds.add(articles[idx].id);
+              }
+              setSelectedIds(Array.from(nextIds));
+            }
+          }
+          if (!event.shiftKey) {
+            setAnchorRowIndex(selectedCell?.rowIndex ?? null);
+          }
       } else if (event.ctrlKey && (event.key === "d" || event.key === "D")) {
         event.preventDefault();
         copyFromAbove();
