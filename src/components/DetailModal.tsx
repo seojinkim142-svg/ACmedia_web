@@ -24,7 +24,7 @@ const STATUS_OPTIONS = [
 ];
 
 const CONTENT_TYPES = ["뉴스", "기사", "AI", "창작", "직접 입력"];
-const CONTRIBUTOR_OPTIONS = ["미정", "지수", "지민", "아라", "서진"];
+const CONTRIBUTOR_OPTIONS = ["미정", "지민", "지안", "아라"];
 
 const formatDateForInput = (value?: string | null) => {
   if (!value) return "";
