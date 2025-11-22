@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import type { KeyboardEvent } from "react";
 
 interface InlineCellProps {
   value: string | number | null | undefined;
@@ -23,6 +24,13 @@ export default function InlineCell({
 }: InlineCellProps) {
   const [editing, setEditing] = useState(false);
   const controlRef = useRef<HTMLInputElement | HTMLSelectElement | null>(null);
+  const handleEditingKeyDown = (event: KeyboardEvent<HTMLInputElement | HTMLSelectElement>) => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      setEditing(false);
+      (event.currentTarget as HTMLInputElement | HTMLSelectElement).blur();
+    }
+  };
 
   useEffect(() => {
     if (!selected && editing) {
@@ -52,26 +60,27 @@ export default function InlineCell({
   if (editing) {
     if (type === "select") {
       return (
-        <td className={`py-2 px-1 ${className}`} style={tdStyle}>
-          <select
-            className="border rounded px-1 w-full"
-            value={value || ""}
-            onChange={(e) => {
-              onUpdate(e.target.value);
-              setEditing(false);
-            }}
-            onBlur={() => setEditing(false)}
-            autoFocus
-            style={{ minWidth: 0 }}
-            ref={(el) => {
-              controlRef.current = el;
-            }}
-          >
-            {options.map((o) => (
-              <option key={o}>{o}</option>
-            ))}
-          </select>
-        </td>
+      <td className={`py-2 px-1 ${className}`} style={tdStyle}>
+        <select
+          className="border rounded px-1 w-full"
+          value={value || ""}
+          onChange={(e) => {
+            onUpdate(e.target.value);
+            setEditing(false);
+          }}
+          onBlur={() => setEditing(false)}
+          onKeyDown={handleEditingKeyDown}
+          autoFocus
+          style={{ minWidth: 0 }}
+          ref={(el) => {
+            controlRef.current = el;
+          }}
+        >
+          {options.map((o) => (
+            <option key={o}>{o}</option>
+          ))}
+        </select>
+      </td>
       );
     }
 
@@ -83,6 +92,7 @@ export default function InlineCell({
           value={value || ""}
           onChange={(e) => onUpdate(e.target.value)}
           onBlur={() => setEditing(false)}
+          onKeyDown={handleEditingKeyDown}
           autoFocus
           style={{ minWidth: 0 }}
           ref={(el) => {
