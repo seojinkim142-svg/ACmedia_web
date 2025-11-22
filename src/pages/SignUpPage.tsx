@@ -27,7 +27,7 @@ export default function SignUpPage() {
       return;
     }
 
-    // profiles 테이블에도 추가
+    // profiles 테이블에 추가
     await supabase.from("profiles").insert({
       id: data.user?.id,
       email,
@@ -35,7 +35,7 @@ export default function SignUpPage() {
     });
 
     setLoading(false);
-    alert("회원가입이 완료되었습니다! 이제 로그인해주세요.");
+    alert("회원가입이 완료되었습니다! 이제 로그인해 주세요.");
     navigate("/signin");
   };
 
@@ -59,18 +59,11 @@ export default function SignUpPage() {
           onChange={(e) => setPw(e.target.value)}
         />
 
-        <button
-          className="bg-green-600 text-white py-2 rounded mt-2"
-          onClick={signUp}
-          disabled={loading}
-        >
+        <button className="bg-green-600 text-white py-2 rounded mt-2" onClick={signUp} disabled={loading}>
           {loading ? "처리 중..." : "회원가입"}
         </button>
 
-        <button
-          className="text-sm underline text-gray-600"
-          onClick={() => navigate("/signin")}
-        >
+        <button className="text-sm underline text-gray-600" onClick={() => navigate("/signin")}>
           로그인으로 돌아가기
         </button>
       </div>

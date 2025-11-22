@@ -8,6 +8,7 @@ interface InlineCellProps {
   highlight?: boolean;
   selected?: boolean;
   onSelect?: () => void;
+  className?: string;
 }
 
 export default function InlineCell({
@@ -18,6 +19,7 @@ export default function InlineCell({
   highlight = false,
   selected = false,
   onSelect,
+  className = "",
 }: InlineCellProps) {
   const [editing, setEditing] = useState(false);
   const controlRef = useRef<HTMLInputElement | HTMLSelectElement | null>(null);
@@ -50,7 +52,7 @@ export default function InlineCell({
   if (editing) {
     if (type === "select") {
       return (
-        <td className="py-2 px-1" style={tdStyle}>
+        <td className={`py-2 px-1 ${className}`} style={tdStyle}>
           <select
             className="border rounded px-1 w-full"
             value={value || ""}
@@ -74,7 +76,7 @@ export default function InlineCell({
     }
 
     return (
-      <td className="py-2 px-1" style={tdStyle}>
+      <td className={`py-2 px-1 ${className}`} style={tdStyle}>
         <input
           type={type}
           className="border rounded px-1 w-full"
@@ -94,9 +96,9 @@ export default function InlineCell({
   return (
     <td
       tabIndex={0}
-      className={`py-2 px-1 cursor-pointer ${
-        highlight ? "underline text-blue-600" : ""
-      } ${selected ? "ring-2 ring-blue-400 rounded" : ""}`}
+      className={`py-2 px-1 cursor-pointer ${highlight ? "underline text-blue-600" : ""} ${
+        selected ? "ring-2 ring-blue-400 rounded" : ""
+      } ${className}`}
       style={tdStyle}
       onClick={(e) => {
         e.stopPropagation();

@@ -1,32 +1,59 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import DetailModal from "../components/DetailModal";
 import CommentsModal from "../components/tracker/CommentsModal";
+import TrackerTable from "../components/tracker/TrackerTable";
 import { supabase } from "../supabaseClient";
 import { STORAGE_STATUSES } from "../constants/statuses";
+import { uploadImage } from "../lib/uploadImages";
+import type { TrackerArticle } from "../types/tracker";
 
-interface Article {
+type ArticleRow = {
   id: number;
-  title: string;
-  status: string;
-  editor?: string;
-  source?: string;
-  content_source?: string;
-  created_at?: string;
-  latest_comment?: string;
-}
+  title: string | null;
+  summary?: string | null;
+  body?: string | null;
+  status: string | null;
+  editor: string | null;
+  source: string | null;
+  content_source: string | null;
+  images: string[] | null;
+  created_at: string | null;
+};
 
 const STORAGE_STATUS_FILTER = `(${STORAGE_STATUSES.map((status) => `"${status}"`).join(",")})`;
+const DETAIL_STORAGE_KEY = "tracker:last-open-detail-id";
+const MEMO_STORAGE_KEY = "tracker:last-open-memo-id";
+const STATUS_OPTIONS = [
+  "리뷰",
+  "추천",
+  "보류",
+  "본문 작성",
+  "본문 완료",
+  "썸네일 작성",
+  "썸네일 완료",
+  "업로드 예정",
+  "업로드 완료",
+  "중복",
+];
 
 export default function TrackerPage() {
-  const [articles, setArticles] = useState<Article[]>([]);
+  const [articles, setArticles] = useState<TrackerArticle[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [openItem, setOpenItem] = useState<Article | null>(null);
-  const [memoItem, setMemoItem] = useState<Article | null>(null);
-
+  const [openItem, setOpenItem] = useState<TrackerArticle | null>(null);
+  const [memoItem, setMemoItem] = useState<TrackerArticle | null>(null);
   const [filterTitle, setFilterTitle] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
   const [filterEditor, setFilterEditor] = useState("");
+  const [filterDate, setFilterDate] = useState("");
+  const [previewState, setPreviewState] = useState<{ item: TrackerArticle; index: number } | null>(null);
+  const [uploadingPreview, setUploadingPreview] = useState(false);
+  const [imageMenu, setImageMenu] = useState<{ x: number; y: number; item: TrackerArticle } | null>(null);
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const [exporting, setExporting] = useState(false);
+
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const currentPreviewUrl = previewState?.item.images?.[previewState.index] ?? null;
 
   const loadArticles = async () => {
     setLoading(true);
@@ -34,9 +61,9 @@ export default function TrackerPage() {
 
     const { data, error: fetchError } = await supabase
       .from("articles")
-      .select("id,title,status,editor,source,content_source,created_at")
+      .select("id,title,summary,body,status,editor,source,content_source,created_at,images")
       .not("status", "in", STORAGE_STATUS_FILTER)
-      .order("created_at", { ascending: false });
+      .order("id", { ascending: true });
 
     if (fetchError || !data) {
       setArticles([]);
@@ -45,7 +72,8 @@ export default function TrackerPage() {
       return;
     }
 
-    const ids = data.map((a) => a.id);
+    const rows = data as ArticleRow[];
+    const ids = rows.map((a) => a.id);
     const latestMap: Record<number, string> = {};
 
     if (ids.length > 0) {
@@ -63,8 +91,17 @@ export default function TrackerPage() {
     }
 
     setArticles(
-      data.map((a) => ({
-        ...a,
+      (data ?? []).map((a) => ({
+        id: a.id,
+        title: a.title ?? "",
+        summary: a.summary ?? "",
+        body: a.body ?? "",
+        source: a.source ?? "",
+        status: a.status ?? "",
+        editor: a.editor ?? "",
+        content_source: a.content_source ?? "",
+        created_at: a.created_at ?? "",
+        images: a.images ?? [],
         latest_comment: latestMap[a.id] ?? "",
       }))
     );
@@ -74,12 +111,6 @@ export default function TrackerPage() {
   useEffect(() => {
     loadArticles();
   }, []);
-
-  const statusOptions = useMemo(() => {
-    const set = new Set<string>();
-    articles.forEach((a) => a.status && set.add(a.status));
-    return Array.from(set);
-  }, [articles]);
 
   const editorOptions = useMemo(() => {
     const set = new Set<string>();
@@ -92,9 +123,10 @@ export default function TrackerPage() {
       const titlePass = filterTitle ? (a.title ?? "").toLowerCase().includes(filterTitle.toLowerCase()) : true;
       const statusPass = filterStatus ? a.status === filterStatus : true;
       const editorPass = filterEditor ? a.editor === filterEditor : true;
-      return titlePass && statusPass && editorPass;
+      const datePass = filterDate ? (a.created_at ?? "").slice(0, 10) === filterDate : true;
+      return titlePass && statusPass && editorPass && datePass;
     });
-  }, [articles, filterTitle, filterStatus, filterEditor]);
+  }, [articles, filterDate, filterEditor, filterStatus, filterTitle]);
 
   const statusSummary = useMemo(() => {
     const map = new Map<string, number>();
@@ -102,13 +134,303 @@ export default function TrackerPage() {
     return Array.from(map.entries());
   }, [filtered]);
 
+  const updateField = async (id: number, field: string, value: string) => {
+    try {
+      const payload: Record<string, string> = { [field]: value };
+      const { error: updateError } = await supabase.from("articles").update(payload).eq("id", id);
+      if (updateError) throw updateError;
+      setArticles((prev) => prev.map((a) => (a.id === id ? { ...a, [field]: value } : a)));
+    } catch (e) {
+      console.error(e);
+      alert("수정에 실패했습니다. 다시 시도해주세요.");
+    }
+  };
+
+  const closePreview = () => setPreviewState(null);
+
+  const downloadPreview = async () => {
+    if (!currentPreviewUrl || !previewState) return;
+    try {
+      const res = await fetch(currentPreviewUrl);
+      if (!res.ok) throw new Error("이미지를 불러올 수 없습니다.");
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `article-${previewState.item.id}.png`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      alert("다운로드 중 오류가 발생했습니다: " + (err as Error).message);
+    }
+  };
+
+  const readImageSize = (file: File) => {
+    return new Promise<{ width: number; height: number }>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const img = new Image();
+        img.onload = () => resolve({ width: img.naturalWidth, height: img.naturalHeight });
+        img.onerror = reject;
+        img.src = reader.result as string;
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleUploadPreview = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !previewState) return;
+    setUploadingPreview(true);
+    try {
+      const { width, height } = await readImageSize(file);
+      if (width !== 1080 || height !== 1350) {
+        alert(`이미지 크기를 1080x1350으로 맞춰 주세요. 현재: ${width}x${height}`);
+        return;
+      }
+      const uploaded = await uploadImage(file);
+      if (!uploaded) {
+        alert("업로드에 실패했습니다. 다시 시도해주세요.");
+        return;
+      }
+      const updatedImages = [...(previewState.item.images ?? [])];
+      const replaceIndex = previewState.index ?? 0;
+      if (updatedImages.length === 0) {
+        updatedImages.push(uploaded);
+      } else {
+        updatedImages[replaceIndex] = uploaded;
+      }
+      const { error } = await supabase.from("articles").update({ images: updatedImages }).eq("id", previewState.item.id);
+      if (error) throw error;
+      await loadArticles();
+      setPreviewState((prev) => (prev ? { ...prev, item: { ...prev.item, images: updatedImages } } : prev));
+      alert("이미지를 업로드했습니다.");
+    } catch (err) {
+      alert("업로드 중 오류가 발생했습니다: " + (err as Error).message);
+    } finally {
+      setUploadingPreview(false);
+      event.target.value = "";
+    }
+  };
+
+  const formatDate = (value?: string | null) => {
+    if (!value) return "";
+    if (value.includes("T")) return value.split("T")[0];
+    if (value.length >= 10) return value.slice(0, 10);
+    const parsed = new Date(value);
+    return Number.isNaN(parsed.getTime()) ? value : parsed.toISOString().split("T")[0];
+  };
+
+  const exportArticles = async () => {
+    try {
+      setExporting(true);
+      let query = supabase
+        .from("articles")
+        .select("id,title,summary,body,source,status,editor,content_source,created_at")
+        .not("status", "in", STORAGE_STATUS_FILTER)
+        .order("id", { ascending: true });
+
+      if (selectedIds.length > 0) {
+        query = query.in("id", selectedIds);
+      }
+
+      const { data, error: fetchError } = await query;
+      if (fetchError) throw fetchError;
+
+      const headers = ["ID", "제목", "요약", "본문", "출처", "상태", "에디터", "콘텐츠 출처", "작성일"];
+      const rows = (data ?? []).map((row) =>
+        [
+          row.id ?? "",
+          row.title ?? "",
+          row.summary ?? "",
+          row.body ?? "",
+          row.source ?? "",
+          row.status ?? "",
+          row.editor ?? "",
+          row.content_source ?? "",
+          formatDate(row.created_at),
+        ]
+          .map((value) => {
+            const str = String(value).replace(/"/g, '""');
+            return `"${str}"`;
+          })
+          .join(",")
+      );
+
+      const csvBody = [headers.join(","), ...rows].join("\r\n");
+      const csv = "\uFEFF" + csvBody; // BOM for Excel
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      const today = new Date().toISOString().split("T")[0];
+      link.href = url;
+      link.download = `tracker-articles-${today}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      alert("파일 내보내기에 실패했습니다: " + (err as Error).message);
+    } finally {
+      setExporting(false);
+    }
+  };
+
   return (
     <div className="w-full px-6 py-8 space-y-8">
+      {/* preview modal */}
+      {previewState && (
+        <div
+          className="fixed inset-0 z-[12000] bg-black/70 flex items-center justify-center px-4"
+          onClick={closePreview}
+        >
+          <div
+            className="relative w-full max-w-[840px] flex flex-col items-center gap-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              className="absolute -top-10 right-0 px-4 py-2 rounded bg-black/60 text-white text-sm hover:bg-black/70"
+              onClick={closePreview}
+            >
+              닫기
+            </button>
+
+            <div className="relative w-full bg-black rounded-2xl overflow-hidden shadow-2xl">
+              <img
+                src={currentPreviewUrl ?? "https://placehold.co/1080x1350?text=No+Image"}
+                alt="미리보기"
+                className="w-full max-h-[80vh] object-contain bg-black"
+              />
+
+              <div className="absolute inset-y-0 left-3 flex items-center">
+                <button
+                  className="p-2 bg-white/85 rounded-full shadow disabled:opacity-40"
+                  onClick={() =>
+                    setPreviewState((prev) => {
+                      if (!prev) return prev;
+                      const imgs = prev.item.images ?? [];
+                      if (imgs.length <= 1) return prev;
+                      const nextIndex = (prev.index - 1 + imgs.length) % imgs.length;
+                      return { ...prev, index: nextIndex };
+                    })
+                  }
+                  disabled={!previewState.item.images?.length || (previewState.item.images?.length ?? 0) <= 1}
+                  aria-label="이전 이미지"
+                >
+                  ←
+                </button>
+              </div>
+
+              <div className="absolute inset-y-0 right-3 flex items-center">
+                <button
+                  className="p-2 bg-white/85 rounded-full shadow disabled:opacity-40"
+                  onClick={() =>
+                    setPreviewState((prev) => {
+                      if (!prev) return prev;
+                      const imgs = prev.item.images ?? [];
+                      if (imgs.length <= 1) return prev;
+                      const nextIndex = (prev.index + 1) % imgs.length;
+                      return { ...prev, index: nextIndex };
+                    })
+                  }
+                  disabled={!previewState.item.images?.length || (previewState.item.images?.length ?? 0) <= 1}
+                  aria-label="다음 이미지"
+                >
+                  →
+                </button>
+              </div>
+
+              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent text-white p-4">
+                <p className="text-xs font-semibold opacity-80">AC Media</p>
+                <p className="text-lg font-bold line-clamp-2">{previewState.item.title || "제목 없음"}</p>
+              </div>
+            </div>
+
+            <div className="text-white text-sm">
+              {(previewState.item.images?.length ?? 0) > 0
+                ? `${previewState.index + 1} / ${previewState.item.images?.length ?? 0}`
+                : "이미지가 없습니다"}
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                className="px-4 py-2 rounded bg-white text-gray-900 shadow disabled:opacity-50"
+                onClick={downloadPreview}
+                disabled={!currentPreviewUrl}
+              >
+                현재 이미지 다운로드
+              </button>
+              <button
+                className="px-4 py-2 rounded bg-white text-gray-900 shadow disabled:opacity-50"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploadingPreview}
+              >
+                {uploadingPreview ? "업로드 중..." : "업로드"}
+              </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleUploadPreview}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* image context menu */}
+      {imageMenu && (
+        <div
+          className="fixed inset-0 z-[11000]"
+          onClick={() => setImageMenu(null)}
+          onContextMenu={(e) => e.preventDefault()}
+        >
+          <div
+            className="absolute bg-white shadow-lg rounded-lg border p-3 space-y-2 text-gray-800"
+            style={{ top: imageMenu.y, left: imageMenu.x }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              className="block w-full text-left hover:bg-gray-100 px-2 py-1 rounded"
+              onClick={() => {
+                setPreviewState({ item: imageMenu.item, index: 0 });
+                setImageMenu(null);
+              }}
+            >
+              이미지 보기
+            </button>
+            <button
+              className="block w-full text-left hover:bg-gray-100 px-2 py-1 rounded disabled:text-gray-400"
+              disabled={!imageMenu.item.images?.length}
+              onClick={() => {
+                setPreviewState({ item: imageMenu.item, index: 0 });
+                setImageMenu(null);
+                setTimeout(() => downloadPreview(), 0);
+              }}
+            >
+              다운로드
+            </button>
+            <button
+              className="block w-full text-left hover:bg-gray-100 px-2 py-1 rounded"
+              onClick={() => {
+                setPreviewState({ item: imageMenu.item, index: 0 });
+                setImageMenu(null);
+                setTimeout(() => fileInputRef.current?.click(), 0);
+              }}
+            >
+              이미지 교체
+            </button>
+          </div>
+        </div>
+      )}
+
       <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-xs uppercase tracking-[0.28em] text-gray-500">ACMEDIA</p>
           <h1 className="text-3xl font-bold text-gray-900">트래커</h1>
-          <p className="text-sm text-gray-500">기사 진행 상황을 한눈에 확인하세요.</p>
+          <p className="text-sm text-gray-500">기사 진행 현황을 한눈에 확인하세요.</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <button
@@ -117,6 +439,13 @@ export default function TrackerPage() {
             disabled={loading}
           >
             {loading ? "불러오는 중..." : "새로고침"}
+          </button>
+          <button
+            className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-60"
+            onClick={exportArticles}
+            disabled={exporting}
+          >
+            {exporting ? "내보내는 중..." : "선택 기사 Excel 내보내기"}
           </button>
         </div>
       </header>
@@ -129,110 +458,39 @@ export default function TrackerPage() {
       </section>
 
       <section className="bg-white border rounded-2xl shadow-sm p-4 space-y-4">
-        <div className="flex flex-wrap gap-3">
-          <input
-            className="border rounded px-3 py-2 text-sm flex-1 min-w-[180px]"
-            placeholder="제목 검색"
-            value={filterTitle}
-            onChange={(e) => setFilterTitle(e.target.value)}
-          />
-          <select
-            className="border rounded px-3 py-2 text-sm min-w-[140px]"
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
-          >
-            <option value="">전체 상태</option>
-            {statusOptions.map((s) => (
-              <option key={s} value={s}>
-                {s}
-              </option>
-            ))}
-          </select>
-          <select
-            className="border rounded px-3 py-2 text-sm min-w-[140px]"
-            value={filterEditor}
-            onChange={(e) => setFilterEditor(e.target.value)}
-          >
-            <option value="">전체 편집자</option>
-            {editorOptions.map((e) => (
-              <option key={e} value={e}>
-                {e}
-              </option>
-            ))}
-          </select>
-          <button
-            className="px-3 py-2 text-sm border rounded hover:bg-gray-50"
-            onClick={() => {
-              setFilterTitle("");
-              setFilterStatus("");
-              setFilterEditor("");
-            }}
-          >
-            초기화
-          </button>
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <colgroup>
-              <col style={{ width: "72px" }} />
-              <col />
-              <col style={{ width: "120px" }} />
-              <col style={{ width: "140px" }} />
-              <col style={{ width: "160px" }} />
-              <col style={{ width: "80px" }} />
-            </colgroup>
-            <thead className="bg-gray-100 text-sm border-b">
-              <tr>
-                <th className="px-3 py-2">ID</th>
-                <th className="px-3 py-2">제목</th>
-                <th className="px-3 py-2">상태</th>
-                <th className="px-3 py-2">편집자</th>
-                <th className="px-3 py-2">출처</th>
-                <th className="px-3 py-2">메모</th>
-              </tr>
-            </thead>
-            <tbody className="text-sm">
-              {loading && (
-                <tr>
-                  <td colSpan={6} className="px-3 py-6 text-center text-gray-500">
-                    데이터를 불러오는 중입니다...
-                  </td>
-                </tr>
-              )}
-              {!loading && filtered.length === 0 && (
-                <tr>
-                  <td colSpan={6} className="px-3 py-6 text-center text-gray-500">
-                    조건에 맞는 기사가 없습니다.
-                  </td>
-                </tr>
-              )}
-              {!loading &&
-                filtered.map((item) => (
-                  <tr key={item.id} className="border-b hover:bg-gray-50">
-                    <td className="px-3 py-2 text-gray-600">{item.id}</td>
-                    <td
-                      className="px-3 py-2 font-medium cursor-pointer text-blue-600 hover:underline"
-                      onClick={() => setOpenItem(item)}
-                    >
-                      {item.title || "제목 없음"}
-                    </td>
-                    <td className="px-3 py-2">{item.status || "-"}</td>
-                    <td className="px-3 py-2">{item.editor || "-"}</td>
-                    <td className="px-3 py-2 text-gray-600">{item.content_source || item.source || "-"}</td>
-                    <td className="px-3 py-2">
-                      <button
-                        className="px-2 py-1 text-xs border rounded hover:bg-gray-100"
-                        onClick={() => setMemoItem(item)}
-                      >
-                        보기
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-            </tbody>
-          </table>
-        </div>
+        <TrackerTable
+          articles={filtered}
+          onTitleClick={(item) => {
+            setOpenItem(item);
+            localStorage.setItem(DETAIL_STORAGE_KEY, String(item.id));
+          }}
+          onInlineUpdate={updateField}
+          onImageClick={(e, item) => {
+            e.stopPropagation();
+            setImageMenu({ x: e.clientX + 8, y: e.clientY + 8, item });
+          }}
+          onMemoClick={(item) => {
+            setMemoItem(item);
+            localStorage.setItem(MEMO_STORAGE_KEY, String(item.id));
+          }}
+          onSelectedChange={setSelectedIds}
+          filterTitle={filterTitle}
+          filterStatus={filterStatus}
+          filterEditor={filterEditor}
+          filterDate={filterDate}
+          onFilterTitleChange={setFilterTitle}
+          onFilterStatusChange={setFilterStatus}
+          onFilterEditorChange={setFilterEditor}
+          onFilterDateChange={setFilterDate}
+          onResetFilters={() => {
+            setFilterTitle("");
+            setFilterStatus("");
+            setFilterEditor("");
+            setFilterDate("");
+          }}
+          statusOptions={STATUS_OPTIONS}
+          editorOptions={editorOptions}
+        />
 
         {error && <p className="text-sm text-red-600">{error}</p>}
       </section>
@@ -242,6 +500,7 @@ export default function TrackerPage() {
         item={openItem}
         onClose={() => {
           setOpenItem(null);
+          localStorage.removeItem(DETAIL_STORAGE_KEY);
           loadArticles();
         }}
         onUpdated={() => loadArticles()}
@@ -251,6 +510,7 @@ export default function TrackerPage() {
         <CommentsModal
           item={memoItem}
           onClose={() => setMemoItem(null)}
+          onAfterClose={() => localStorage.removeItem(MEMO_STORAGE_KEY)}
           onUpdated={loadArticles}
         />
       )}

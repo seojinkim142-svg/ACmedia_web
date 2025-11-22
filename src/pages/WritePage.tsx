@@ -2,17 +2,17 @@ import { useState } from "react";
 import { supabase } from "../supabaseClient";
 import { uploadImage } from "../lib/uploadImages";
 
-const sourceList = ["기사", "인스타", "AI", "창의"];
+const sourceList = ["기사", "뉴스", "AI", "창의"];
 const statusList = [
   "리뷰",
   "추천",
   "보류",
-  "본문 생성",
+  "본문 작성",
   "본문 완료",
-  "이미지 생성",
-  "이미지 완료",
-  "업로드 대기",
-  "업로드",
+  "썸네일 작성",
+  "썸네일 완료",
+  "업로드 예정",
+  "업로드 완료",
   "중복",
 ];
 
@@ -25,7 +25,7 @@ export default function WritePage() {
   const [source, setSource] = useState("기사");
   const [contentSource, setContentSource] = useState("");
 
-  // 추가된 상태값
+  // 추가 필드
   const [sourceUrl, setSourceUrl] = useState("");
   const [bgm, setBgm] = useState("");
 
@@ -48,7 +48,7 @@ export default function WritePage() {
       source,
       content_source: contentSource,
 
-      // 추가된 부분
+      // 추가 필드 저장
       source_url: sourceUrl,
       bgm,
 
@@ -71,13 +71,8 @@ export default function WritePage() {
   return (
     <div className="w-full">
       <div className="flex flex-col items-start w-full px-6 mt-6 gap-4">
-
         <label className="font-semibold">제목</label>
-        <input
-          className="border rounded p-2 w-full"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-        />
+        <input className="border rounded p-2 w-full" value={title} onChange={(e) => setTitle(e.target.value)} />
 
         <label className="font-semibold">요약</label>
         <textarea
@@ -100,33 +95,21 @@ export default function WritePage() {
 
         <div className="flex gap-2 flex-wrap mt-2">
           {images.map((img, i) => (
-            <img
-              key={i}
-              src={img}
-              className="w-20 h-20 object-cover border rounded"
-            />
+            <img key={i} src={img} className="w-20 h-20 object-cover border rounded" />
           ))}
         </div>
 
-        {/* 🔥 에디터 드롭다운으로 변경 */}
         <label className="font-semibold">에디터</label>
-        <select
-          className="border rounded p-2 w-full"
-          value={editor}
-          onChange={(e) => setEditor(e.target.value)}
-        >
-          <option value="">선택하세요</option>
+        <select className="border rounded p-2 w-full" value={editor} onChange={(e) => setEditor(e.target.value)}>
+          <option value="">선택해주세요</option>
+          <option value="지수">지수</option>
           <option value="지민">지민</option>
-          <option value="지안">지안</option>
           <option value="아라">아라</option>
+          <option value="서진">서진</option>
         </select>
 
         <label className="font-semibold">출처</label>
-        <select
-          className="border rounded p-2 w-full"
-          value={source}
-          onChange={(e) => setSource(e.target.value)}
-        >
+        <select className="border rounded p-2 w-full" value={source} onChange={(e) => setSource(e.target.value)}>
           {sourceList.map((s) => (
             <option key={s}>{s}</option>
           ))}
@@ -147,27 +130,16 @@ export default function WritePage() {
         />
 
         <label className="font-semibold">BGM 자료</label>
-        <input
-          className="border rounded p-2 w-full"
-          value={bgm}
-          onChange={(e) => setBgm(e.target.value)}
-        />
+        <input className="border rounded p-2 w-full" value={bgm} onChange={(e) => setBgm(e.target.value)} />
 
         <label className="font-semibold">상태</label>
-        <select
-          className="border rounded p-2 w-full"
-          value={status}
-          onChange={(e) => setStatus(e.target.value)}
-        >
+        <select className="border rounded p-2 w-full" value={status} onChange={(e) => setStatus(e.target.value)}>
           {statusList.map((s) => (
             <option key={s}>{s}</option>
           ))}
         </select>
 
-        <button
-          className="px-6 py-3 bg-green-600 text-white rounded mt-4"
-          onClick={saveArticle}
-        >
+        <button className="px-6 py-3 bg-green-600 text-white rounded mt-4" onClick={saveArticle}>
           저장
         </button>
       </div>

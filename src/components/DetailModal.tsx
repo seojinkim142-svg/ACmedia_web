@@ -11,20 +11,20 @@ interface DetailModalProps {
 }
 
 const STATUS_OPTIONS = [
-  "초안",
-  "검토",
-  "발행",
-  "문장 작성",
-  "문장 완료",
-  "이미지 작성",
-  "이미지 완료",
-  "업로드 대기",
-  "업로드",
+  "리뷰",
+  "추천",
+  "보류",
+  "본문 작성",
+  "본문 완료",
+  "썸네일 작성",
+  "썸네일 완료",
+  "업로드 예정",
+  "업로드 완료",
   "중복",
 ];
 
-const CONTENT_TYPES = ["인스타", "기사", "AI", "창작", "직접 입력"];
-const CONTRIBUTOR_OPTIONS = ["미정", "도란", "현민", "아둥", "상혁"];
+const CONTENT_TYPES = ["뉴스", "기사", "AI", "창작", "직접 입력"];
+const CONTRIBUTOR_OPTIONS = ["미정", "지수", "지민", "아라", "서진"];
 
 const formatDateForInput = (value?: string | null) => {
   if (!value) return "";
@@ -117,7 +117,7 @@ export default function DetailModal({ isOpen, onClose, item, onUpdated }: Detail
 
     if (data) setArticle(data);
     onUpdated?.(data);
-    alert("변경 사항이 저장되었습니다.");
+    alert("변경사항이 저장되었습니다.");
   };
 
   return (
@@ -131,7 +131,7 @@ export default function DetailModal({ isOpen, onClose, item, onUpdated }: Detail
       >
         <header className="px-6 py-4 border-b bg-white flex flex-wrap items-center justify-between gap-3">
           <div>
-            <p className="text-xs uppercase tracking-widest text-gray-400">메인 팝업</p>
+            <p className="text-xs uppercase tracking-widest text-gray-400">메인 작업</p>
             <h2 className="text-2xl font-semibold text-gray-900">{article.title || "제목 없음"}</h2>
           </div>
           <div className="flex items-center gap-2">
@@ -167,7 +167,7 @@ export default function DetailModal({ isOpen, onClose, item, onUpdated }: Detail
                   </option>
                 ))}
               </select>
-              <p className="text-xs text-gray-500 mt-1">드롭다운(디폴트 '리뷰') · 작성할 때 선택</p>
+              <p className="text-xs text-gray-500 mt-1">옵션을 선택하세요(기본값은 '리뷰').</p>
             </div>
 
             <div className="grid gap-6 md:grid-cols-2">
@@ -179,7 +179,7 @@ export default function DetailModal({ isOpen, onClose, item, onUpdated }: Detail
                   value={formatDateForInput(article.created_at)}
                   onChange={(e) => handleDateChange(e.target.value)}
                 />
-                <p className="text-xs text-gray-500 mt-1">발행(디폴트, 작성 당일) · 작성할 때</p>
+                <p className="text-xs text-gray-500 mt-1">발행 예정일을 설정하세요.</p>
               </div>
               <div>
                 <label className="block text-sm font-semibold text-gray-800 mb-1">참고 콘텐츠</label>
@@ -194,13 +194,13 @@ export default function DetailModal({ isOpen, onClose, item, onUpdated }: Detail
                     </option>
                   ))}
                 </select>
-                <p className="text-xs text-gray-500 mt-1">예: 인스타, 기사, AI, 창작, 직접입력 등</p>
+                <p className="text-xs text-gray-500 mt-1">뉴스, 기사, AI, 창작, 직접 입력 중 선택.</p>
               </div>
             </div>
 
             <div className="grid gap-6 md:grid-cols-2">
               <div>
-                <label className="block text-sm font-semibold text-gray-800 mb-1">편집자</label>
+                <label className="block text-sm font-semibold text-gray-800 mb-1">에디터</label>
                 <select
                   className="border rounded px-4 py-2.5 w-full"
                   value={article.editor || ""}
@@ -212,7 +212,7 @@ export default function DetailModal({ isOpen, onClose, item, onUpdated }: Detail
                     </option>
                   ))}
                 </select>
-                <p className="text-xs text-gray-500 mt-1">드롭다운(디폴트, 담당자) · 작성할 때</p>
+                <p className="text-xs text-gray-500 mt-1">담당자를 선택하거나 직접 입력하세요.</p>
               </div>
               <div>
                 <label className="block text-sm font-semibold text-gray-800 mb-1">출처</label>
@@ -220,14 +220,14 @@ export default function DetailModal({ isOpen, onClose, item, onUpdated }: Detail
                   className="border rounded px-4 py-2.5 w-full"
                   value={article.content_source || ""}
                   onChange={(e) => handleFieldChange("content_source", e.target.value)}
-                  placeholder="예: 웹소설, 또는 인스타 아이디 등"
+                  placeholder="참고 계정이나 자료명을 입력"
                 />
-                <p className="text-xs text-gray-500 mt-1">비고(웹소설, 계정 이름 등)</p>
+                <p className="text-xs text-gray-500 mt-1">비고용 출처/계정명을 적어주세요.</p>
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-800 mb-1">URL (클릭하면 이동)</label>
+              <label className="block text-sm font-semibold text-gray-800 mb-1">URL (클릭 시 이동)</label>
               <div className="flex flex-col gap-2 sm:flex-row">
                 <input
                   className="border rounded px-4 py-2.5 flex-1"
@@ -244,7 +244,7 @@ export default function DetailModal({ isOpen, onClose, item, onUpdated }: Detail
                   이동
                 </button>
               </div>
-              <p className="text-xs text-gray-500 mt-1">클릭하면 새 탭에서 바로 열기</p>
+              <p className="text-xs text-gray-500 mt-1">클릭하면 새 창에서 열립니다.</p>
             </div>
 
             <div>
@@ -253,9 +253,9 @@ export default function DetailModal({ isOpen, onClose, item, onUpdated }: Detail
                 className="border rounded px-4 py-2.5 w-full"
                 value={article.bgm || ""}
                 onChange={(e) => handleFieldChange("bgm", e.target.value)}
-                placeholder="필요 시에만 입력"
+                placeholder="필요한 경우만 입력"
               />
-              <p className="text-xs text-gray-500 mt-1">필요한 경우에만 자유 입력</p>
+              <p className="text-xs text-gray-500 mt-1">필요한 경우에만 공유해 주세요.</p>
             </div>
           </section>
 
@@ -294,7 +294,7 @@ export default function DetailModal({ isOpen, onClose, item, onUpdated }: Detail
             <div className="flex items-center justify-between flex-wrap gap-3">
               <div>
                 <h3 className="text-lg font-semibold text-gray-900">이미지</h3>
-                <p className="text-xs text-gray-500">너무 크지 않게 · 1/5 비율로 캡처 권장</p>
+                <p className="text-xs text-gray-500">썸네일이 보이는 · 4/5 비율 캡처 권장</p>
               </div>
             </div>
             <ImageSection images={article.images || []} articleId={article.id} onUpdate={loadArticleInfo} />
@@ -312,5 +312,4 @@ export default function DetailModal({ isOpen, onClose, item, onUpdated }: Detail
       </div>
     </div>
   );
-
 }

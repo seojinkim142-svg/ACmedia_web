@@ -1,27 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import type { MouseEvent } from "react";
 import TrackerRow from "./TrackerRow";
-
-interface Article {
-  id: number;
-  title: string;
-  summary: string;
-  body: string;
-  source: string;
-  status: string;
-  editor?: string;
-  content_source?: string;
-  images: string[] | null;
-  created_at?: string;
-  latest_comment?: string;
-}
+import type { TrackerArticle } from "../../types/tracker";
 
 interface TrackerTableProps {
-  articles: Article[];
-  onTitleClick: (item: Article) => void;
+  articles: TrackerArticle[];
+  onTitleClick: (item: TrackerArticle) => void;
   onInlineUpdate: (id: number, field: string, value: string) => Promise<unknown> | void;
-  onImageClick: (e: MouseEvent, item: Article) => void;
-  onMemoClick: (item: Article) => void;
+  onImageClick: (e: MouseEvent, item: TrackerArticle) => void;
+  onMemoClick: (item: TrackerArticle) => void;
   onSelectedChange?: (ids: number[]) => void;
   filterTitle?: string;
   filterStatus?: string;
@@ -47,6 +34,21 @@ interface HistoryEntry {
   previous: string;
   next: string;
 }
+
+const DEFAULT_EDITOR_OPTIONS = ["지수", "지민", "아라", "서진"];
+
+const DEFAULT_STATUS_OPTIONS = [
+  "리뷰",
+  "추천",
+  "보류",
+  "본문 작성",
+  "본문 완료",
+  "썸네일 작성",
+  "썸네일 완료",
+  "업로드 예정",
+  "업로드 완료",
+  "중복",
+];
 
 export default function TrackerTable({
   articles,
@@ -75,6 +77,7 @@ export default function TrackerTable({
   const [bulkDate, setBulkDate] = useState("");
   const [bulkEditor, setBulkEditor] = useState("");
   const [bulkStatus, setBulkStatus] = useState("");
+  const [activeRowIndex, setActiveRowIndex] = useState<number | null>(null);
 
   const filtersEnabled =
     onFilterTitleChange ||
@@ -86,6 +89,8 @@ export default function TrackerTable({
   const filterStatusValue = filterStatus ?? "";
   const filterEditorValue = filterEditor ?? "";
   const filterDateValue = filterDate ?? "";
+  const editorSelectOptions = editorOptions.length ? editorOptions : DEFAULT_EDITOR_OPTIONS;
+  const statusSelectOptions = statusOptions.length ? statusOptions : DEFAULT_STATUS_OPTIONS;
 
   useEffect(() => {
     if (articles.length === 0) {
@@ -115,11 +120,7 @@ export default function TrackerTable({
     const rowIndex = articles.findIndex((a) => a.id === id);
     const prevValue =
       rowIndex >= 0
-        ? String(
-            (
-              articles[rowIndex] as unknown as Record<string, string | number | null | undefined>
-            )[field] ?? ""
-          )
+        ? String((articles[rowIndex] as unknown as Record<string, string | number | null | undefined>)[field] ?? "")
         : "";
     const normalized = value ?? "";
     if (!applyingHistory.current && prevValue !== normalized) {
@@ -145,9 +146,7 @@ export default function TrackerTable({
     if (rowIndex === 0) return;
     const above = articles[rowIndex - 1];
     const current = articles[rowIndex];
-    const value = (above as unknown as Record<string, string | number | null | undefined> | undefined)?.[
-      field
-    ];
+    const value = (above as unknown as Record<string, string | number | null | undefined> | undefined)?.[field];
     if (value === undefined || current === undefined) return;
     handleUpdate(current.id, field, String(value ?? ""));
   };
@@ -178,7 +177,6 @@ export default function TrackerTable({
 
   useEffect(() => {
     const handler = (event: KeyboardEvent) => {
-      if (!selectedCell) return;
       const active = document.activeElement as HTMLElement | null;
       if (active && ["INPUT", "SELECT", "TEXTAREA"].includes(active.tagName)) {
         return;
@@ -187,9 +185,25 @@ export default function TrackerTable({
       if (event.key === "ArrowDown") {
         event.preventDefault();
         moveSelection(1);
+        if (event.shiftKey && selectedCell) {
+          const nextIndex = Math.min(selectedCell.rowIndex + 1, articles.length - 1);
+          const nextId = articles[nextIndex]?.id;
+          if (nextId) {
+            setActiveRowIndex(nextIndex);
+            setSelectedIds((prev) => (prev.includes(nextId) ? prev : [...prev, nextId]));
+          }
+        }
       } else if (event.key === "ArrowUp") {
         event.preventDefault();
         moveSelection(-1);
+        if (event.shiftKey && selectedCell) {
+          const nextIndex = Math.max(selectedCell.rowIndex - 1, 0);
+          const nextId = articles[nextIndex]?.id;
+          if (nextId) {
+            setActiveRowIndex(nextIndex);
+            setSelectedIds((prev) => (prev.includes(nextId) ? prev : [...prev, nextId]));
+          }
+        }
       } else if (event.ctrlKey && (event.key === "d" || event.key === "D")) {
         event.preventDefault();
         copyFromAbove();
@@ -229,7 +243,7 @@ export default function TrackerTable({
 
   const applyBulk = async (field: string, value: string) => {
     if (!value) {
-      alert("적용할 값을 입력하세요.");
+      alert("적용할 값을 입력해주세요.");
       return;
     }
     if (selectedIds.length === 0) {
@@ -244,8 +258,7 @@ export default function TrackerTable({
     if (!headerCheckboxRef.current) return;
     const allCount = articles.length;
     const selectedCount = selectedIds.length;
-    headerCheckboxRef.current.indeterminate =
-      selectedCount > 0 && selectedCount < allCount;
+    headerCheckboxRef.current.indeterminate = selectedCount > 0 && selectedCount < allCount;
   }, [selectedIds, articles.length]);
 
   return (
@@ -270,18 +283,19 @@ export default function TrackerTable({
           value={bulkEditor}
           onChange={(e) => setBulkEditor(e.target.value)}
         >
-          <option value="">편집자 선택</option>
-          <option value="지민">지민</option>
-          <option value="지안">지안</option>
-          <option value="아라">아라</option>
-          <option value="서진">서진</option>
+          <option value="">에디터 선택</option>
+          {editorSelectOptions.map((name) => (
+            <option key={name} value={name}>
+              {name}
+            </option>
+          ))}
         </select>
         <button
           className="px-3 py-1 bg-blue-600 text-white rounded disabled:opacity-60"
           onClick={() => applyBulk("editor", bulkEditor)}
           disabled={!bulkEditor}
         >
-          편집자 적용
+          에디터 적용
         </button>
 
         <select
@@ -290,16 +304,11 @@ export default function TrackerTable({
           onChange={(e) => setBulkStatus(e.target.value)}
         >
           <option value="">상태 선택</option>
-          <option value="리뷰">리뷰</option>
-          <option value="추천">추천</option>
-          <option value="보류">보류</option>
-          <option value="본문 작성">본문 작성</option>
-          <option value="본문 완료">본문 완료</option>
-          <option value="이미지 작성">이미지 작성</option>
-          <option value="이미지 완료">이미지 완료</option>
-          <option value="업로드 대기">업로드 대기</option>
-          <option value="업로드">업로드</option>
-          <option value="중복">중복</option>
+          {statusSelectOptions.map((status) => (
+            <option key={status} value={status}>
+              {status}
+            </option>
+          ))}
         </select>
         <button
           className="px-3 py-1 bg-blue-600 text-white rounded disabled:opacity-60"
@@ -310,40 +319,40 @@ export default function TrackerTable({
         </button>
       </div>
 
-      <table className="w-full text-left border-collapse table-fixed">
+      <table className="w-full text-left border border-gray-200">
         <colgroup>
-          <col style={{ width: "3.75rem" }} />
-          <col style={{ width: "1.75rem" }} />
-          <col style={{ width: "3.5rem" }} />
-          <col style={{ width: "6rem" }} />
-          <col style={{ width: "4.5rem" }} />
-          <col style={{ width: "320px" }} />
-          <col style={{ width: "5rem" }} />
+          <col style={{ width: "60px" }} />
+          <col style={{ width: "60px" }} />
+          <col style={{ width: "80px" }} />
+          <col />
+          <col style={{ width: "120px" }} />
+          <col style={{ width: "120px" }} />
+          <col style={{ width: "120px" }} />
+          <col style={{ width: "180px" }} />
           <col style={{ width: "220px" }} />
         </colgroup>
-        <thead>
-          <tr className="border-b bg-gray-100">
-            <th className="py-2 px-1 w-8 text-sm text-center">
+        <thead className="bg-gray-50 text-sm border-b border-gray-200">
+          <tr>
+            <th className="px-3 py-2 font-semibold text-gray-800 border-r border-gray-200">
               <input
                 type="checkbox"
                 ref={headerCheckboxRef}
-                checked={
-                  articles.length > 0 && selectedIds.length === articles.length
-                }
+                checked={articles.length > 0 && selectedIds.length === articles.length}
                 onChange={(e) => toggleAllRows(e.target.checked)}
               />
             </th>
-            <th className="py-2 px-1 w-10 text-sm">#</th>
-            <th className="py-2 px-1 w-16 text-sm">썸네일</th>
-            <th className="py-2 px-1 w-28 text-sm">날짜</th>
-            <th className="py-2 px-1 w-20 text-sm">편집자</th>
-            <th className="py-2 px-2 w-[320px] text-sm">제목</th>
-            <th className="py-2 px-1 w-20 text-sm">상태</th>
-            <th className="py-2 px-2 w-[220px] text-sm">댓글</th>
+            <th className="px-3 py-2 font-semibold text-gray-800 border-r border-gray-200">#</th>
+            <th className="px-3 py-2 font-semibold text-gray-800 border-r border-gray-200">썸네일</th>
+            <th className="px-3 py-2 font-semibold text-gray-800 border-r border-gray-200">제목</th>
+            <th className="px-3 py-2 font-semibold text-gray-800 border-r border-gray-200">날짜</th>
+            <th className="px-3 py-2 font-semibold text-gray-800 border-r border-gray-200">에디터</th>
+            <th className="px-3 py-2 font-semibold text-gray-800 border-r border-gray-200">상태</th>
+            <th className="px-3 py-2 font-semibold text-gray-800 border-r border-gray-200">출처</th>
+            <th className="px-3 py-2 font-semibold text-gray-800">메모</th>
           </tr>
           {filtersEnabled && (
-            <tr className="border-b bg-white text-xs text-gray-600">
-              <th className="py-1 px-1">
+            <tr className="border-b border-gray-200 bg-white text-xs text-gray-600">
+              <th className="py-1 px-1 border-r border-gray-200">
                 <button
                   className="text-blue-600 underline text-[11px]"
                   onClick={(e) => {
@@ -356,29 +365,7 @@ export default function TrackerTable({
               </th>
               <th />
               <th />
-              <th className="py-1 px-1">
-                <input
-                  type="date"
-                  className="border rounded px-1 py-0.5 text-xs w-full"
-                  value={filterDateValue}
-                  onChange={(e) => onFilterDateChange?.(e.target.value)}
-                />
-              </th>
-              <th className="py-1 px-1">
-                <select
-                  className="border rounded px-1 py-0.5 text-xs w-full"
-                  value={filterEditorValue}
-                  onChange={(e) => onFilterEditorChange?.(e.target.value)}
-                >
-                  <option value="">전체</option>
-                  {editorOptions.map((editor) => (
-                    <option key={editor} value={editor}>
-                      {editor}
-                    </option>
-                  ))}
-                </select>
-              </th>
-              <th className="py-1 px-1">
+              <th className="py-1 px-1 border-r border-gray-200">
                 <input
                   className="border rounded px-1 py-0.5 text-xs w-full"
                   placeholder="제목"
@@ -386,20 +373,43 @@ export default function TrackerTable({
                   onChange={(e) => onFilterTitleChange?.(e.target.value)}
                 />
               </th>
-              <th className="py-1 px-1">
+              <th className="py-1 px-1 border-r border-gray-200">
+                <input
+                  type="date"
+                  className="border rounded px-1 py-0.5 text-xs w-full"
+                  value={filterDateValue}
+                  onChange={(e) => onFilterDateChange?.(e.target.value)}
+                />
+              </th>
+              <th className="py-1 px-1 border-r border-gray-200">
+                <select
+                  className="border rounded px-1 py-0.5 text-xs w-full"
+                  value={filterEditorValue}
+                  onChange={(e) => onFilterEditorChange?.(e.target.value)}
+                >
+                  <option value="">전체</option>
+                  {editorSelectOptions.map((editor) => (
+                    <option key={editor} value={editor}>
+                      {editor}
+                    </option>
+                  ))}
+                </select>
+              </th>
+              <th className="py-1 px-1 border-r border-gray-200">
                 <select
                   className="border rounded px-1 py-0.5 text-xs w-full"
                   value={filterStatusValue}
                   onChange={(e) => onFilterStatusChange?.(e.target.value)}
                 >
                   <option value="">전체</option>
-                  {statusOptions.map((status) => (
+                  {statusSelectOptions.map((status) => (
                     <option key={status} value={status}>
                       {status}
                     </option>
                   ))}
                 </select>
               </th>
+              <th className="border-r border-gray-200" />
               <th />
             </tr>
           )}
@@ -416,11 +426,16 @@ export default function TrackerTable({
               onImageClick={onImageClick}
               onMemoClick={onMemoClick}
               selectedCell={selectedCell}
-              onSelectCell={(rowIdx, field) =>
-                setSelectedCell({ rowIndex: rowIdx, field })
-              }
+              onSelectCell={(rowIdx, field) => {
+                setSelectedCell({ rowIndex: rowIdx, field });
+                setActiveRowIndex(rowIdx);
+              }}
               rowSelected={selectedIds.includes(item.id)}
-              onToggleRow={(checked) => toggleRowSelection(item.id, checked)}
+              onToggleRow={(checked) => {
+                toggleRowSelection(item.id, checked);
+                setActiveRowIndex(index);
+              }}
+              rowActive={activeRowIndex === index}
             />
           ))}
         </tbody>

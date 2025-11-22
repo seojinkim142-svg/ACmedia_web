@@ -92,8 +92,9 @@ export default function UploadPage() {
   };
 
   const notifyStatusChange = (field: string, value: string) => {
+    // 업로드 페이지에 머무르기 위해 네비게이션을 하지 않습니다.
     if (field === "status" && !isStorageStatus(value)) {
-      navigate("/tracker");
+      // 목록은 onInlineUpdate 후 loadArticles()로 갱신되므로 추가 동작 없음
     }
   };
 
