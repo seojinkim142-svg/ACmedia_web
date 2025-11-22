@@ -35,7 +35,7 @@ interface HistoryEntry {
   next: string;
 }
 
-const DEFAULT_EDITOR_OPTIONS = ["지수", "지민", "아라", "서진"];
+const DEFAULT_EDITOR_OPTIONS = ["지민", "지안", "아라"];
 
 const DEFAULT_STATUS_OPTIONS = [
   "리뷰",
