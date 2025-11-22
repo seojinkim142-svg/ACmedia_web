@@ -64,6 +64,16 @@ export default function InlineCell({
     };
   }, [editing]);
 
+  useEffect(() => {
+    if (editing && type === "select" && controlRef.current instanceof HTMLSelectElement) {
+      setTimeout(() => {
+        const select = controlRef.current;
+        select?.focus();
+        select?.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
+      }, 0);
+    }
+  }, [editing, type]);
+
   const tdStyle = { width: 0 };
 
   if (editing) {
