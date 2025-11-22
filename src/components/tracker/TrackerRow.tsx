@@ -16,7 +16,7 @@ interface TrackerRowProps {
   rowActive?: boolean;
 }
 
-const EDITOR_OPTIONS = ["지수", "지민", "아라", "서진"];
+const EDITOR_OPTIONS = ["지민", "지안", "아라"];
 
 const STATUS_OPTIONS = [
   "리뷰",
