@@ -45,7 +45,8 @@ export default function TrackerPage() {
   const [filterTitle, setFilterTitle] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
   const [filterEditor, setFilterEditor] = useState("");
-  const [filterDate, setFilterDate] = useState("");
+  const [filterDateFrom, setFilterDateFrom] = useState("");
+  const [filterDateTo, setFilterDateTo] = useState("");
   const [previewState, setPreviewState] = useState<{ item: Article; index: number } | null>(null);
   const [uploadingPreview, setUploadingPreview] = useState(false);
   const [imageMenu, setImageMenu] = useState<{ x: number; y: number; item: Article } | null>(null);
@@ -118,10 +119,13 @@ export default function TrackerPage() {
       const titlePass = filterTitle ? (a.title ?? "").toLowerCase().includes(filterTitle.toLowerCase()) : true;
       const statusPass = filterStatus ? a.status === filterStatus : true;
       const editorPass = filterEditor ? a.editor === filterEditor : true;
-      const datePass = filterDate ? (a.created_at ?? "").slice(0, 10) === filterDate : true;
+      const dateStr = (a.created_at ?? "").slice(0, 10);
+      const fromPass = filterDateFrom ? dateStr >= filterDateFrom : true;
+      const toPass = filterDateTo ? dateStr <= filterDateTo : true;
+      const datePass = fromPass && toPass;
       return titlePass && statusPass && editorPass && datePass;
     });
-  }, [articles, filterDate, filterEditor, filterStatus, filterTitle]);
+  }, [articles, filterDateFrom, filterDateTo, filterEditor, filterStatus, filterTitle]);
 
   const statusSummary = useMemo(() => {
     const map = new Map<string, number>();
@@ -474,16 +478,19 @@ export default function TrackerPage() {
           filterTitle={filterTitle}
           filterStatus={filterStatus}
           filterEditor={filterEditor}
-          filterDate={filterDate}
+          filterDateFrom={filterDateFrom}
+          filterDateTo={filterDateTo}
           onFilterTitleChange={setFilterTitle}
           onFilterStatusChange={setFilterStatus}
           onFilterEditorChange={setFilterEditor}
-          onFilterDateChange={setFilterDate}
+          onFilterDateFromChange={setFilterDateFrom}
+          onFilterDateToChange={setFilterDateTo}
           onResetFilters={() => {
             setFilterTitle("");
             setFilterStatus("");
             setFilterEditor("");
-            setFilterDate("");
+            setFilterDateFrom("");
+            setFilterDateTo("");
           }}
           statusOptions={STATUS_OPTIONS}
           editorOptions={editorOptions}

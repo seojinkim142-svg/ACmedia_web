@@ -13,11 +13,13 @@ interface TrackerTableProps {
   filterTitle?: string;
   filterStatus?: string;
   filterEditor?: string;
-  filterDate?: string;
+  filterDateFrom?: string;
+  filterDateTo?: string;
   onFilterTitleChange?: (value: string) => void;
   onFilterStatusChange?: (value: string) => void;
   onFilterEditorChange?: (value: string) => void;
-  onFilterDateChange?: (value: string) => void;
+  onFilterDateFromChange?: (value: string) => void;
+  onFilterDateToChange?: (value: string) => void;
   onResetFilters?: () => void;
   statusOptions?: string[];
   editorOptions?: string[];
@@ -60,11 +62,13 @@ export default function TrackerTable({
   filterTitle,
   filterStatus,
   filterEditor,
-  filterDate,
+  filterDateFrom,
+  filterDateTo,
   onFilterTitleChange,
   onFilterStatusChange,
   onFilterEditorChange,
-  onFilterDateChange,
+  onFilterDateFromChange,
+  onFilterDateToChange,
   onResetFilters,
   statusOptions = [],
   editorOptions = [],
@@ -84,12 +88,14 @@ export default function TrackerTable({
     onFilterTitleChange ||
     onFilterStatusChange ||
     onFilterEditorChange ||
-    onFilterDateChange ||
+    onFilterDateFromChange ||
+    onFilterDateToChange ||
     onResetFilters;
   const filterTitleValue = filterTitle ?? "";
   const filterStatusValue = filterStatus ?? "";
   const filterEditorValue = filterEditor ?? "";
-  const filterDateValue = filterDate ?? "";
+  const filterDateFromValue = filterDateFrom ?? "";
+  const filterDateToValue = filterDateTo ?? "";
   const editorSelectOptions = editorOptions.length ? editorOptions : DEFAULT_EDITOR_OPTIONS;
   const statusSelectOptions = statusOptions.length ? statusOptions : DEFAULT_STATUS_OPTIONS;
 
@@ -413,12 +419,21 @@ export default function TrackerTable({
                 />
               </th>
               <th className="py-1 px-1 border-r border-gray-200">
-                <input
-                  type="date"
-                  className="border rounded px-1 py-0.5 text-xs w-full"
-                  value={filterDateValue}
-                  onChange={(e) => onFilterDateChange?.(e.target.value)}
-                />
+                <div className="flex gap-1">
+                  <input
+                    type="date"
+                    className="border rounded px-1 py-0.5 text-xs w-full"
+                    value={filterDateFromValue}
+                    onChange={(e) => onFilterDateFromChange?.(e.target.value)}
+                  />
+                  <span className="self-center text-gray-400 text-[10px]">~</span>
+                  <input
+                    type="date"
+                    className="border rounded px-1 py-0.5 text-xs w-full"
+                    value={filterDateToValue}
+                    onChange={(e) => onFilterDateToChange?.(e.target.value)}
+                  />
+                </div>
               </th>
               <th className="py-1 px-1 border-r border-gray-200">
                 <select
