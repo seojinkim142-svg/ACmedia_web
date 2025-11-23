@@ -5,20 +5,20 @@ import TrackerTable from "../components/tracker/TrackerTable";
 import { supabase } from "../supabaseClient";
 import { STORAGE_STATUSES } from "../constants/statuses";
 import { uploadImage } from "../lib/uploadImages";
-import type { TrackerArticle } from "../types/tracker";
 
-type ArticleRow = {
+interface Article {
   id: number;
-  title: string | null;
-  summary?: string | null;
-  body?: string | null;
-  status: string | null;
-  editor: string | null;
-  source: string | null;
-  content_source: string | null;
+  title: string;
+  summary: string;
+  body: string;
+  status: string;
+  editor?: string;
+  source: string;
+  content_source?: string;
   images: string[] | null;
-  created_at: string | null;
-};
+  created_at?: string;
+  latest_comment?: string;
+}
 
 const STORAGE_STATUS_FILTER = `(${STORAGE_STATUSES.map((status) => `"${status}"`).join(",")})`;
 const DETAIL_STORAGE_KEY = "tracker:last-open-detail-id";
@@ -37,18 +37,18 @@ const STATUS_OPTIONS = [
 ];
 
 export default function TrackerPage() {
-  const [articles, setArticles] = useState<TrackerArticle[]>([]);
+  const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [openItem, setOpenItem] = useState<TrackerArticle | null>(null);
-  const [memoItem, setMemoItem] = useState<TrackerArticle | null>(null);
+  const [openItem, setOpenItem] = useState<Article | null>(null);
+  const [memoItem, setMemoItem] = useState<Article | null>(null);
   const [filterTitle, setFilterTitle] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
   const [filterEditor, setFilterEditor] = useState("");
   const [filterDate, setFilterDate] = useState("");
-  const [previewState, setPreviewState] = useState<{ item: TrackerArticle; index: number } | null>(null);
+  const [previewState, setPreviewState] = useState<{ item: Article; index: number } | null>(null);
   const [uploadingPreview, setUploadingPreview] = useState(false);
-  const [imageMenu, setImageMenu] = useState<{ x: number; y: number; item: TrackerArticle } | null>(null);
+  const [imageMenu, setImageMenu] = useState<{ x: number; y: number; item: Article } | null>(null);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [exporting, setExporting] = useState(false);
 
@@ -72,8 +72,7 @@ export default function TrackerPage() {
       return;
     }
 
-    const rows = data as ArticleRow[];
-    const ids = rows.map((a) => a.id);
+    const ids = data.map((a) => a.id);
     const latestMap: Record<number, string> = {};
 
     if (ids.length > 0) {
@@ -91,16 +90,16 @@ export default function TrackerPage() {
     }
 
     setArticles(
-      (data ?? []).map((a) => ({
+      data.map((a) => ({
         id: a.id,
-        title: a.title ?? "",
-        summary: a.summary ?? "",
+        title: a.title,
+        summary: a.summary ?? "", 
         body: a.body ?? "",
         source: a.source ?? "",
-        status: a.status ?? "",
+        status: a.status,
         editor: a.editor ?? "",
         content_source: a.content_source ?? "",
-        created_at: a.created_at ?? "",
+        created_at: a.created_at,
         images: a.images ?? [],
         latest_comment: latestMap[a.id] ?? "",
       }))
@@ -142,7 +141,7 @@ export default function TrackerPage() {
       setArticles((prev) => prev.map((a) => (a.id === id ? { ...a, [field]: value } : a)));
     } catch (e) {
       console.error(e);
-      alert("수정에 실패했습니다. 다시 시도해주세요.");
+      alert("저장에 실패했습니다. 다시 시도해 주세요.");
     }
   };
 
@@ -191,7 +190,7 @@ export default function TrackerPage() {
       }
       const uploaded = await uploadImage(file);
       if (!uploaded) {
-        alert("업로드에 실패했습니다. 다시 시도해주세요.");
+        alert("업로드에 실패했습니다. 다시 시도해 주세요.");
         return;
       }
       const updatedImages = [...(previewState.item.images ?? [])];
@@ -238,7 +237,7 @@ export default function TrackerPage() {
       const { data, error: fetchError } = await query;
       if (fetchError) throw fetchError;
 
-      const headers = ["ID", "제목", "요약", "본문", "출처", "상태", "에디터", "콘텐츠 출처", "작성일"];
+      const headers = ["ID", "제목", "요약", "본문", "출처", "상태", "편집자", "콘텐츠 출처", "작성일"];
       const rows = (data ?? []).map((row) =>
         [
           row.id ?? "",
@@ -271,7 +270,7 @@ export default function TrackerPage() {
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
     } catch (err) {
-      alert("파일 내보내기에 실패했습니다: " + (err as Error).message);
+      alert("엑셀 내보내기에 실패했습니다: " + (err as Error).message);
     } finally {
       setExporting(false);
     }
@@ -279,7 +278,6 @@ export default function TrackerPage() {
 
   return (
     <div className="w-full px-6 py-8 space-y-8">
-      {/* preview modal */}
       {previewState && (
         <div
           className="fixed inset-0 z-[12000] bg-black/70 flex items-center justify-center px-4"
@@ -318,7 +316,7 @@ export default function TrackerPage() {
                   disabled={!previewState.item.images?.length || (previewState.item.images?.length ?? 0) <= 1}
                   aria-label="이전 이미지"
                 >
-                  ←
+                  ‹
                 </button>
               </div>
 
@@ -337,7 +335,7 @@ export default function TrackerPage() {
                   disabled={!previewState.item.images?.length || (previewState.item.images?.length ?? 0) <= 1}
                   aria-label="다음 이미지"
                 >
-                  →
+                  ›
                 </button>
               </div>
 
@@ -380,7 +378,6 @@ export default function TrackerPage() {
         </div>
       )}
 
-      {/* image context menu */}
       {imageMenu && (
         <div
           className="fixed inset-0 z-[11000]"
@@ -420,7 +417,7 @@ export default function TrackerPage() {
                 setTimeout(() => fileInputRef.current?.click(), 0);
               }}
             >
-              이미지 교체
+              업로드
             </button>
           </div>
         </div>
@@ -445,7 +442,7 @@ export default function TrackerPage() {
             onClick={exportArticles}
             disabled={exporting}
           >
-            {exporting ? "내보내는 중..." : "선택 기사 Excel 내보내기"}
+            {exporting ? "내보내는 중..." : "선택 데이터 Excel 내보내기"}
           </button>
         </div>
       </header>
