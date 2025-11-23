@@ -176,34 +176,48 @@ export default function TrackerPage() {
   };
 
   const handleUploadPreview = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file || !previewState) return;
+    const files = event.target.files ? Array.from(event.target.files) : [];
+    if (!files.length || !previewState) return;
     setUploadingPreview(true);
     try {
-      const { width, height } = await readImageSize(file);
-      if (width !== 1080 || height !== 1350) {
-        alert(`이미지 크기를 1080x1350으로 맞춰 주세요. 현재: ${width}x${height}`);
+      const uploaded: string[] = [];
+
+      for (const file of files) {
+        const { width, height } = await readImageSize(file);
+        if (width !== 1080 || height !== 1350) {
+          alert(`??? ??? 1080x1350?? ?? ???. ??: ${width}x${height}`);
+          continue;
+        }
+        const url = await uploadImage(file);
+        if (url) {
+          uploaded.push(url);
+        }
+      }
+
+      if (!uploaded.length) {
+        alert("???? ??????. ?? ??? ???.");
         return;
       }
-      const uploaded = await uploadImage(file);
-      if (!uploaded) {
-        alert("업로드에 실패했습니다. 다시 시도해 주세요.");
-        return;
-      }
+
       const updatedImages = [...(previewState.item.images ?? [])];
       const replaceIndex = previewState.index ?? 0;
+
       if (updatedImages.length === 0) {
-        updatedImages.push(uploaded);
+        updatedImages.push(...uploaded);
       } else {
-        updatedImages[replaceIndex] = uploaded;
+        updatedImages[replaceIndex] = uploaded[0];
+        if (uploaded.length > 1) {
+          updatedImages.push(...uploaded.slice(1));
+        }
       }
+
       const { error } = await supabase.from("articles").update({ images: updatedImages }).eq("id", previewState.item.id);
       if (error) throw error;
       await loadArticles();
       setPreviewState((prev) => (prev ? { ...prev, item: { ...prev.item, images: updatedImages } } : prev));
-      alert("이미지를 업로드했습니다.");
+      alert("???? ??????.");
     } catch (err) {
-      alert("업로드 중 오류가 발생했습니다: " + (err as Error).message);
+      alert("??? ?? ? ??? ??????: " + (err as Error).message);
     } finally {
       setUploadingPreview(false);
       event.target.value = "";
@@ -367,6 +381,7 @@ export default function TrackerPage() {
                 ref={fileInputRef}
                 type="file"
                 accept="image/*"
+                multiple
                 className="hidden"
                 onChange={handleUploadPreview}
               />
@@ -529,4 +544,3 @@ export default function TrackerPage() {
     </div>
   );
 }
-
