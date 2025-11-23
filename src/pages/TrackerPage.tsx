@@ -62,7 +62,7 @@ export default function TrackerPage() {
     const { data, error: fetchError } = await supabase
       .from("articles")
       .select("id,title,summary,body,status,editor,source,content_source,created_at,images")
-      .not("status", "in", STORAGE_STATUSES)
+      .not("status", "in", STORAGE_STATUS_FILTER)
       .order("id", { ascending: true });
 
     if (fetchError || !data) {
@@ -227,7 +227,7 @@ export default function TrackerPage() {
       let query = supabase
         .from("articles")
         .select("id,title,summary,body,source,status,editor,content_source,created_at")
-        .not("status", "in", STORAGE_STATUSES)
+        .not("status", "in", STORAGE_STATUS_FILTER)
         .order("id", { ascending: true });
 
       if (selectedIds.length > 0) {
