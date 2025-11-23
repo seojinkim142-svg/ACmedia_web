@@ -227,7 +227,7 @@ export default function TrackerPage() {
       let query = supabase
         .from("articles")
         .select("id,title,summary,body,source,status,editor,content_source,created_at")
-        .not("status", "in", STORAGE_STATUS_FILTER)
+        .not("status", "in", STORAGE_STATUSES)
         .order("id", { ascending: true });
 
       if (selectedIds.length > 0) {
