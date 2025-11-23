@@ -134,14 +134,18 @@ export default function TrackerPage() {
   }, [filtered]);
 
   const updateField = async (id: number, field: string, value: string) => {
+    setArticles((prev) => prev.map((a) => (a.id === id ? { ...a, [field]: value } : a)));
     try {
       const payload: Record<string, string> = { [field]: value };
       const { error: updateError } = await supabase.from("articles").update(payload).eq("id", id);
       if (updateError) throw updateError;
-      setArticles((prev) => prev.map((a) => (a.id === id ? { ...a, [field]: value } : a)));
+      
+      await loadArticles();
     } catch (e) {
       console.error(e);
       alert("저장에 실패했습니다. 다시 시도해 주세요.");
+
+      await loadArticles();
     }
   };
 
