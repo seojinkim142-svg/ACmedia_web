@@ -111,11 +111,7 @@ export default function TrackerPage() {
     loadArticles();
   }, []);
 
-  const editorOptions = useMemo(() => {
-    const set = new Set<string>();
-    articles.forEach((a) => a.editor && set.add(a.editor));
-    return Array.from(set);
-  }, [articles]);
+  const editorOptions = useMemo(() => ["지민", "아라", "지안"], []);
 
   const filtered = useMemo(() => {
     return articles.filter((a) => {
