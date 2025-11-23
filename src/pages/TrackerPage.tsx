@@ -62,7 +62,7 @@ export default function TrackerPage() {
     const { data, error: fetchError } = await supabase
       .from("articles")
       .select("id,title,summary,body,status,editor,source,content_source,created_at,images")
-      .not("status", "in", STORAGE_STATUS_FILTER)
+      .not("status", "in", STORAGE_STATUSES)
       .order("id", { ascending: true });
 
     if (fetchError || !data) {
