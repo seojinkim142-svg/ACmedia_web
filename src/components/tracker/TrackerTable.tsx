@@ -132,14 +132,26 @@ export default function TrackerTable({
     await onInlineUpdate(id, field, normalized);
   };
 
-  const moveSelection = (delta: number) => {
-    setSelectedCell((prev) => {
-      if (!prev) return prev;
-      const newIndex = prev.rowIndex + delta;
-      if (newIndex < 0 || newIndex >= articles.length) return prev;
-      return { ...prev, rowIndex: newIndex };
-    });
-  };
+    const FIELD_ORDER = ["created_at", "editor", "status", "content_source"];
+
+    const moveField = (delta: number) => {
+      setSelectedCell((prev) => {
+        if (!prev) return prev;
+        const current = FIELD_ORDER.indexOf(prev.field);
+        if (current === -1) return prev;
+        const nextIndex = Math.min(Math.max(current + delta, 0), FIELD_ORDER.length - 1);
+        return { ...prev, field: FIELD_ORDER[nextIndex] };
+      });
+    };
+
+    const moveSelection = (delta: number) => {
+      setSelectedCell((prev) => {
+        if (!prev) return prev;
+        const newIndex = prev.rowIndex + delta;
+        if (newIndex < 0 || newIndex >= articles.length) return prev;
+        return { ...prev, rowIndex: newIndex };
+      });
+    };
 
   const copyFromAbove = () => {
     if (!selectedCell) return;
@@ -207,7 +219,7 @@ export default function TrackerTable({
         } else if (event.key === "ArrowUp") {
           event.preventDefault();
           moveSelection(-1);
-          if (event.shiftKey && selectedCell) {
+        if (event.shiftKey && selectedCell) {
             const nextIndex = Math.max(selectedCell.rowIndex - 1, 0);
             const nextId = articles[nextIndex]?.id;
             if (nextId) {
@@ -225,7 +237,13 @@ export default function TrackerTable({
           if (!event.shiftKey) {
             setAnchorRowIndex(selectedCell?.rowIndex ?? null);
           }
-      } else if (event.ctrlKey && (event.key === "d" || event.key === "D")) {
+        } else if (event.key === "ArrowRight") {
+          event.preventDefault();
+          moveField(1);
+        } else if (event.key === "ArrowLeft") {
+          event.preventDefault();
+          moveField(-1);
+        } else if (event.ctrlKey && (event.key === "d" || event.key === "D")) {
         event.preventDefault();
         copyFromAbove();
       } else if (event.ctrlKey && (event.key === "z" || event.key === "Z")) {

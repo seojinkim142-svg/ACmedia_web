@@ -65,13 +65,17 @@ export default function InlineCell({
   }, [editing]);
 
   useEffect(() => {
-    if (editing && type === "select" && controlRef.current instanceof HTMLSelectElement) {
-      setTimeout(() => {
-        const select = controlRef.current;
-        select?.focus();
-        select?.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
-      }, 0);
-    }
+    if (!editing || !controlRef.current) return;
+    const target = controlRef.current;
+    setTimeout(() => {
+      if (type === "select" && target instanceof HTMLSelectElement) {
+        target.focus();
+        target.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
+      } else if (type === "date" && target instanceof HTMLInputElement && target.type === "date") {
+        target.focus();
+        target.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
+      }
+    }, 0);
   }, [editing, type]);
 
   const tdStyle = { width: 0 };
