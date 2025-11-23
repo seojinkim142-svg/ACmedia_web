@@ -5,51 +5,39 @@ import TrackerTable from "../components/tracker/TrackerTable";
 import { supabase } from "../supabaseClient";
 import { STORAGE_STATUSES } from "../constants/statuses";
 import { uploadImage } from "../lib/uploadImages";
-
-interface Article {
-  id: number;
-  title: string;
-  summary: string;
-  body: string;
-  status: string;
-  editor?: string;
-  source: string;
-  content_source?: string;
-  images: string[] | null;
-  created_at?: string;
-  latest_comment?: string;
-}
+import type { TrackerArticle } from "../types/tracker";
 
 const STORAGE_STATUS_FILTER = `(${STORAGE_STATUSES.map((status) => `"${status}"`).join(",")})`;
 const DETAIL_STORAGE_KEY = "tracker:last-open-detail-id";
 const MEMO_STORAGE_KEY = "tracker:last-open-memo-id";
+const STATUS_SUMMARY_LEFT = ["리뷰", "추천", "본문 작성", "본문 완료"] as const;
+const STATUS_SUMMARY_RIGHT = ["이미지 생성", "이미지 완료", "업로드 예정", ""] as const;
 const STATUS_OPTIONS = [
   "리뷰",
   "추천",
-  "보류",
   "본문 작성",
   "본문 완료",
-  "썸네일 작성",
-  "썸네일 완료",
+  "이미지 생성",
+  "이미지 완료",
   "업로드 예정",
-  "업로드 완료",
+  "보류",
   "중복",
 ];
 
 export default function TrackerPage() {
-  const [articles, setArticles] = useState<Article[]>([]);
+  const [articles, setArticles] = useState<TrackerArticle[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [openItem, setOpenItem] = useState<Article | null>(null);
-  const [memoItem, setMemoItem] = useState<Article | null>(null);
+  const [openItem, setOpenItem] = useState<TrackerArticle | null>(null);
+  const [memoItem, setMemoItem] = useState<TrackerArticle | null>(null);
   const [filterTitle, setFilterTitle] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
   const [filterEditor, setFilterEditor] = useState("");
   const [filterDateFrom, setFilterDateFrom] = useState("");
   const [filterDateTo, setFilterDateTo] = useState("");
-  const [previewState, setPreviewState] = useState<{ item: Article; index: number } | null>(null);
+  const [previewState, setPreviewState] = useState<{ item: TrackerArticle; index: number } | null>(null);
   const [uploadingPreview, setUploadingPreview] = useState(false);
-  const [imageMenu, setImageMenu] = useState<{ x: number; y: number; item: Article } | null>(null);
+  const [imageMenu, setImageMenu] = useState<{ x: number; y: number; item: TrackerArticle } | null>(null);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [exporting, setExporting] = useState(false);
 
@@ -112,7 +100,7 @@ export default function TrackerPage() {
     loadArticles();
   }, []);
 
-  const editorOptions = useMemo(() => ["지민", "아라", "지안"], []);
+    const editorOptions = useMemo(() => ["지민", "아라", "지은"], []);
 
   const filtered = useMemo(() => {
     return articles.filter((a) => {
@@ -132,6 +120,11 @@ export default function TrackerPage() {
     filtered.forEach((a) => map.set(a.status || "미정", (map.get(a.status || "미정") ?? 0) + 1));
     return Array.from(map.entries());
   }, [filtered]);
+
+  const statusCount = useMemo(() => {
+    const map = new Map(statusSummary);
+    return (label: string) => map.get(label) ?? 0;
+  }, [statusSummary]);
 
   const updateField = async (id: number, field: string, value: string) => {
     setArticles((prev) => prev.map((a) => (a.id === id ? { ...a, [field]: value } : a)));
@@ -284,7 +277,7 @@ export default function TrackerPage() {
     <div className="w-full px-6 py-8 space-y-8">
       {previewState && (
         <div
-          className="fixed inset-0 z-[12000] bg-black/70 flex items-center justify-center px-4"
+          className="fixed inset-0 z-12000 bg-black/70 flex items-center justify-center px-4"
           onClick={closePreview}
         >
           <div
@@ -343,7 +336,7 @@ export default function TrackerPage() {
                 </button>
               </div>
 
-              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent text-white p-4">
+              <div className="absolute inset-x-0 bottom-0 bg-linear-to-t from-black/80 to-transparent text-white p-4">
                 <p className="text-xs font-semibold opacity-80">AC Media</p>
                 <p className="text-lg font-bold line-clamp-2">{previewState.item.title || "제목 없음"}</p>
               </div>
@@ -384,7 +377,7 @@ export default function TrackerPage() {
 
       {imageMenu && (
         <div
-          className="fixed inset-0 z-[11000]"
+          className="fixed inset-0 z-11000"
           onClick={() => setImageMenu(null)}
           onContextMenu={(e) => e.preventDefault()}
         >
@@ -451,11 +444,26 @@ export default function TrackerPage() {
         </div>
       </header>
 
-      <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <SummaryCard label="전체" value={filtered.length} />
-        {statusSummary.map(([label, count]) => (
-          <SummaryCard key={label} label={label} value={count} />
-        ))}
+      <section className="bg-white border rounded-2xl shadow-sm p-4 max-w-5xl mx-auto">
+        <div className="grid grid-cols-1 gap-2">
+          {STATUS_SUMMARY_LEFT.map((label, idx) => {
+            const rightLabel = STATUS_SUMMARY_RIGHT[idx];
+            return (
+              <div key={label} className="grid grid-cols-2 gap-2">
+                <div className="flex items-center justify-between px-3 py-2 bg-gray-50 rounded-lg border">
+                  <span className="text-gray-700">{label}</span>
+                  <span className="font-semibold text-gray-900">{statusCount(label)}</span>
+                </div>
+                <div className="flex items-center justify-between px-3 py-2 bg-gray-50 rounded-lg border">
+                  <span className="text-gray-700">{rightLabel || " "}</span>
+                  <span className="font-semibold text-gray-900">
+                    {rightLabel ? statusCount(rightLabel) : ""}
+                  </span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </section>
 
       <section className="bg-white border rounded-2xl shadow-sm p-4 space-y-4">
@@ -522,11 +530,3 @@ export default function TrackerPage() {
   );
 }
 
-function SummaryCard({ label, value }: { label: string; value: number }) {
-  return (
-    <div className="bg-white border rounded-2xl p-4 shadow-sm">
-      <p className="text-xs text-gray-500 mb-1">{label}</p>
-      <p className="text-2xl font-bold text-gray-900">{value}</p>
-    </div>
-  );
-}

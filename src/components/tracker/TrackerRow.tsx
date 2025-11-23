@@ -16,18 +16,17 @@ interface TrackerRowProps {
   rowActive?: boolean;
 }
 
-const EDITOR_OPTIONS = ["지민", "지안", "아라"];
+const EDITOR_OPTIONS = ["지민", "아라", "지은"];
 
 const STATUS_OPTIONS = [
   "리뷰",
   "추천",
-  "보류",
   "본문 작성",
   "본문 완료",
-  "썸네일 작성",
-  "썸네일 완료",
+  "이미지 생성",
+  "이미지 완료",
   "업로드 예정",
-  "업로드 완료",
+  "보류",
   "중복",
 ];
 
@@ -54,7 +53,7 @@ export default function TrackerRow({
       <td className="py-2 px-1 text-center border-r border-gray-200">
         <input
           type="checkbox"
-          className="w-6 h-6"
+          className="w-5 h-5"
           checked={rowSelected}
           onChange={(e) => {
             e.stopPropagation();
@@ -66,7 +65,7 @@ export default function TrackerRow({
 
       <td className="py-2 px-1 cursor-pointer border-r border-gray-200">
         <div
-          className="w-12 rounded overflow-hidden"
+          className="w-6 rounded overflow-hidden"
           style={{ aspectRatio: "4 / 5" }}
           onClick={(e) => {
             e.stopPropagation();
@@ -75,15 +74,6 @@ export default function TrackerRow({
         >
           <img src={preview} className="w-full h-full object-cover" />
         </div>
-      </td>
-
-      <td
-        className={`py-2 px-2 cursor-pointer max-w-[320px] truncate border-r border-gray-200 ${
-          item.title.length < 25 ? "text-sm" : item.title.length < 40 ? "text-xs" : "text-[10px]"
-        }`}
-        onClick={() => onTitleClick(item)}
-      >
-        {item.title}
       </td>
 
       <InlineCell
@@ -105,6 +95,15 @@ export default function TrackerRow({
         className="border-r border-gray-200"
       />
 
+      <td
+        className={`py-2 px-2 cursor-pointer max-w-[360px] truncate border-r border-gray-200 ${
+          item.title.length < 25 ? "text-sm" : item.title.length < 40 ? "text-xs" : "text-[10px]"
+        }`}
+        onClick={() => onTitleClick(item)}
+      >
+        {item.title}
+      </td>
+
       <InlineCell
         type="select"
         value={item.status}
@@ -114,10 +113,6 @@ export default function TrackerRow({
         onSelect={() => onSelectCell(index, "status")}
         className="border-r border-gray-200"
       />
-
-      <td className="py-2 px-2 text-sm text-gray-700 border-r border-gray-200 max-w-[200px] truncate">
-        {item.content_source || item.source || "-"}
-      </td>
 
       <td
         className="py-2 px-2 cursor-pointer text-sm text-gray-700 max-w-[220px] truncate"
