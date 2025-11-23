@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import TrackerTable from "../components/tracker/TrackerTable";
 import ImageMenu from "../components/tracker/ImageMenu";
@@ -33,6 +33,11 @@ const formatDate = (value?: string | null) => {
 
 export default function UploadPage() {
   const [articles, setArticles] = useState<UploadArticle[]>([]);
+  const [filterTitle, setFilterTitle] = useState("");
+  const [filterStatus, setFilterStatus] = useState("");
+  const [filterEditor, setFilterEditor] = useState("");
+  const [filterDateFrom, setFilterDateFrom] = useState("");
+  const [filterDateTo, setFilterDateTo] = useState("");
   const [openItem, setOpenItem] = useState<UploadArticle | null>(null);
   const [memoItem, setMemoItem] = useState<UploadArticle | null>(null);
   const [imageMenu, setImageMenu] = useState<{
@@ -86,6 +91,18 @@ export default function UploadPage() {
   useEffect(() => {
     loadArticles();
   }, []);
+
+  const filteredArticles = useMemo(() => {
+    return articles.filter((a) => {
+      const titlePass = filterTitle ? (a.title ?? "").toLowerCase().includes(filterTitle.toLowerCase()) : true;
+      const statusPass = filterStatus ? a.status === filterStatus : true;
+      const editorPass = filterEditor ? a.editor === filterEditor : true;
+      const dateStr = (a.created_at ?? "").slice(0, 10);
+      const fromPass = filterDateFrom ? dateStr >= filterDateFrom : true;
+      const toPass = filterDateTo ? dateStr <= filterDateTo : true;
+      return titlePass && statusPass && editorPass && fromPass && toPass;
+    });
+  }, [articles, filterDateFrom, filterDateTo, filterEditor, filterStatus, filterTitle]);
 
   const handleUpdated = (updated: UploadArticle) => {
     setArticles((prev) => prev.map((item) => (item.id === updated.id ? updated : item)));
@@ -264,7 +281,7 @@ export default function UploadPage() {
       )}
 
       <TrackerTable
-        articles={articles}
+        articles={filteredArticles}
         onTitleClick={setOpenItem}
         onInlineUpdate={async (id, field, value) => {
           await supabase.from("articles").update({ [field]: value }).eq("id", id);
@@ -281,6 +298,24 @@ export default function UploadPage() {
         }
         onMemoClick={(item) => setMemoItem(item)}
         onSelectedChange={setSelectedIds}
+        filterTitle={filterTitle}
+        filterStatus={filterStatus}
+        filterEditor={filterEditor}
+        filterDateFrom={filterDateFrom}
+        filterDateTo={filterDateTo}
+        onFilterTitleChange={setFilterTitle}
+        onFilterStatusChange={setFilterStatus}
+        onFilterEditorChange={setFilterEditor}
+        onFilterDateFromChange={setFilterDateFrom}
+        onFilterDateToChange={setFilterDateTo}
+        onResetFilters={() => {
+          setFilterTitle("");
+          setFilterStatus("");
+          setFilterEditor("");
+          setFilterDateFrom("");
+          setFilterDateTo("");
+        }}
+        statusOptions={STORAGE_STATUSES}
       />
 
       <ImageMenu
